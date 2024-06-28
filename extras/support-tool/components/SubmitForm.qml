@@ -16,9 +16,8 @@
 // along with the Private Internet Access Desktop Client.  If not, see
 // <https://www.gnu.org/licenses/>.
 
-import QtQuick 2.0
 import QtQuick 2.9
-import QtQuick.Controls 2.3
+import QtQuick.Controls 2.4
 import QtQuick.Layouts 1.3
 import PIA.ReportHelper 1.0
 import PIA.PayloadBuilder 1.0
@@ -107,7 +106,7 @@ Item {
         Layout.topMargin: 2
         visible: params.daemon_crash_files.length > 0
                  || params.client_crash_files.length > 0
-        text: "Include crash reports"
+        text: "Include crash reports."
         checked: params.include_crash
         enabled: formStatus <= 0
         onClicked: {

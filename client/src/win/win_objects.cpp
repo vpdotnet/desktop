@@ -25,7 +25,6 @@
 
 #include <QPainter>
 #include <QPixmap>
-#include <QtWin>
 
 #pragma comment(lib, "User32.lib")
 
@@ -100,7 +99,7 @@ HMENU WinPopupMenu::createMenu(const NativeMenuItem::List& items)
                         painter.setRenderHint(QPainter::SmoothPixmapTransform);
                         painter.drawPixmap(QRectF { (icon.width() - scale * pixmap.width()) / 2.0, (icon.height() - scale * pixmap.height()) / 2.0, scale * pixmap.width(), scale * pixmap.height() }, pixmap, pixmap.rect());
                     }
-                    info.hbmpItem = QtWin::toHBITMAP(icon, QtWin::HBitmapPremultipliedAlpha);
+                    info.hbmpItem = icon.toImage().toHBITMAP();
                     if (info.hbmpItem)
                         _icons.insert(item->icon(), { info.hbmpItem, DeleteObject });
                 }

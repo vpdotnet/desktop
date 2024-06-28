@@ -25,6 +25,7 @@
 #include "pathmtu.h"
 #include <kapps_core/src/ipaddress.h>
 #include <QStandardPaths>
+#include <QRegularExpression>
 
 #if defined(Q_OS_WIN)
     #include "win/win_daemon.h"
@@ -359,6 +360,8 @@ void OpenVPNMethod::networkChanged()
     // and kill the connection; on other platforms, we wait for a ping timeout.
     // In the future we might be able to reconnect more quickly by detecting
     // connection loss due to a network change.
+    qDebug() << "Network state has changed. In order to avoid waiting for the timeout reconnection will be forced";
+    emit networkHasChanged();
 }
 
 bool OpenVPNMethod::writeOpenVPNConfig(QFile& outFile,
@@ -710,7 +713,7 @@ void OpenVPNMethod::checkStdoutErrors(const QString &line)
 
     // This error can be logged by socks_handshake and recv_socks_reply, others
     // might be possible too.
-    if(line.contains(QRegExp("socks.*: TCP port read failed")))
+    if(line.contains(QRegularExpression("socks.*: TCP port read failed")))
     {
         raiseError({HERE, Error::Code::OpenVPNProxyError});
         return;
@@ -719,11 +722,12 @@ void OpenVPNMethod::checkStdoutErrors(const QString &line)
     // This error occurs if OpenVPN fails to open a TCP connection.  If it's
     // reported for the SOCKS proxy, report it as a proxy error, otherwise let
     // it be handled as a general failure.
-    QRegExp tcpFailRegex{R"(TCP: connect to \[AF_INET\]([\d\.]+):\d+ failed:)"};
-    if(line.contains(tcpFailRegex))
+    QRegularExpression tcpFailRegex{R"(TCP: connect to \[AF_INET\]([\d\.]+):\d+ failed:)"};
+    const auto match = tcpFailRegex.match(line);
+    if(match.hasMatch())
     {
         QHostAddress failedHost;
-        if(failedHost.setAddress(tcpFailRegex.cap(1)) &&
+        if(failedHost.setAddress(match.captured(1)) &&
             failedHost == _connectingConfig.socksHost())
         {
             raiseError({HERE, Error::Code::OpenVPNProxyError});
@@ -768,11 +772,12 @@ unsigned OpenVPNMethod::findMaxMtu(const kapps::core::Ipv4Address &host)
 
 void OpenVPNMethod::checkForMagicStrings(const QString& line)
 {
-    QRegExp tunDeviceNameRegex{R"(Using device:([^ ]+) local_address:([^ ]+) remote_address:([^ ]+))"};
-    if(line.contains(tunDeviceNameRegex))
+    QRegularExpression tunDeviceNameRegex{R"(Using device:([^ ]+) local_address:([^ ]+) remote_address:([^ ]+))"};
+    const auto match = tunDeviceNameRegex.match(line);
+    if(match.hasMatch())
     {
         if(!_networkAdapter)
-            _networkAdapter.reset(new NetworkAdapter{tunDeviceNameRegex.cap(1)});
+            _networkAdapter.reset(new NetworkAdapter{match.captured(1)});
 
         int maxMtu = findMaxMtu(_vpnHost);
         qInfo() << "MTU config:" << _connectingConfig.mtu()
@@ -781,14 +786,14 @@ void OpenVPNMethod::checkForMagicStrings(const QString& line)
 
         _mtuPinger.reset(new MtuPinger(_networkAdapter, maxMtu, _connectingConfig.mtu()));
 
-        emitTunnelConfiguration(tunDeviceNameRegex.cap(1), tunDeviceNameRegex.cap(2),
-                                tunDeviceNameRegex.cap(3));
-    }
+        emitTunnelConfiguration(match.captured(1), match.captured(2),
+                                match.captured(3));
 
-    // TODO: extract this out into a more general error mechanism, where the "!!!" prefix
-    // indicates an error condition followed by the code.
-    if (line.startsWith("!!!updown.sh!!!dnsConfigFailure")) {
-        raiseError(Error(HERE, Error::OpenVPNDNSConfigError));
+        // TODO: extract this out into a more general error mechanism, where the "!!!" prefix
+        // indicates an error condition followed by the code.
+        if (line.startsWith("!!!updown.sh!!!dnsConfigFailure")) {
+            raiseError(Error(HERE, Error::OpenVPNDNSConfigError));
+        }
     }
 }
 
@@ -798,7 +803,7 @@ bool OpenVPNMethod::respondToMgmtAuth(const QString &line, const QString &user,
     // Extract the auth type from the prompt - such as `Auth` or `SOCKS Proxy`.
     // The line looks like:
     // >PASSWORD:Need 'Auth' username/password
-    auto quotes = line.midRef(15).split('\'');
+    auto quotes = QStringView{line}.mid(15).split('\'');
     if (quotes.size() >= 3)
     {
         auto id = quotes[1].toString();
@@ -854,7 +859,7 @@ void OpenVPNMethod::openvpnManagementLine(const QString& line)
         }
         else if (line.startsWith(QLatin1String(">BYTECOUNT:")))
         {
-            auto params = line.midRef(11).split(',');
+            auto params = QStringView{line}.mid(11).split(',');
             if (params.size() >= 2)
             {
                 bool ok = false;

@@ -55,6 +55,7 @@ const QString UpdateChannel::platformName =
     #if defined(Q_PROCESSOR_X86_64)
         QStringLiteral("windows_x64");
     #elif defined(Q_PROCESSOR_X86_32)
+        #error "32-bit windows is not supported.
         QStringLiteral("windows_x86");
     #else
         #error "Platform name not known for this Windows architecture"
@@ -79,6 +80,8 @@ namespace
     const std::chrono::minutes versionInitialInterval{10};
     // Refresh interval after initial load.
     const std::chrono::hours versionRefreshInterval{1};
+    // Timeout for no progress during update download
+    const std::chrono::seconds timeoutInterval{15};
 }
 
 Update::Update(const QString &uri, const QString &version, const QString &osRequired)
@@ -272,7 +275,10 @@ but that's acceptable.
 */
 
 UpdateDownloader::UpdateDownloader()
-    : _daemonVersion{99999, 99999, 99999}, _running{false}, _enableBeta{false}
+    : _daemonVersion{99999, 99999, 99999}
+    , _running{false}
+    , _enableBeta{false}
+    , _downloadTimedOut{false}
 {
     // If the daemon's version can't be parsed, we log an error and proceed with
     // the default version above that will never offer an upgrade.  This might
@@ -516,13 +522,20 @@ Async<DownloadResult> UpdateDownloader::downloadUpdate()
         return Async<DownloadResult>::resolve(DownloadResult().version(availableUpdate.version()).failed(true));
     }
 
+    // Creating the progress timer, but not starting it.
+    connect(&_progressTimer, &QTimer::timeout, this,
+            &UpdateDownloader::downloadTimerElapsed);
+    _progressTimer.setInterval(timeoutInterval);
+    _downloadTimedOut = false;
+
     QNetworkRequest downloadReq{availableUpdate.uri()};
     _pDownloadReply = ApiNetwork::instance()->getAccessManager().get(downloadReq);
     _pDownloadReply->setParent(this);
     _pDownloadTask = Async<DownloadResult>::create();
     _downloadingVersion = availableUpdate.version();
-    // There is no timeout on this download, but the user can cancel it
-    // manually if it appears to be stuck but does not fail.
+
+    // The download will timeout if not even 1 byte can be downloaded
+    // with the error "HostNotFoundError"
     connect(_pDownloadReply, &QNetworkReply::downloadProgress, this,
             &UpdateDownloader::onDownloadProgress);
     connect(_pDownloadReply, &QIODevice::readyRead, this,
@@ -532,6 +545,16 @@ Async<DownloadResult> UpdateDownloader::downloadUpdate()
     emit downloadProgress(_downloadingVersion, 0);
 
     return _pDownloadTask;
+}
+
+void UpdateDownloader::downloadTimerElapsed()
+{
+    qWarning() << "Download update timer has elapsed, the download will be canceled";
+    // When the timer stops, the download gets canceled.
+    // This bool is set to true, so we can distinguish from the case in which the user
+    // clicked the Stop button and display the "Update failed" banner.
+    _downloadTimedOut = true;
+    cancelDownload();
 }
 
 void UpdateDownloader::cancelDownload()
@@ -550,6 +573,12 @@ void UpdateDownloader::cancelDownload()
 void UpdateDownloader::onDownloadProgress(qint64 bytesReceived,
                                           qint64 bytesTotal)
 {
+    if(_progressTimer.isActive())
+    {
+        _progressTimer.stop();
+    }
+    _progressTimer.start();
+
     // Class invariant - valid when this signal is connected
     Q_ASSERT(_pDownloadReply);
     // Class invariant - set when _pDownloadReply is set
@@ -587,6 +616,11 @@ void UpdateDownloader::onDownloadReadyRead()
 
 void UpdateDownloader::onDownloadFinished()
 {
+    if(_progressTimer.isActive())
+    {
+        _progressTimer.stop();
+    }
+
     // Class invariant - valid when this signal is connected
     Q_ASSERT(_pDownloadReply);
     // Class invariant - valid when _pDownloadReply is set
@@ -623,6 +657,8 @@ void UpdateDownloader::onDownloadFinished()
         // 'OperationCanceledError' indicates that the user canceled the
         // download (we only call abort() due to a user cancellation).
         bool dueToError = error != QNetworkReply::NetworkError::OperationCanceledError;
+        dueToError = _downloadTimedOut ? true : dueToError;
+        _downloadTimedOut = false;
         emit downloadFailed(finishedVersion, dueToError);
         // The result is an error if we detected an error above, canceled
         // otherwise.

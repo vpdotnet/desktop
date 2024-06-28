@@ -66,7 +66,7 @@ Item {
                                           cueBound)
       }
 
-      Keys.onPressed: {
+      Keys.onPressed: event => {
         KeyUtil.handleScrollKeyEvent(event, scrollView,
           scrollView.ScrollBar.horizontal,
           scrollView.ScrollBar.vertical, scrollFocusCue)

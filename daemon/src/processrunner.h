@@ -102,17 +102,14 @@ class UidGidProcess : public QProcess
     Q_OBJECT
 
 public:
+    UidGidProcess();
+
     // Set the user for the process (eg "root")
     void setUser(const QString &user) { _desiredUser = user; }
 
     // Set the group for the process (e.g "piavpn")
     void setGroup(const QString &group) { _desiredGroup = group; }
 protected:
-
-     // This hook method is called immediately before the exec()
-     // allowing us to set the uid/gid of the process
-     void setupChildProcess() override;
-
      QString _desiredUser{};
      QString _desiredGroup{};
 };

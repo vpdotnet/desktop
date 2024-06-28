@@ -1,5 +1,4 @@
-/* Copyright (c) 2006, Google Inc.
- * All rights reserved.
+/* Copyright 2006 Google LLC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -11,7 +10,7 @@
  * copyright notice, this list of conditions and the following disclaimer
  * in the documentation and/or other materials provided with the
  * distribution.
- *     * Neither the name of Google Inc. nor the names of its
+ *     * Neither the name of Google LLC nor the names of its
  * contributors may be used to endorse or promote products derived from
  * this software without specific prior written permission.
  *
@@ -42,12 +41,8 @@
 
 #if (defined(_INTTYPES_H) || defined(_INTTYPES_H_)) && \
     !defined(__STDC_FORMAT_MACROS)
-//
-// This #error breaks builds on some platforms, including clang on Linux (but not gcc on Linux)
-// Since we use clang to build, we can prevent emitting this error without affecting
-// the functionality in any noticeable manner.
-//#error "inttypes.h has already been included before this header file, but "
-//#error "without __STDC_FORMAT_MACROS defined."
+#error "inttypes.h has already been included before this header file, but "
+#error "without __STDC_FORMAT_MACROS defined."
 #endif
 
 #ifndef __STDC_FORMAT_MACROS

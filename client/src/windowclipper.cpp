@@ -24,9 +24,9 @@
 #include "linux/linux_env.h"
 #endif
 
-bool WindowClipper::updateEffectiveClip()
+bool WindowClipper::updateEffectiveClipRect()
 {
-    QRect newEffectiveClip = _clip;
+    QRect newEffectiveClipRect = _clipRect;
     QRect windowClient{0, 0, 0, 0};
     if(_pTargetWindow)
         windowClient.setSize(_pTargetWindow->geometry().size());
@@ -39,11 +39,11 @@ bool WindowClipper::updateEffectiveClip()
     // By clipping the mask to the window client bound and detecting window
     // resizing, we know when to reapply the mask due to the window being
     // resized.
-    newEffectiveClip &= windowClient;
+    newEffectiveClipRect &= windowClient;
 
-    if(newEffectiveClip != _effectiveClip)
+    if(newEffectiveClipRect != _effectiveClipRect)
     {
-        _effectiveClip = newEffectiveClip;
+        _effectiveClipRect = newEffectiveClipRect;
         return true;
     }
 
@@ -58,26 +58,26 @@ QRegion WindowClipper::generateClipMask()
     // corner ellipses that would overlap), and it never applies currently.
     // (Only Linux uses the radius, and it never sizes the dashboard this
     // small.)
-    if(_round <= 0 || _effectiveClip.width() < 2*_round || _effectiveClip.height() < 2*_round)
+    if(_round <= 0 || _effectiveClipRect.width() < 2*_round || _effectiveClipRect.height() < 2*_round)
     {
         // Regular non-rounded region
-        return QRegion{_effectiveClip};
+        return QRegion{_effectiveClipRect};
     }
 
     // To build a rounded rectangle region, generate 4 circular regions for the
     // corners and 2 rectangular regions for the middle.
-    QRegion clipMask{_effectiveClip.left() + _round, _effectiveClip.top(),
-                     _effectiveClip.width() - 2*_round, _effectiveClip.height()};
-    clipMask |= QRegion{_effectiveClip.left(), _effectiveClip.top() + _round,
-                        _effectiveClip.width(), _effectiveClip.height() - 2*_round};
+    QRegion clipMask{_effectiveClipRect.left() + _round, _effectiveClipRect.top(),
+                     _effectiveClipRect.width() - 2*_round, _effectiveClipRect.height()};
+    clipMask |= QRegion{_effectiveClipRect.left(), _effectiveClipRect.top() + _round,
+                        _effectiveClipRect.width(), _effectiveClipRect.height() - 2*_round};
 
-    QRect cornerCircle{_effectiveClip.left(), _effectiveClip.top(), _round*2, _round*2};
+    QRect cornerCircle{_effectiveClipRect.left(), _effectiveClipRect.top(), _round*2, _round*2};
     clipMask |= QRegion{cornerCircle, QRegion::RegionType::Ellipse};
-    cornerCircle.moveRight(_effectiveClip.right());
+    cornerCircle.moveRight(_effectiveClipRect.right());
     clipMask |= QRegion{cornerCircle, QRegion::RegionType::Ellipse};
-    cornerCircle.moveBottom(_effectiveClip.bottom());
+    cornerCircle.moveBottom(_effectiveClipRect.bottom());
     clipMask |= QRegion{cornerCircle, QRegion::RegionType::Ellipse};
-    cornerCircle.moveLeft(_effectiveClip.left());
+    cornerCircle.moveLeft(_effectiveClipRect.left());
     clipMask |= QRegion{cornerCircle, QRegion::RegionType::Ellipse};
 
     return clipMask;
@@ -99,7 +99,7 @@ void WindowClipper::applyClipMask()
 void WindowClipper::onWindowResize()
 {
     // If the resize causes the effective mask to change, update the window mask
-    if(updateEffectiveClip())
+    if(updateEffectiveClipRect())
         applyClipMask();
 }
 
@@ -122,7 +122,7 @@ void WindowClipper::setTargetWindow(QQuickWindow *pTargetWindow)
 
     // Don't care whether the effective clip bound changed, because the window
     // has changed - always update the mask.
-    updateEffectiveClip();
+    updateEffectiveClipRect();
     applyClipMask();
     if(_pTargetWindow)
     {
@@ -133,16 +133,16 @@ void WindowClipper::setTargetWindow(QQuickWindow *pTargetWindow)
     }
 }
 
-void WindowClipper::setClip(const QRect &clip)
+void WindowClipper::setClipRect(const QRect &clipRect)
 {
-    if(clip == _clip)
+    if(clipRect == _clipRect)
         return; // Nothing to do
 
-    _clip = clip;
-    emit clipChanged();
+    _clipRect = clipRect;
+    emit clipRectChanged();
 
     // If the effective clip bound changed, apply the new mask.
-    if(updateEffectiveClip())
+    if(updateEffectiveClipRect())
         applyClipMask();
 }
 
@@ -156,6 +156,6 @@ void WindowClipper::setRound(int round)
 
     // Don't care whether the effective clip bound changed, because the round
     // radius has changed.  Always update the window mask.
-    updateEffectiveClip();
+    updateEffectiveClipRect();
     applyClipMask();
 }

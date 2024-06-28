@@ -195,7 +195,12 @@ void AppSingleton::setLaunchResource(QString url)
 {
     if(lockResourceShare()) {
         char* data = reinterpret_cast<char*>(_resourceShare.data());
-        strcpy(data, url.toUtf8().constData());
+        if(!isValidResource(url))
+        {
+            qError () << "Cannot handle resource" << url;
+            return;
+        }
+        strncpy(data, url.toUtf8().constData(), RESOURCE_LENGTH_LIMIT);
         unlockResourceShare();
     }
 }
@@ -212,6 +217,11 @@ QString AppSingleton::getLaunchResource()
     }
 
     return result;
+}
+
+bool AppSingleton::isValidResource(const QString& url) const
+{
+    return url.toUtf8().size() < RESOURCE_LENGTH_LIMIT;
 }
 
 template class COMMON_EXPORT Singleton<AppSingleton>;

@@ -211,7 +211,7 @@ Item {
     control: cb
   }
 
-  Keys.onPressed: {
+  Keys.onPressed: event => {
     if(KeyUtil.handleButtonKeyEvent(event)) {
       focusCue.reveal()
       clicked()

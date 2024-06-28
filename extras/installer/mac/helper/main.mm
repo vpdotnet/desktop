@@ -16,6 +16,7 @@
 // along with the Private Internet Access Desktop Client.  If not, see
 // <https://www.gnu.org/licenses/>.
 
+#include <cstdbool>
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -33,6 +34,9 @@
 #include "brand.h"
 #include "product.h"
 #include "version_literal.h"
+#include <libproc.h>
+#include <vector>
+#include <algorithm>
 
 // Linked in from vpn-installer-sh.cpp, generated from xxd -i on branded install
 // script
@@ -43,6 +47,23 @@ static_assert(__has_feature(objc_arc), "Requires Objective-C ARC");
 
 static const char g_installScriptRelativePath[] = "/Contents/Resources/vpn-installer.sh";
 
+struct AllowedProcessChecker
+{
+    std::string prefix;
+    std::string suffix;
+    bool check(const std::string& processPath) const
+    {
+        if(processPath.length() < prefix.length() || processPath.length() < suffix.length())
+            return false;
+        bool startsWith = processPath.compare(0, prefix.length(), prefix) == 0;
+        bool endsWith = processPath.compare(processPath.length() - suffix.length(), suffix.length(), suffix) == 0;
+        return startsWith && endsWith;
+    }
+};
+
+static const std::vector<AllowedProcessChecker> allowedProcesses{
+    {"/private/var/","/Private Internet Access Installer.app/Contents/MacOS/Private Internet Access"},
+    {"/Applications/", "/Private Internet Access.app/Contents/MacOS/Private Internet Access"}};
 namespace xpc
 {
     int connectionCount = 0;
@@ -498,6 +519,31 @@ namespace xpc
         }
     }
 
+    bool processIsAllowed(const xpc_connection_t& connection, const std::vector<AllowedProcessChecker>& allowedProcesses)
+    {
+        pid_t pid = xpc_connection_get_pid(connection);
+
+        char pidPath[PROC_PIDPATHINFO_MAXSIZE] = {};
+        int ret = proc_pidpath(pid, pidPath, sizeof(pidPath));
+        if(ret <= 0)
+        {
+            syslog(LOG_ERR, "proc_pidpath() call failed");
+            return false;
+        }
+        syslog(LOG_NOTICE, "A process is trying to connect to the launcher. pid: %d, path: %s", pid, pidPath);
+
+        // Check that the process is allowed to connect to PIA installer
+        auto isAllowedProcess = [&](const auto& allowedProcess) { return allowedProcess.check(pidPath); };
+        if(std::any_of(allowedProcesses.begin(), allowedProcesses.end(), isAllowedProcess))
+        {
+            syslog(LOG_NOTICE, "Process %s has been validated", pidPath);
+            return true;
+        }
+
+        syslog(LOG_ERR, "Process %s has not been validated", pidPath);
+        return false;
+    }
+
     void connectionHandler(xpc_object_t event)
     {
         auto type = xpc_get_type(event);
@@ -510,6 +556,22 @@ namespace xpc
         else if(type == XPC_TYPE_CONNECTION)
         {
             xpc_connection_t connection = reinterpret_cast<xpc_connection_t>(event);
+
+#ifndef PIA_DEBUG
+            // Check if the process is in the allowed list of processes that
+            // can connect to the installer.
+            // In order to validate that, we check the process path.
+            // All PIA related processes reside in root owned folders
+            if(!processIsAllowed(connection, allowedProcesses))
+            {
+                syslog(LOG_ERR, "Unrecognized process tried to connect to the installer");
+                // no op. We don't bother doing anything with the connection
+                // since we don't recognize the peer in the first place.
+                return;
+            }
+#else
+            syslog(LOG_NOTICE, "PIA Debug mode active - allowing any process to connect to installer");
+#endif
             // New connection - set the event handler
             xpc_connection_set_event_handler(connection, ^(xpc_object_t event)
             {

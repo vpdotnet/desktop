@@ -56,7 +56,7 @@ void DragHandle::mouseMoveEvent(QMouseEvent *event)
             Q_ASSERT(QGuiApplication::styleHints());    // Guarantee of QGuiApplication
             int dragDist = QGuiApplication::styleHints()->startDragDistance();
             // The drag distance is a Manhattan distance
-            if((_cursorInitialScreenPos - event->globalPos()).manhattanLength() < dragDist)
+            if((_cursorInitialScreenPos - event->globalPosition()).manhattanLength() < dragDist)
                 return; // Don't do anything yet; haven't moved far enough.
             _state = DragState::Active; // Begin the drag
             // Set the closed hand as the application-wide override cursor,
@@ -69,7 +69,7 @@ void DragHandle::mouseMoveEvent(QMouseEvent *event)
         case DragState::Active:
             // The cursor's current position is the desired screen position of
             // the drag point; no fancy logic here.
-            emit dragUpdatePosition(_dragPos, event->globalPos());
+            emit dragUpdatePosition(_dragPos, event->globalPosition());
             break;
     }
 }
@@ -88,8 +88,8 @@ void DragHandle::mousePressEvent(QMouseEvent *event)
         // Though this depends on the item's absolute position, there's no need
         // to handle any changes in absolute position; this only depends on the
         // absolute position at this moment as the drag begins.
-        _dragPos = mapFromGlobal(QPointF{event->globalPos()});
-        _cursorInitialScreenPos = event->globalPos();
+        _dragPos = mapFromGlobal(QPointF{event->globalPosition()});
+        _cursorInitialScreenPos = event->globalPosition();
     }
 }
 

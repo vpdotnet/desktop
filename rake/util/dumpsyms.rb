@@ -57,7 +57,7 @@ class DumpSyms
     # installed in the system. This is for compatibility with newer environments used 
     # during development.
     def self.run_dump_syms_with_fallback(binary_path, symbol_path, args=[], env_vars={})
-        dump_syms_cmd = File.absolute_path("deps/dump_syms/dump_syms#{Build::selectDesktop('.exe', '_mac', '_linux.bin')}")
+        dump_syms_cmd = File.absolute_path("deps/dump_syms/dump_syms#{Build::selectDesktop('.exe', '_mac', Build::selectArch('_linux.bin', '_linux_arm.bin'))}")
         system(env_vars, dump_syms_cmd, *args, binary_path, out: symbol_path, err: File::NULL)
         exit_status = $?.exitstatus
         if (exit_status == 0 && File.size(symbol_path) > 0)

@@ -175,7 +175,7 @@
   <context>
     <name>AutomationPage</name>
     <message>
-      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="55"/>
+      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="54"/>
       <location filename="../../../client/res/components/settings/pages/automation/AutomationPage.qml" line="30"/>
       <source>Connection Automation</source>
       <translation>Automatización de conexión</translation>
@@ -300,40 +300,40 @@
       <translation>Novedades</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="23"/>
+      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="22"/>
       <source>Checkmark bullet</source>
       <extracomment>Screen reader annotation for the &quot;checkmark&quot; bullets used in the What&apos;s New view</extracomment>
       <translation>Viñeta de marca de comprobación</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="66"/>
+      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="65"/>
       <source>Control which apps use our VPN!</source>
       <translation>¡Controla qué aplicaciones usan la VPN!</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="70"/>
+      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="69"/>
       <source>With our comprehensive split tunneling functionality, you can control which apps use the VPN and when. Check out our Split Tunnel [[app examples]] to see what&apos;s possible.</source>
       <extracomment>The [[double square brackets]] are replaced by a link. Please use them for the relavant link text.</extracomment>
       <translation>Con nuestra completa funcionalidad de túnel dividido, puedes controlar qué aplicaciones usan la VPN y cuándo. Echa un vistazo a nuestro túnel dividido [[ejemplos de aplicaciones]] para ver lo que puedes hacer.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="78"/>
+      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="77"/>
       <source>Split tunnel feature</source>
       <extracomment>Screen reader annotation for the split tunnel image in the What&apos;s New view</extracomment>
       <translation>Función de túnel dividido</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="83"/>
+      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="82"/>
       <source>Have you tried our command-line interface (CLI)?</source>
       <translation>¿Probaste nuestra interfaz de línea de comandos (ILC)?</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="85"/>
+      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="84"/>
       <source>The PIA desktop app comes with a CLI for added functionality. Invoke &quot;piactl&quot; and check it out today! You can do things like control PIA, integrate PIA hotkeys, and even automate PIA functionality with scripts, or make custom integrations.</source>
       <translation>La aplicación de escritorio PIA incluye una ILC para tener una mayor funcionalidad. ¡Invoca &quot;piactl&quot; y compruébalo hoy mismo! Puedes realizar funciones como controlar PIA, integrar teclas de acceso directo de PIA e incluso automatizar la funcionalidad de PIA con secuencias de comandos o realizar integraciones personalizadas.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="91"/>
+      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="90"/>
       <source>Command-line interface feature</source>
       <extracomment>Screen reader annotation for the command-line interface image in the What&apos;s New view</extracomment>
       <translation>Función de interfaz de línea de comandos</translation>
@@ -373,288 +373,298 @@
       <translation>La versión del sistema operativo ya no es compatible. Actualiza para recibir las actualizaciones más recientes de PIA.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="133"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="124"/>
+      <source>Your VPN session token has expired. Please log in again.</source>
+      <translation>Tu token de sesión VPN ha caducado. Por favor, inicia sesión de nuevo.</translation>
+    </message>
+    <message>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="128"/>
+      <source>Please check your username and password, and verify that your account is not expired.</source>
+      <translation>Comprueba tu nombre de usuario y contraseña y verifica que tu cuenta no haya caducado.</translation>
+    </message>
+    <message>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="150"/>
       <source>The TAP adapter for the VPN tunnel is not installed.  You can reinstall it from Settings.</source>
       <extracomment>&quot;TAP&quot; is the type of virtual network adapter used on Windows and is not generally localized.</extracomment>
       <translation>El adaptador TAP para el túnel VPN no está instalado. Puedes volver a instalarlo en los Ajustes.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="145"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="162"/>
       <source>Restart to complete installation.</source>
       <translation>Reinicia para completar la instalación.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="146"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="163"/>
       <source>The system must be restarted before you can connect.</source>
       <translation>Debe reiniciarse el sistema para poder conectar.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="159"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="176"/>
       <source>The WinTUN adapter for the VPN tunnel is not installed.  You can reinstall it from Settings.</source>
       <extracomment>&quot;WinTUN&quot; is name of the virtual network adapter and is not localized.</extracomment>
       <translation>El adaptador WinTUN para el túnel VPN no está instalado. Puedes volver a instalarlo en los Ajustes.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="172"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="189"/>
       <source>The split tunnel filter is not installed.</source>
       <translation>El filtro de túnel dividido no está instalado.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="173"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="190"/>
       <source>The App Exclusion feature requires the split tunnel filter.  Reinstall it from Settings.</source>
       <translation>La característica Exclusión de aplicaciones requiere el filtro de túnel dividido. Vuelve a instalarlo desde los Ajustes.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="184"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="201"/>
       <location filename="../../../client/res/components/common/DriverNotificationStatus.qml" line="12"/>
       <source>Reinstall</source>
       <translation>Volver a instalar</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="198"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="215"/>
       <source>The App Exclusion feature requires the split tunnel filter.  Restart to finish installation.</source>
       <translation>La característica Exclusión de aplicaciones requiere el filtro de túnel dividido. Reinicia para finalizar la instalación.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="211"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="228"/>
       <location filename="../../../client/res/components/settings/SettingsMessages.qml" line="45"/>
       <source>Iptables is not installed.</source>
       <extracomment>Message for Linux indicating that iptables is missing</extracomment>
       <translation>Iptables no está instalado.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="212"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="229"/>
       <source>Iptables is required to connect to the VPN. Reinstall the application or manually install the iptables or iptables-nft package, then restart your computer.</source>
       <translation>Iptables es necesario para conectarse a la VPN. Reinstala la aplicación o instala manualmente el paquete de iptables o iptables-nft y reinicia el equipo.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="225"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="242"/>
       <source>Connection refused.</source>
       <translation>Conexión rechazada.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="231"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="248"/>
       <source>The server refused the connection.  Please check your username and password, and verify that your account is not expired.</source>
       <extracomment>This error could be caused by incorrect credentials or an expired account, but it could have other causes too. The message should suggest checking those things without implying that they&apos;re necessarily the cause (to avoid frustrating users who are sure their account is current).</extracomment>
       <translation>El servidor rechazó la conexión. Comprueba tu nombre de usuario y contraseña y verifica que tu cuenta no ha caducado.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="240"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="257"/>
       <source>Could not configure DNS.</source>
       <translation>Error al configurar el DNS.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="241"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="258"/>
       <source>Enable debug logging and check the daemon log for specific details.</source>
       <translation>Habilita el registro de daemon y consúltalo para obtener más detalles.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="244"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="261"/>
       <source>Daemon Log</source>
       <translation>Registro de daemon</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="246"/>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="278"/>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="337"/>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="419"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="263"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="295"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="354"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="436"/>
       <source>Settings</source>
       <translation>Ajustes</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="254"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="271"/>
       <source>Failed to run /usr/bin/xdg-open.  Please open the daemon log file from:</source>
       <translation>Error al ejecutar /usr/bin/xdg-open. Abre el archivo de registro de daemon desde:</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="271"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="288"/>
       <source>Can&apos;t connect to Handshake.</source>
       <extracomment>Indicates that we can&apos;t connect to the Handshake name-resolution network. &quot;Handshake&quot; is a brand name and should be left as-is.</extracomment>
       <translation>No se puede conectar con Handshake.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="275"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="292"/>
       <source>Can&apos;t set up name resolution with Handshake.  Continue waiting, or try a different Name Server setting.</source>
       <extracomment>Detailed message about failure to connect to the Handshake name- resolution network. &quot;Handshake&quot; is a brand name and should be left as-is.</extracomment>
       <translation>No se puede establecer una resolución de nombre con Handshake. Sigue esperando o prueba con un ajuste de servidor de nombre distinto.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="289"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="306"/>
       <source>Running PIA as administrator is not recommended.</source>
       <translation>No se recomienda ejecutar PIA como administrador</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="290"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="307"/>
       <source>Running PIA as administrator can prevent Launch on System Startup from working and may cause other problems.</source>
       <translation>Ejecutar PIA como administrador puede impedir que la función de abrir al iniciar el sistema funcione y causar otro tipo de problemas.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="302"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="319"/>
       <source>KILLSWITCH ENABLED</source>
       <translation>INTERRUPCIÓN DE EMERGENCIA HABILITADA</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="303"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="320"/>
       <source>Killswitch is enabled.</source>
       <translation>La interrupción de emergencia está habilitada.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="304"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="321"/>
       <source>Access to the Internet is blocked because the killswitch feature is enabled in Settings.</source>
       <translation>El acceso a Internet está bloqueado porque la función de interrupción de emergencia está habilitada en Configuración.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="307"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="324"/>
       <source>Change</source>
       <translation>Cambiar</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="320"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="337"/>
       <source>RECONNECTING...</source>
       <translation>RECONECTANDO...</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="321"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="338"/>
       <source>The connection to the VPN server was lost.</source>
       <translation>Se perdió la conexión con el servidor VPN.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="330"/>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="348"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="347"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="365"/>
       <source>CONNECTING...</source>
       <translation>CONECTANDO...</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="333"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="350"/>
       <source>Can&apos;t connect to the proxy.</source>
       <extracomment>Warning message used when the app is currently trying to connect to a proxy, but the proxy can&apos;t be reached.</extracomment>
       <translation>No se puede conectar con el proxy.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="334"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="351"/>
       <source>The proxy can&apos;t be reached.  Check your proxy settings, and check that the proxy is available.</source>
       <translation>Imposible conectar con el proxy. Comprueba los ajustes del proxy y asegúrate de que esté disponible.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="349"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="366"/>
       <source>We couldn&apos;t establish the connection to the VPN server. Please get in touch with our support department.</source>
       <translation>No pudimos establecer conexión con el servidor VPN. Comunícate con nuestro departamento de soporte.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="362"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="379"/>
       <source>RECONNECT NEEDED</source>
       <translation>ES NECESARIO RECONECTAR</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="363"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="380"/>
       <source>Reconnect to apply settings.</source>
       <translation>Vuelve a conectarte para aplicar la configuración.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="364"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="381"/>
       <source>Some settings changes won&apos;t take effect until the next time you connect. Click to reconnect now.</source>
       <translation>Algunos cambios en la configuración no surtirán efecto hasta la próxima vez que te conectes. Haz clic para volver a conectarte ahora.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="373"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="390"/>
       <source>Connected with OpenVPN.</source>
       <translation>Conectado cono OpenVPN.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="376"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="393"/>
       <source>Connected with OpenVPN to log in for the first time. Reconnect to use WireGuard.</source>
       <translation>Conectado cono OpenVPN para iniciar sesión por primera vez. Vuelve a conectar para usar WireGuard.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="378"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="395"/>
       <source>Connected with OpenVPN to log in for the first time.</source>
       <translation>Conectado cono OpenVPN para iniciar sesión por primera vez.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="397"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="414"/>
       <source>Connected using %1 port %2.</source>
       <extracomment>Message when the client automatically uses a transport other than the user&apos;s chosen transport (because the user&apos;s settings did not work). &quot;Connected&quot; means the client is currently connected right now using this setting. %1 is the protocol used (&quot;UDP&quot; or &quot;TCP&quot;), and %2 is the port number. For example: &quot;UDP port 8080&quot; or &quot;TCP port 443&quot;.</extracomment>
       <translation>Conectado a través de %1 puerto %2.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="406"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="423"/>
       <source>Try Alternate Settings is enabled.  The server could not be reached on the default %1 port, so %2 port %3 was used instead.</source>
       <extracomment>Detailed message used when the client automatically uses an alternate transport, and the user has selected the &quot;default&quot; port (the actual value used for the default is not shown, since it could vary among servers). %1 is the chosen protocol (&quot;UDP&quot; or &quot;TCP&quot;), and &quot;%2 port %3&quot; refers to the actual transport used, such as &quot;TCP port 443&quot; or &quot;UDP port 8080&quot;.</extracomment>
       <translation>Probar ajustes alternativos está activado. El servidor no podrá ser alcanzado en el puerto %1 predeterminado, por lo tanto, se usó el puerto %2 %3 en su lugar.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="414"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="431"/>
       <source>Try Alternate Settings is enabled.  The server could not be reached on %1 port %2, so %3 port %4 was used instead.</source>
       <extracomment>Detailed message when the client automatically uses an alternate transport. &quot;%1 port %2&quot; refers to the chosen transport, and &quot;%3 port %4&quot; refers to the actual transport; for example &quot;TCP port 443&quot; or &quot;UDP port 8080&quot;. The &quot;Try Alternate Settings&quot; setting is on the Connection page.</extracomment>
       <translation>Probar configuración alternativa está habilitado. No se pudo conectar con el servidor a través de %1 puerto %2, así que se ha usado %3 puerto %4 en su lugar.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="428"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="445"/>
       <source>Subscription expires in %1 days.</source>
       <translation>La suscripción expira en %1 días.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="431"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="448"/>
       <source>Renew</source>
       <translation>Renovar</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="445"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="462"/>
       <source>Your dedicated IP will expire in %1 days.</source>
       <extracomment>Message displayed when a purchased dedicated IP will expire soon. %1 is at least 2; there are specific messages for 1 day or 0 days remaining.</extracomment>
       <translation>Tu IP dedicada caducará en %1 días.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="451"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="468"/>
       <source>Your dedicated IP will expire in 1 day.</source>
       <extracomment>Message displayed when a purchased dedicated IP will expire in 1 day. (Specifically, in 12-36 hours, since the time remaining is rounded to the nearest day.)</extracomment>
       <translation>Tu IP dedicada caducará en 1 día.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="456"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="473"/>
       <source>Your dedicated IP will expire today.</source>
       <extracomment>Message displayed when a purchased dedicated IP will expire in less than 12 hours.</extracomment>
       <translation>Tu IP dedicada caducará hoy.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="461"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="478"/>
       <source>Get a new one</source>
       <translation>Obtén una nueva</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="473"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="490"/>
       <source>Your dedicated IP was updated.</source>
       <translation>Tu IP dedicada perfil se actualizó.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="489"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="506"/>
       <source>Unable to reach login server.</source>
       <extracomment>Dashboard notification for being unable to reach our main API server in order to authenticate the user&apos;s account. The phrase should convey that the problem is network related and that we are merely offline or &quot;out of touch&quot; rather than there being any account problem.</extracomment>
       <translation>No se puede conectar con el servidor de inicio de sesión.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="493"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="510"/>
       <source>Your account details are unavailable, but you may still be able to connect to the VPN.</source>
       <extracomment>Infotip to explain to the user that a login authentication failure is not necessarily a critical problem, but that the app will have reduced functionality until this works.</extracomment>
       <translation>Los detalles de tu cuenta no están disponibles, pero es probable que todavía puedas conectarte a la VPN.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="497"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="514"/>
       <source>Retry</source>
       <translation>Intentar de nuevo</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="510"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="527"/>
       <source>Private Internet Access was updated.</source>
       <translation>Se actualizó Private Internet Access.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="513"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="530"/>
       <source>See what&apos;s new</source>
       <translation>Ver novedades</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="530"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="547"/>
       <source>The application quit unexpectedly. Your VPN connection was preserved.</source>
       <extracomment>Indicates that Private Internet Access had previously crashed or otherwise stopped unexpectedly - shown the next time the user starts the app.</extracomment>
       <translation>La aplicación se ha cerrado de forma inesperada. Tu conexión VPN se ha conservado.</translation>
@@ -748,34 +758,34 @@
     <message>
       <location filename="../../../client/res/components/settings/pages/multihop/MultihopPage.qml" line="56"/>
       <location filename="../../../client/res/components/settings/pages/multihop/MultihopPage.qml" line="137"/>
-      <location filename="../../../client/res/components/settings/pages/multihop/MultihopPage.qml" line="239"/>
+      <location filename="../../../client/res/components/settings/pages/multihop/Socks5ProxyDialog.qml" line="20"/>
       <source>SOCKS5 Proxy</source>
       <translation>Proxy SOCKS5</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/settings/pages/multihop/MultihopPage.qml" line="265"/>
+      <location filename="../../../client/res/components/settings/pages/multihop/Socks5ProxyDialog.qml" line="48"/>
       <source>Server IP Address</source>
       <extracomment>The IP address of the SOCKS proxy server to use when connecting. Labeled with &quot;IP Address&quot; to indicate that it can&apos;t be a hostname.</extracomment>
       <translation>Dirección IP del servidor</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/settings/pages/multihop/MultihopPage.qml" line="278"/>
+      <location filename="../../../client/res/components/settings/pages/multihop/Socks5ProxyDialog.qml" line="61"/>
       <source>Port</source>
       <translation>Puerto</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/settings/pages/multihop/MultihopPage.qml" line="285"/>
+      <location filename="../../../client/res/components/settings/pages/multihop/Socks5ProxyDialog.qml" line="65"/>
       <location filename="../../../client/res/components/settings/SettingsMessages.qml" line="58"/>
       <source>Default</source>
       <translation>Predeterminado</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/settings/pages/multihop/MultihopPage.qml" line="292"/>
+      <location filename="../../../client/res/components/settings/pages/multihop/Socks5ProxyDialog.qml" line="75"/>
       <source>User (optional)</source>
       <translation>Usuario (opcional)</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/settings/pages/multihop/MultihopPage.qml" line="302"/>
+      <location filename="../../../client/res/components/settings/pages/multihop/Socks5ProxyDialog.qml" line="85"/>
       <source>Password (optional)</source>
       <translation>Contraseña (opcional)</translation>
     </message>
@@ -938,7 +948,7 @@
   <context>
     <name>DashboardPopup</name>
     <message>
-      <location filename="../../../client/res/components/dashboard/DashboardPopup.qml" line="78"/>
+      <location filename="../../../client/res/components/dashboard/DashboardPopup.qml" line="77"/>
       <source>PIA Dashboard</source>
       <extracomment>Title of the dashboard window (the main UI that users interact with. This isn&apos;t normally shown, but it is used by screen readers, and it is occasionally used by tools on Windows that list open application windows. &quot;PIA&quot; stands for Private Internet Access. We refer to this window as the &quot;dashboard&quot;, but this term doesn&apos;t currently appear elsewhere in the product.</extracomment>
       <translation>Panel de control de PIA</translation>
@@ -1178,8 +1188,8 @@
     </message>
     <message>
       <location filename="../../../client/res/components/settings/pages/general/GeneralPage.qml" line="50"/>
-      <source>Show Service Communication Messages</source>
-      <translation>Mostrar mensajes de comunicaciones de servicio</translation>
+      <source>Allow Background Latency Checks</source>
+      <translation>Permitir verificación de latencia en segundo plano</translation>
     </message>
     <message>
       <location filename="../../../client/res/components/settings/pages/general/GeneralPage.qml" line="57"/>
@@ -1292,6 +1302,12 @@
   <context>
     <name>HeaderBar</name>
     <message>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="130"/>
+      <location filename="../../../client/res/components/dashboard/HeaderBar.qml" line="416"/>
+      <source>Logout</source>
+      <translation>Cerrar sesión</translation>
+    </message>
+    <message>
       <location filename="../../../client/res/components/common/Messages.qml" line="12"/>
       <source>Alpha pre-release</source>
       <extracomment>Screen reader annotation for the &quot;Alpha&quot; banner shown in alpha prerelease builds</extracomment>
@@ -1355,11 +1371,6 @@
       <location filename="../../../client/res/components/dashboard/HeaderBar.qml" line="412"/>
       <source>Settings</source>
       <translation>Configuración</translation>
-    </message>
-    <message>
-      <location filename="../../../client/res/components/dashboard/HeaderBar.qml" line="416"/>
-      <source>Logout</source>
-      <translation>Cerrar sesión</translation>
     </message>
     <message>
       <location filename="../../../client/res/components/dashboard/HeaderBar.qml" line="421"/>
@@ -1570,42 +1581,42 @@
   <context>
     <name>HeroCard</name>
     <message>
-      <location filename="../../../client/res/components/changelog/HeroCard.qml" line="24"/>
+      <location filename="../../../client/res/components/changelog/HeroCard.qml" line="23"/>
       <source>Get Your Dedicated IP!</source>
       <translation>¡Obtén tu IP dedicada!</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/changelog/HeroCard.qml" line="25"/>
+      <location filename="../../../client/res/components/changelog/HeroCard.qml" line="24"/>
       <source>Get your own unique IP without sacrificing any of your privacy or security. Enjoy all the benefits of a fully anonymous dedicated IP:</source>
       <translation>Obtén tu propia IP exclusiva sin sacrificar tu privacidad ni tu seguridad. Disfruta de todas las ventajas de una IP dedicada completamente anónima.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/changelog/HeroCard.qml" line="27"/>
+      <location filename="../../../client/res/components/changelog/HeroCard.qml" line="26"/>
       <source>Stop triggering security warnings</source>
       <translation>Deja de activar alertas de seguridad</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/changelog/HeroCard.qml" line="28"/>
+      <location filename="../../../client/res/components/changelog/HeroCard.qml" line="27"/>
       <source>Smoother account access</source>
       <translation>Acceso a cuenta más fluido</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/changelog/HeroCard.qml" line="29"/>
+      <location filename="../../../client/res/components/changelog/HeroCard.qml" line="28"/>
       <source>See fewer CAPTCHAs</source>
       <translation>Recibe menos CAPTCHAS</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/changelog/HeroCard.qml" line="30"/>
+      <location filename="../../../client/res/components/changelog/HeroCard.qml" line="29"/>
       <source>Protect your IoT devices</source>
       <translation>Protege tus dispositivos de IoT</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/changelog/HeroCard.qml" line="32"/>
+      <location filename="../../../client/res/components/changelog/HeroCard.qml" line="31"/>
       <source>GET YOUR DEDICATED IP</source>
       <translation>OBTÉN TU IP DEDICADA</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/changelog/HeroCard.qml" line="144"/>
+      <location filename="../../../client/res/components/changelog/HeroCard.qml" line="143"/>
       <source>Dedicated IP feature</source>
       <translation>Característica de IP dedicada</translation>
     </message>
@@ -2064,28 +2075,29 @@
       <translation>Si se habilita esta característica se instalará el filtro de túnel dividido.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelPage.qml" line="123"/>
-      <source>The split tunnel filter is not installed.  Reinstall it on the Help page.</source>
-      <translation>El filtro de túnel dividido no está instalado. Vuelve a instalarlo en la página de Ayuda.</translation>
-    </message>
-    <message>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelPage.qml" line="113"/>
       <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelPage.qml" line="128"/>
-      <source>Choose which applications use the VPN.</source>
-      <translation>Elige qué aplicaciones usan la VPN.</translation>
-    </message>
-    <message>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelPage.qml" line="129"/>
       <source>Learn More</source>
       <translation>Más información</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelPage.qml" line="216"/>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelPage.qml" line="221"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelPage.qml" line="122"/>
+      <source>The split tunnel filter is not installed.  Reinstall it on the Help page.</source>
+      <translation>El filtro de túnel dividido no está instalado. Vuelve a instalarlo en la página de Ayuda.</translation>
+    </message>
+    <message>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelPage.qml" line="127"/>
+      <source>Choose which applications use the VPN.</source>
+      <translation>Elige qué aplicaciones usan la VPN.</translation>
+    </message>
+    <message>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelPage.qml" line="215"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelPage.qml" line="220"/>
       <source>App Exclusions</source>
       <translation>Exclusiones de aplicaciones</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelPage.qml" line="287"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelPage.qml" line="286"/>
       <source>Apps may need to be restarted for changes to be applied.</source>
       <translation>Puede que sea necesario reiniciar las aplicaciones para que se apliquen los cambios.</translation>
     </message>
@@ -2141,6 +2153,8 @@
     <name>OverlayDialog</name>
     <message>
       <location filename="../../../client/res/components/common/OverlayDialog.qml" line="97"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAddIpDialog.qml" line="24"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="29"/>
       <source>OK</source>
       <comment>dialog button</comment>
       <translation>Aceptar</translation>
@@ -2148,6 +2162,8 @@
     <message>
       <location filename="../../../client/res/components/common/OverlayDialog.qml" line="98"/>
       <location filename="../../../client/res/components/common/OverlayDialog.qml" line="100"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAddIpDialog.qml" line="24"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="29"/>
       <source>Cancel</source>
       <comment>dialog button</comment>
       <translation>Cancelar</translation>
@@ -2264,32 +2280,32 @@
   <context>
     <name>Page2Theme</name>
     <message>
-      <location filename="../../../client/res/components/onboarding/pages/Page2Theme.qml" line="21"/>
+      <location filename="../../../client/res/components/onboarding/pages/Page2Theme.qml" line="20"/>
       <source>GETTING STARTED</source>
       <translation>EMPEZAR</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/onboarding/pages/Page2Theme.qml" line="22"/>
+      <location filename="../../../client/res/components/onboarding/pages/Page2Theme.qml" line="21"/>
       <source>Choose your theme</source>
       <translation>Elige tu tema</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/onboarding/pages/Page2Theme.qml" line="23"/>
+      <location filename="../../../client/res/components/onboarding/pages/Page2Theme.qml" line="22"/>
       <source>Private Internet Access comes with light and dark themes to fit the look and feel of your desktop.</source>
       <translation>Private Internet Access incluye temas oscuros y claros para adaptarse al aspecto de tu escritorio.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/onboarding/pages/Page2Theme.qml" line="77"/>
+      <location filename="../../../client/res/components/onboarding/pages/Page2Theme.qml" line="76"/>
       <source>Dark Theme</source>
       <translation>Tema oscuro</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/onboarding/pages/Page2Theme.qml" line="110"/>
+      <location filename="../../../client/res/components/onboarding/pages/Page2Theme.qml" line="109"/>
       <source>Light Theme</source>
       <translation>Tema claro</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/onboarding/pages/Page2Theme.qml" line="130"/>
+      <location filename="../../../client/res/components/onboarding/pages/Page2Theme.qml" line="129"/>
       <source>Theme preview</source>
       <translation>Vista previa de tema</translation>
     </message>
@@ -2297,22 +2313,22 @@
   <context>
     <name>Page3Customize</name>
     <message>
-      <location filename="../../../client/res/components/onboarding/pages/Page3Customize.qml" line="17"/>
+      <location filename="../../../client/res/components/onboarding/pages/Page3Customize.qml" line="16"/>
       <source>PRO TIP</source>
       <translation>CONSEJO PROFESIONAL</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/onboarding/pages/Page3Customize.qml" line="18"/>
+      <location filename="../../../client/res/components/onboarding/pages/Page3Customize.qml" line="17"/>
       <source>Customize Your VPN Experience</source>
       <translation>Personaliza tu experiencia VPN</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/onboarding/pages/Page3Customize.qml" line="19"/>
+      <location filename="../../../client/res/components/onboarding/pages/Page3Customize.qml" line="18"/>
       <source>Choose from a variety of tiles to customize your dashboard to display the information and controls most relevant to you.</source>
       <translation>Elige entre una variedad de casillas para personalizar tu panel de control y mostrar la información y controles más relevantes para ti.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/onboarding/pages/Page3Customize.qml" line="42"/>
+      <location filename="../../../client/res/components/onboarding/pages/Page3Customize.qml" line="41"/>
       <source>Customization preview</source>
       <translation>Vista previa de personalización</translation>
     </message>
@@ -2886,7 +2902,7 @@
   <context>
     <name>RatingRequestNotificationStatus</name>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="352"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="369"/>
       <location filename="../../../client/res/components/common/RatingRequestNotificationStatus.qml" line="39"/>
       <source>Contact Support</source>
       <translation>Contacto con el servicio de asistencia</translation>
@@ -2931,7 +2947,7 @@
   <context>
     <name>ReconnectWarning</name>
     <message>
-      <location filename="../../../client/res/components/settings/ReconnectWarning.qml" line="62"/>
+      <location filename="../../../client/res/components/settings/ReconnectWarning.qml" line="61"/>
       <source>Reconnect to apply settings.</source>
       <translation>Volver a conectar aplicar la configuración.</translation>
     </message>
@@ -3188,21 +3204,6 @@
     </message>
     <message>
       <location filename="../../../client/res/components/settings/SettingsMessages.qml" line="73"/>
-      <source>Split Tunnel is not installed.</source>
-      <translation>La función de túnel dividido no está instalada.</translation>
-    </message>
-    <message>
-      <location filename="../../../client/res/components/settings/SettingsMessages.qml" line="75"/>
-      <source>Go to System Settings -&gt; Privacy &amp; Security, then click &quot;Allow&quot; in the Security section.</source>
-      <translation>Ve a Ajustes del Sistema -&gt; Privacidad y Seguridad, luego haz clic en &quot;Permitir&quot; en la sección Seguridad.</translation>
-    </message>
-    <message>
-      <location filename="../../../client/res/components/settings/SettingsMessages.qml" line="77"/>
-      <source>Allow PIA Proxy Configurations.</source>
-      <translation>Permitir configuraciones del proxy PIA.</translation>
-    </message>
-    <message>
-      <location filename="../../../client/res/components/settings/SettingsMessages.qml" line="79"/>
       <source>Split Tunnel is not installed. Go to System Settings -&gt; Privacy &amp; Security, scroll down to Security section and &quot;Allow&quot; PIA. Then click &quot;Allow&quot; on the Proxy Configurations popup</source>
       <translation>La funcionalidad de túnel dividido no está instalada. Ve a Configuración del sistema -&gt; Privacidad y Seguridad, desplázate hacia abajo a la sección de Seguridad y elige &quot;Permitir&quot; PIA. Luego haz clic en &quot;Permitir&quot; en la ventana emergente Configuración de proxy</translation>
     </message>
@@ -3333,61 +3334,61 @@
   <context>
     <name>SnoozeModule</name>
     <message>
-      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="18"/>
+      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="17"/>
       <source>VPN Snooze tile</source>
       <extracomment>Screen reader annotation for the Snooze tile</extracomment>
       <translation>Casilla de Suspender VPN</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="35"/>
+      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="34"/>
       <source>RESUMING CONNECTION</source>
       <translation>REANUDANDO CONEXIÓN</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="37"/>
+      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="36"/>
       <source>SNOOZED</source>
       <translation>SUSPENDIDA</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="39"/>
+      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="38"/>
       <source>SNOOZING</source>
       <translation>SUSPENDIENDO</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="42"/>
+      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="41"/>
       <source>VPN SNOOZE</source>
       <translation>SUSPENDER VPN</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="179"/>
+      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="178"/>
       <source>Decrease snooze time</source>
       <extracomment>Screen reader name for the &quot;minus&quot; button that decreases snooze time</extracomment>
       <translation>Reducir tiempo de suspensión</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="202"/>
+      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="201"/>
       <source>Snooze time</source>
       <extracomment>Screen reader annotation for the snooze time display in the Snooze tile</extracomment>
       <translation>Tiempo de suspensión</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="252"/>
+      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="251"/>
       <source>Increase snooze time</source>
       <extracomment>Screen reader name for the &quot;plus&quot; button that increases snooze time</extracomment>
       <translation>Aumentar tiempo de suspensión</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="274"/>
+      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="273"/>
       <source>Snooze</source>
       <translation>Suspender</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="274"/>
+      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="273"/>
       <source>Resume</source>
       <translation>Reanudar</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="288"/>
+      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="287"/>
       <source>Snooze temporarily disconnects the VPN and automatically reconnects when the timer elapses.</source>
       <translation>Suspender desconecta temporalmente la VPN y se vuelve a conectar automáticamente cuando finaliza el tiempo establecido.</translation>
     </message>
@@ -3421,8 +3422,8 @@
   <context>
     <name>SplitTunnelAddAppRow</name>
     <message>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="158"/>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelPage.qml" line="253"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="31"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelPage.qml" line="252"/>
       <source>Add Application</source>
       <translation>Añadir aplicación</translation>
     </message>
@@ -3430,18 +3431,18 @@
   <context>
     <name>SplitTunnelAddIpRow</name>
     <message>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAddIpDialog.qml" line="59"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAddIpDialog.qml" line="61"/>
       <source>IP Address or Subnet</source>
       <translation>Dirección IP o Subred</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAddIpDialog.qml" line="66"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAddIpDialog.qml" line="68"/>
       <source>You can enter an IPv4/IPv6 address, or a subnet in CIDR notation:</source>
       <translation>Puede ingresar una dirección IPv4/IPv6 o una subred en notación CIDR:</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAddIpDialog.qml" line="77"/>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelPage.qml" line="262"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAddIpDialog.qml" line="79"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelPage.qml" line="261"/>
       <source>Add IP Address</source>
       <translation>Agregar dirección IP</translation>
     </message>
@@ -3449,50 +3450,50 @@
   <context>
     <name>SplitTunnelAppDialog</name>
     <message>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="88"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="112"/>
       <source>Only executable files can be excluded from VPN. Please select an executable program or shell script.</source>
       <translation>Solo se pueden excluir de la VPN los archivos ejecutables. Selecciona un programa ejecutable o un archivo de comandos shell.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="88"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="112"/>
       <source>Unable to exclude application</source>
       <translation>No se puede excluir la aplicación.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="201"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="203"/>
       <source>Search</source>
       <translation>Buscar</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="214"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="216"/>
       <source>Browse</source>
       <translation>Examinar</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="266"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="268"/>
       <source>Applications</source>
       <translation>Aplicaciones</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="482"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="484"/>
       <source>App list, loading</source>
       <extracomment>Screen reader annotation for the &quot;application list&quot; from which a user can select an application to exclude. Screen reader annotation used for the split tunnel app list when the apps are still being loaded.</extracomment>
       <translation>Lista de aplicaciones, cargando</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="485"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="487"/>
       <source>App list</source>
       <extracomment>Screen reader annotation for the split tunnel app list.</extracomment>
       <translation>Lista de aplicaciones</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="491"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="493"/>
       <source>App</source>
       <extracomment>Screen reader annotation for the column listing the application in the existing application list (this table has only one column)</extracomment>
       <translation>Aplicación</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="517"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="519"/>
       <source>Refresh</source>
       <translation>Actualizar</translation>
     </message>
@@ -3544,7 +3545,7 @@
   <context>
     <name>SplitTunnelPage</name>
     <message>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelPage.qml" line="247"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelPage.qml" line="246"/>
       <source>Your Split Tunnel Rules</source>
       <translation>Tus reglas de túnel dividido</translation>
     </message>
@@ -4025,28 +4026,28 @@
   <context>
     <name>WhatsNewContent</name>
     <message>
-      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="34"/>
+      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="33"/>
       <source>WireGuard Protocol</source>
       <translation>Protocolo WireGuard</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="35"/>
+      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="34"/>
       <source>It&apos;s a new, more efficient protocol that offers better performance, lower CPU usage, and longer battery life.  [[Try it now]]</source>
       <translation>Se trata de un nuevo protocolo más eficaz que ofrece un mejor rendimiento, menor consumo de CPU y mayor duración de la batería. [[Pruébalo ahora]]</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="50"/>
+      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="49"/>
       <source>WireGuard feature</source>
       <extracomment>Screen reader annotation for the WireGuard image in the What&apos;s New view</extracomment>
       <translation>Característica de WireGuard</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="56"/>
+      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="55"/>
       <source>Create rules to automatically connect or disconnect the VPN when you join a particular network.  [[Go to Settings]]</source>
       <translation>Crea reglas para conectar o desconectar automáticamente la VPN cuando te unas a una red concreta.  [[Ir a los Ajustes]]</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="61"/>
+      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="60"/>
       <source>Automation feature</source>
       <extracomment>Screen reader annotation for the automation image in the What&apos;s New view</extracomment>
       <translation>Característica de automatización</translation>

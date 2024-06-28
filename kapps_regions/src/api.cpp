@@ -57,7 +57,7 @@ namespace
 
     // Static cast is fine for Service/KARService because the values are the
     // same
-    KARService toApi(Service service) {return static_cast<KARService>(service);}
+    [[maybe_unused]] KARService toApi(Service service) {return static_cast<KARService>(service);}
     Service fromApi(KARService service) {return static_cast<Service>(service);}
 
     // Adapt various values between internal types and API types

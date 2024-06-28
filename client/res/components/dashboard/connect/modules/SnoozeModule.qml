@@ -25,7 +25,6 @@ import "../../../theme"
 import "../../../helpers"
 import "../../../settings/stores"
 import PIA.NativeAcc 1.0 as NativeAcc
-import QtGraphicalEffects 1.0
 import PIA.NativeHelpers 1.0
 
 MovableModule {

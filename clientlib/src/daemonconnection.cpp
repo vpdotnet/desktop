@@ -45,9 +45,9 @@ DaemonConnection::DaemonConnection(QObject* parent)
     {
         for(const auto &dipLoc : state.dedicatedIpLocations())
         {
-            const auto &dipIp = dipLoc["dedicatedIp"].toString();
-            const auto &dipId = dipLoc["id"].toString();
-            const auto &dipCn = dipLoc["dedicatedIpCn"].toString();
+            const auto &dipIp = dipLoc[QStringLiteral("dedicatedIp")].toString();
+            const auto &dipId = dipLoc[QStringLiteral("id")].toString();
+            const auto &dipCn = dipLoc[QStringLiteral("dedicatedIpCn")].toString();
             if(!dipIp.isEmpty())
                 Logger::addRedaction(dipIp, QStringLiteral("DIP IP %1").arg(dipId));
             if(!dipCn.isEmpty())

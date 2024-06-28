@@ -23,7 +23,6 @@
 #define APINETWORK_H
 
 #include <QNetworkAccessManager>
-#include <QNetworkConfigurationManager>
 
 // ApiNetwork keeps track of the local network address that we need to use for
 // API requests (such as server lists, web API, port forwarding/MACE).

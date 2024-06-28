@@ -26,6 +26,7 @@
 #include "../platformscreens.h"
 #include <QGuiApplication>
 #include <QProcessEnvironment>
+#include <QFile>
 #include <QPainter>
 #include <chrono>
 

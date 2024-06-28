@@ -196,9 +196,7 @@ void MacInterfaceNameTask::checkInterfaceFile()
 LocalSocketTask::LocalSocketTask(const QString &name)
 {
     _pSocket.reset(new QLocalSocket{});
-    connect(_pSocket.get(),
-            QOverload<QLocalSocket::LocalSocketError>::of(&QLocalSocket::error),
-            this, &LocalSocketTask::socketError);
+    connect(_pSocket.get(), &QLocalSocket::errorOccurred, this, &LocalSocketTask::socketError);
     // We don't expect to get a disconnected signal - we hand off the socket as
     // soon as it's connected - but it's not totally clear that QLocalSocket
     // always emits an error when the connection fails.  Handle this as an

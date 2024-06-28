@@ -8,9 +8,12 @@ module PiaWindows
     extend BuildDSL
 
     SignCertFile = ENV['PIA_SIGNTOOL_CERTFILE']
-    SignPassword = ENV['PIA_SIGNTOOL_PASSWORD']
-    SignThumbprint = ENV['PIA_SIGNTOOL_THUMBPRINT']
-    CanSign = Build::release? && (SignCertFile != nil || SignThumbprint != nil)
+    GCloudKeyId = ENV['GOOGLE_CLOUD_KEY_ID']
+    SkipSigning = !ENV['PIA_SKIP_SIGNING'].nil?
+    CanSign = Build::release? && (SignCertFile != nil) && !SkipSigning
+    # Override this value manually if you need to test signing locally with a 
+    # dev cert
+    UseGCloudSigning = true
 
     # Base setup for uninstaller/installer; these are built from the same source
     # with either INSTALLER or UNINSTALLER defined
@@ -46,7 +49,7 @@ module PiaWindows
     def self.installRuntime(target)
         arch = (Build::TargetArchitecture == :x86_64) ? 'x64' : Build::TargetArchitecture.to_s
 
-        msvcLibs = [ 'msvcp140', 'msvcp140_1', 'vcruntime140' ]
+        msvcLibs = [ 'msvcp140', 'msvcp140_1', 'msvcp140_2', 'vcruntime140' ]
         # vcruntime140_1.dll is required on x86_64 (SEH fix in VC runtime), but
         # does not exist at all on x86
         if(Build::TargetArchitecture == :x86_64)
@@ -101,7 +104,7 @@ module PiaWindows
         args = [Executable::Qt.tool('windeployqt'), '-verbose', '0']
         args += qmlDirs.flat_map{|d| ['--qmldir', File.absolute_path(d)]}
         args += [
-            '--no-webkit2', '--no-angle', '--no-compiler-runtime',
+            '--no-compiler-runtime',
             '--no-translations', '--no-opengl-sw'
         ]
         args += binaryFilePaths
@@ -111,26 +114,35 @@ module PiaWindows
     # Invoke signtool on Windows - signs one time
     # - files - absolute paths to files to sign, with Windows separators
     # - first - whether this is the first signature or an additional signature
-    # - hash - hash algorithm to use in signature, 'sha1' or 'sha256'
+    # - hash_alg - hash algorithm to use in signature, 'sha1' or 'sha256'
     # - useTimestamp - whether to use a timestamping authority
     # - description - if non-nil, file description passed to signtool
-    def self.signtool(files, first, hash, useTimestamp, description)
+    def self.signtool(files, first, hash_alg, useTimestamp, description)
         args = [
             'signtool', # Placed in PATH by vcvars
             'sign'
         ]
         args << '/as' unless first # append signature if not the first one
         args << '/fd'
-        args << hash
+        args << hash_alg
+        args << '/v'
+        args << '/debug' # Extra information
         if(useTimestamp)
             args << '/tr'
             args << 'http://timestamp.digicert.com'
             args << '/td'
-            args << hash
+            args << hash_alg
         end
-        # Cert args - can be specified with a file + password or a thumbprint,
-        # comes from environment variables
-        if(SignCertFile != nil)
+        # Cert args - can be specified with a file + password, a thumbprint,
+        # or google cloud token. These values are taken from environment variables
+        if UseGCloudSigning
+            args << '/f'
+            args << SignCertFile
+            args << '/csp'
+            args << 'Google Cloud KMS Provider'
+            args << '/kc'
+            args << GCloudKeyId
+        elsif(SignCertFile != nil)
             args << '/f'
             args << SignCertFile
             if(SignPassword != nil)
@@ -147,7 +159,28 @@ module PiaWindows
             args << description
         end
 
-        Util.shellRun *(args + files)
+
+        # Signing tends to be flaky as it depends on network and there's some
+        # signtool bug when using CNG. It's uncommon enough that retrying a 
+        # few times should solve the problem. If it keeps failing we'll need a 
+        # fancier solution.
+        attempts = 0
+        maxAttempts = 10
+        while true
+            begin
+                attempts += 1
+                Util.shellRun *(args + files)
+            rescue => error
+                if attempts < maxAttempts
+                    puts "Signing failed, will retry"
+                else
+                    puts "Signing failed too many times, will abort"
+                    raise error
+                end
+            else
+                break
+            end
+        end
     end
 
     # Double-sign files using both SHA-1 and SHA-256.
@@ -159,7 +192,6 @@ module PiaWindows
         # Get absolute, Windows-style paths
         files = files.map {|f| File.absolute_path(f).gsub!('/', '\\')}
 
-        signtool(files, true, 'sha1', useTimestamp, description)
         signtool(files, false, 'sha256', useTimestamp, description)
     end
 

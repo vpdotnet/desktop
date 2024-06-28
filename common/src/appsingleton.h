@@ -74,6 +74,9 @@ public:
 
     void setLaunchResource (QString url);
     QString getLaunchResource();
+
+    // Returns false if the url is too long or cannot be handled.
+    bool isValidResource(const QString& url) const;
 };
 
 extern template class COMMON_EXPORT_TMPL_SPEC_DECL Singleton<AppSingleton>;

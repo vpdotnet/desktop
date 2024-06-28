@@ -30,34 +30,32 @@ class NetExtensionChecker : public QObject {
 
 public:
     NetExtensionChecker(std::string transparentProxyCliExecutable,
-                        std::chrono::milliseconds shortInterval, std::chrono::milliseconds longInterval);
+                        std::chrono::milliseconds shortInterval,
+                        std::chrono::milliseconds longInterval);
 
-    StateModel::NetExtensionState checkInstallationState();
-
-    // Starting the service that will periodically (forever) check for
+    // Starting the service that will periodically check for
     // network extension installation state.
-    // We do not stop checking even after the extension has been installed
-    // because it could be uninstalled (in multiple ways) by the user.
-    // If that happens, we want to provide feedback and update the UI,
-    // without having to restart the daemon
-    void start(StateModel::NetExtensionState installState, bool isEnabled);
+    void start(StateModel::NetExtensionState installState);
+
+    void stop();
 
     // Timer is set to long interval in every scenario, except when
     // Split Tunnel is enabled and the extension is not yet installed.
     // In the latter, we check faster to give a quicker user feedback
-    void updateTimer(StateModel::NetExtensionState installState, bool isEnabled);
+    void updateTimer(StateModel::NetExtensionState installState);
+
+    StateModel::NetExtensionState checkInstallationState() const;
 
 private:
-    void checkIfStateChanged();
+    void checkIfNetExtensionStateChanged();
 
     // Check that the network extension is installed in the system.
-    // This requires the users to go into Privacy & Security settings and allow it
-    bool isNetExtensionInstalled();
+    bool isNetExtensionInstalled() const;
 
     // Check that the proxy manager is installed in Filter & Proxies
-    bool isProxyInstalled();
+    bool isProxyInstalled() const;
 
-    bool isInstalled();
+    bool isInstalled() const;
 
 private:
     QTimer _timer;

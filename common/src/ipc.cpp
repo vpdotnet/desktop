@@ -21,7 +21,6 @@
 
 #include "ipc.h"
 #include "builtin/path.h"
-
 #include <QtEndian>
 #include <QByteArray>
 #include <QDataStream>
@@ -29,6 +28,27 @@
 #include <QUuid>
 #include <QFile>
 #include <QLocalServer>
+
+#ifdef Q_OS_UNIX
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <pwd.h>
+#include <errno.h>
+#include <kapps_core/src/util.h>
+#endif
+#ifdef Q_OS_LINUX
+#include <linux/limits.h>
+#endif
+#ifdef Q_OS_MACOS
+#include <libproc.h>
+#include <sys/un.h>
+#endif
+#ifdef Q_OS_WINDOWS
+#include <windows.h>
+#include <tlhelp32.h>
+#include <psapi.h>
+#endif
 
 // The IPC layer provides basic message framing for UTF-8-encoded payloads.
 // (The JSON-RPC implementation is connected to this IPC layer to transport its
@@ -144,10 +164,121 @@ static const char* scanForMagic(const char* begin, const char* end)
     return nullptr;
 }
 
+static qint64 getClientPid(QLocalSocket* clientSocket)
+{
+    qint64 pid = -1;
+
+    #ifdef Q_OS_LINUX
+        int fd = clientSocket->socketDescriptor();
+        struct ucred credentials;
+        socklen_t ucred_length = sizeof(credentials);
+        if(getsockopt(fd, SOL_SOCKET, SO_PEERCRED, &credentials, &ucred_length) != -1)
+        {
+            pid = credentials.pid;
+        }
+        else
+        {
+            qWarning() << "Failed to get client PID:" << kapps::core::ErrnoTracer{};
+        }
+    #elif defined(Q_OS_MACOS)
+        int fd = clientSocket->socketDescriptor();
+        pid_t macPid = -1;
+        socklen_t pid_len = sizeof(macPid);
+
+        if(getsockopt(fd, SOL_LOCAL, LOCAL_PEERPID, &macPid, &pid_len) == -1)
+        {
+            qWarning() << "Failed to get client PID. Error:"
+                       << kapps::core::ErrnoTracer{};
+        }
+        pid = macPid;
+    #elif defined(Q_OS_WIN)
+        HANDLE pipeHandle = reinterpret_cast<HANDLE>(clientSocket->socketDescriptor());
+        DWORD clientPid = -1;
+        if(GetNamedPipeClientProcessId(pipeHandle, &clientPid))
+        {
+            pid = static_cast<qint64>(clientPid);
+        }
+        else
+        {
+            qWarning() << "Failed to get client PID. Error:" << GetLastError();
+        }
+    #endif
+    return pid;
+}
+
+QString getProcessBinaryPath(qint64 pid)
+{
+    QString binaryPath;
+
+    #ifdef Q_OS_LINUX
+        QString procPath = QString("/proc/%1/exe").arg(pid);
+        char buffer[PATH_MAX] = {};
+        // Read up to sizeof(buffer) - 1 because readlink won't append a terminating \0
+        ssize_t len = readlink(procPath.toUtf8().constData(), buffer, sizeof(buffer) - 1);
+        if(len != -1)
+        {
+            buffer[len] = '\0';
+            binaryPath = QString(buffer);
+            qError() << "Failed to retrieve client process binary path" 
+                     << kapps::core::ErrnoTracer{};
+        }
+    #elif defined(Q_OS_MACOS)
+        char path[PATH_MAX] = {};
+        if(proc_pidpath(pid, path, sizeof(path)) == -1)
+        {
+            qError() << "Failed to retrieve client process binary path" 
+                     << kapps::core::ErrnoTracer{};
+        }
+        binaryPath = QString(path);
+    #elif defined(Q_OS_WIN)
+        HANDLE processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, static_cast<DWORD>(pid));
+        if(processHandle)
+        {
+            TCHAR buffer[MAX_PATH];
+            if(GetModuleFileNameEx(processHandle, NULL, buffer, MAX_PATH))
+            {
+                binaryPath = QString::fromWCharArray(buffer).replace("\\", "/");
+            }
+            CloseHandle(processHandle);
+        }
+    #endif
+
+    return binaryPath;
+}
+
 LocalSocketIPCServer::LocalSocketIPCServer(QObject *parent)
     : IPCServer(parent), _server(nullptr)
 {
 
+}
+
+bool LocalSocketIPCServer::isClientAllowedToConnect(QLocalSocket* clientSocket)
+{
+    bool skipCheckForDebug = false;
+    // If you need to test the blocking behavior on a debug build, use this
+    // #define DEBUG_CLIENT_AUTH 1
+    #if defined UNIT_TEST || (!defined DEBUG_CLIENT_AUTH && defined _DEBUG)
+        // When running debug builds the client may not be in the correct 
+        // location, so we can skip this check.
+        qDebug() << "Skipping client authentication for new socket";
+        skipCheckForDebug = true;
+    #endif
+
+    const QStringList authorizedBinaries = {Path::ClientExecutable,
+                                            Path::CliExecutable};
+    qint64 pid = getClientPid(clientSocket);
+    if(pid < 0)
+    {
+        qError() << "Could not identify socket client process";
+        return false || skipCheckForDebug;
+    }
+    QString clientBinaryPath = getProcessBinaryPath(pid);
+    bool authorized = authorizedBinaries.contains(clientBinaryPath);
+    if(authorized)
+        qInfo() << "New client connection from" << clientBinaryPath;
+    else
+        qWarning() << "Rejected client connection from" << clientBinaryPath;
+    return authorized || skipCheckForDebug;
 }
 
 bool LocalSocketIPCServer::listen()
@@ -163,6 +294,12 @@ bool LocalSocketIPCServer::listen()
         while (_server->hasPendingConnections())
         {
             QLocalSocket* clientSocket = _server->nextPendingConnection();
+            if(!isClientAllowedToConnect(clientSocket))
+            {
+                qInfo() << "Unauthorized client connection, will ignore.";
+                clientSocket->close();
+                return;
+            }
             LocalSocketIPCConnection* connection = new LocalSocketIPCConnection(clientSocket, this);
             // Set up so we clean out connections from the list, but only later
             // in its own call stack. This is safe as long as the daemon doesn't
@@ -204,7 +341,7 @@ LocalSocketIPCConnection::LocalSocketIPCConnection(QLocalSocket *socket, QObject
       _acknowledgedSequence{_lastSendSequence},
       _error{false}
 {
-    connect(socket, QOverload<QLocalSocket::LocalSocketError>::of(&QLocalSocket::error), this, [this](QLocalSocket::LocalSocketError e) {
+    connect(socket, &QLocalSocket::errorOccurred, this, [this](QLocalSocket::LocalSocketError e) {
         _error = true;
         _socket->disconnect(this);
         emit error(_socket->errorString());

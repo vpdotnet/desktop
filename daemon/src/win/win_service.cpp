@@ -54,7 +54,7 @@ static void serviceMain(int argc, wchar_t** argv)
 
         // Note: argc and argv are actually picked up with GetCommandLine()
         // on Windows to get the proper unicode, so pass dummy values here.
-        int c = 1; char* v = "";
+        int c = 1; char* v = new char(1);
         QCoreApplication app(c, &v);
 
         Path::initializePostApp();
@@ -150,7 +150,7 @@ WinService::RunResult WinService::tryRun()
 {
     static SERVICE_TABLE_ENTRYW table[] =
     {
-        { PIA_SERVICE, [](DWORD argc, LPWSTR *argv) { serviceMain(argc, argv); } },
+        { const_cast<wchar_t*>(PIA_SERVICE), [](DWORD argc, LPWSTR *argv) { serviceMain(argc, argv); } },
         { NULL, NULL }
     };
 

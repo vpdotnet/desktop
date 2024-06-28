@@ -39,7 +39,6 @@
 #include <QOperatingSystemVersion>
 #include <QCursor>
 #include <QLibrary>
-#include <QOperatingSystemVersion>
 
 #ifdef Q_OS_MACOS
 #include "mac/mac_install.h"
@@ -225,7 +224,7 @@ void NativeHelpers::initDecoratedWindow(QQuickWindow *pWindow)
     // It's normal to run PIA in the background for a long time with no
     // windows open, try not to hog resources.
     pWindow->setPersistentSceneGraph(false);
-    pWindow->setPersistentOpenGLContext(false);
+    pWindow->setPersistentGraphics(false);
 
 #if defined(Q_OS_WIN)
     winSetIcon(*pWindow);
@@ -789,10 +788,9 @@ QString NativeHelpers::cleanSsidDisplay(const QString &ssid)
     QString cleaned{ssid};
     for(QChar &qc : cleaned)
     {
-        ushort &cval{qc.unicode()};
         // Replace control codes (anything < 0x20, or 0x7F 'DEL'), with spaces
-        if(cval < 0x20 || cval == 0x7F)
-            cval = ' ';
+        if(qc.unicode() < 0x20 || qc.unicode() == 0x7F)
+            qc.unicode() = ' ';
     }
     return cleaned;
 }

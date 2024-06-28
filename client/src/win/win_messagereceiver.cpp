@@ -65,7 +65,7 @@ LRESULT MessageReceiver::proc(UINT uMsg, WPARAM wParam, LPARAM lParam)
         //
         // lParam is a set of flags describing the shutdown; none of these
         // matter to us, we just quit.
-        qInfo() << "WM_ENDSESSION:" << wParam << hex << lParam;
+        qInfo() << "WM_ENDSESSION:" << wParam << Qt::hex << lParam;
         if(wParam)
         {
             qInfo() << "Exiting because session is ending";

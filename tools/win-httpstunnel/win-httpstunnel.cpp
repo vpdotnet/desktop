@@ -227,6 +227,7 @@ public:
     // GetLastError() and security APIs return DWORD, WSAGetLastError()
     // returns int.  Both work with FormatMessage()
     WinError(const char *pMsg, int err) : WinError{pMsg, static_cast<DWORD>(err)} {}
+    WinError(const char *pMsg, SECURITY_STATUS err) : WinError{pMsg, static_cast<DWORD>(err)} {}
     WinError(const char *pMsg, DWORD err)
         : std::runtime_error{pMsg}, _err{err}
     {
@@ -261,7 +262,7 @@ void createClientCredential(const SecurityInterface &secItf, SspiCredHandle &cli
     // support 0 indicating the system defaults.  No client cert is
     // specified.
     TimeStamp expire{};
-    SECURITY_STATUS err = secItf.get().AcquireCredentialsHandleW(nullptr, UNISP_NAME_W,
+    SECURITY_STATUS err = secItf.get().AcquireCredentialsHandleW(nullptr, const_cast<SEC_WCHAR*>(UNISP_NAME_W),
         SECPKG_CRED_OUTBOUND, nullptr, &clientCredSpec, nullptr, nullptr,
         clientCred.receive(), &expire);
     if(err != SEC_E_OK)

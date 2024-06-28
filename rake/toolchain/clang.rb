@@ -145,15 +145,11 @@ class ClangToolchain
     end
 
     # Macros always defined
-    # TODO: Qt 5.15 has deprecated a lot of API elements from Qt 5.12 (note
-    # that deprecated warnings are also issued by default now).  Silence
-    # these for now to highlight actual errors, we'll resolve deprecations
-    # when the build is working with 5.15
-    Macros = [ 'QT_NO_DEPRECATED_WARNINGS' ]
+    Macros = []
 
     VariantMacros = {
         debug: [
-            # None
+            'PIA_DEBUG'
         ],
         release: [
             'NDEBUG',
@@ -162,21 +158,7 @@ class ClangToolchain
     }
 
     # C++-specific compile options
-    CppCompileOpts = [
-        '-fexceptions'
-    ] +
-    (Build.linux? ?
-        [
-            # Use C++14 on Linux since CI builds are still done on Debian Stretch,
-            # where libstdcpp lacks C++17 support in the standard library.
-            # Allow C++17 language extensions though, there are many of these that
-            # are useful and clang-7 properly supports them.
-            '-std=c++14', '-Wno-c++17-extensions'
-        ] :
-        [
-            # Use proper C++17 everywhere else.
-            '-std=c++17'
-        ])
+    CppCompileOpts = ['-fexceptions', '-std=c++17']
 
     # Objective-C++-specific compile options (includes relevant C++ options)
     # Mac only
@@ -315,7 +297,6 @@ class ClangToolchain
             '-pipe',
             '-fvisibility=hidden', # Exports from dynamic libraries are explicitly marked
             '-Wno-unused-parameter',
-            '-Wno-enum-constexpr-conversion',
             '-Wno-dangling-else',
             '-Werror=unused-result',
             '-Werror=return-type',
@@ -323,6 +304,8 @@ class ClangToolchain
             '-MMD', # Write dependency file for user headers only
             '-MF', depFile # Specify dependency file
         ]
+        params += ['-Wno-enum-constexpr-conversion' ] if @clangMajorVersion > 14
+        params += ['-Wno-everything'] if sourceFile.include? 'deps/'
         params += @platform.driverTargetOpts(architecture)
         params += CompileOpts[Build::Variant]
         params += coverageOpts(architecture, coverage, CoverageDriverOpts)
@@ -374,21 +357,21 @@ class ClangToolchain
         linkParams = []
         # Include '$ORIGIN/../lib' in the rpath to find PIA-specific libraries
         # (specifically pia-clientlib) when testing builds from the staging
-        # directory. 
+        # directory.
         pathOrigin = ""
         if Build.linuxKernel?
             # On linux, `$ORIGIN` resolves to the path of the binary being loaded.
             pathOrigin = '$ORIGIN/../lib'
         elsif Build.xnuKernel?
             # On Mac, `@loader_path` resolves to the path of the binary being loaded.
-            pathOrigin = '@loader_path/../Frameworks' 
+            pathOrigin = '@loader_path/../Frameworks'
         end
         linkParams.concat(['-rpath', "#{pathOrigin}"])
         # If Qt is used, add the Qt installation to the rpath.  (Otherwise, we
         # don't need to set an rpath.)  During the deploy step, rpaths will be
         # patched to the final installation directory; this rpath is needed for
         # directly running the staged build in development.
-        if(libs.any? {|l| l.include?('Qt5Core')} || frameworks.any? {|f| f.include?('QtCore')})
+        if(libs.any? {|l| l.include?('Qt6Core')} || frameworks.any? {|f| f.include?('QtCore')})
             # Qt must be provided when linking to Qt
             if(@qt == nil)
                 raise "Cannot link to Qt libraries when Qt was not passed to clang toolchain driver"

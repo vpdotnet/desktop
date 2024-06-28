@@ -155,95 +155,95 @@ Rectangle {
       // position.
       contentHeight: 1
 
-        function applyViewHeight() {
-          if(scrollViewColumn.implicitHeight !== regionListFlickable.contentHeight) {
-            regionListFlickable.contentHeight = scrollViewColumn.implicitHeight
+      function applyViewHeight() {
+        if(scrollViewColumn.implicitHeight !== regionListFlickable.contentHeight) {
+          regionListFlickable.contentHeight = scrollViewColumn.implicitHeight
+        }
+      }
+
+      Timer {
+        id: heightDeferralTimer
+        repeat: false
+        interval: 0
+        onTriggered: regionListFlickable.applyViewHeight()
+        Component.onCompleted: regionListFlickable.applyViewHeight()
+      }
+
+      Connections {
+        target: scrollViewColumn
+        function onImplicitHeightChanged()  {
+          heightDeferralTimer.start()
+        }
+      }
+
+      ColumnLayout {
+        id: scrollViewColumn
+        width: parent.width
+        spacing: 0
+        RegionAuto {
+          id: regionAuto
+          // As in other cases, reading 'visible' isn't the same as reading
+          // the value it's bound too; avoid spurious dependencies in the
+          // separator's visible binding
+          readonly property bool show: searchTerm === ""
+          visible: show
+          height: 65
+          Layout.fillWidth: true
+          highlightColumn: {
+            if(keyboardRow.country === 'auto' && keyboardRow.location === 'auto') {
+              return regionListView.highlightColumn
+            }
+            return -1
           }
+          serviceLocations: regionListView.serviceLocations
+          onClicked: regionListView.regionSelected('auto')
+          onFocusCell: mouseFocusCell({country: 'auto', location: 'auto'}, keyColumn)
         }
-
-        Timer {
-          id: heightDeferralTimer
-          repeat: false
-          interval: 0
-          onTriggered: regionListFlickable.applyViewHeight()
-          Component.onCompleted: regionListFlickable.applyViewHeight()
-        }
-
-        Connections {
-          target: scrollViewColumn
-          function onImplicitHeightChanged()  {
-            heightDeferralTimer.start()
-          }
-        }
-
-        ColumnLayout {
-          id: scrollViewColumn
-          width: parent.width
-          spacing: 0
-          RegionAuto {
-            id: regionAuto
-            // As in other cases, reading 'visible' isn't the same as reading
-            // the value it's bound too; avoid spurious dependencies in the
-            // separator's visible binding
-            readonly property bool show: searchTerm === ""
-            visible: show
-            height: 65
+        Repeater {
+          id: dedicatedIpsRepeater
+          model: displayDedicatedIpsArray
+          delegate: DedicatedIpRegion {
             Layout.fillWidth: true
+            region: modelData
+            serviceLocations: regionListView.serviceLocations
+            portForwardEnabled: regionListView.portForwardEnabled
+            canFavorite: regionListView.canFavorite
             highlightColumn: {
-              if(keyboardRow.country === 'auto' && keyboardRow.location === 'auto') {
+              if(keyboardRow.country === "dip" && keyboardRow.location === region.id) {
                 return regionListView.highlightColumn
               }
               return -1
             }
-            serviceLocations: regionListView.serviceLocations
-            onClicked: regionListView.regionSelected('auto')
-            onFocusCell: mouseFocusCell({country: 'auto', location: 'auto'}, keyColumn)
-          }
-          Repeater {
-            id: dedicatedIpsRepeater
-            model: displayDedicatedIpsArray
-            delegate: DedicatedIpRegion {
-              Layout.fillWidth: true
-              region: modelData
-              serviceLocations: regionListView.serviceLocations
-              portForwardEnabled: regionListView.portForwardEnabled
-              canFavorite: regionListView.canFavorite
-              highlightColumn: {
-                if(keyboardRow.country === "dip" && keyboardRow.location === region.id) {
-                  return regionListView.highlightColumn
-                }
-                return -1
-              }
-              onClicked: regionListView.regionSelected(modelData.id)
-              onFocusCell: mouseFocusCell({country: "dip", location: region.id}, keyColumn)
-            }
-          }
-          // Separator between the "auto" + dedicated regions and the normal
-          // regions.  Show if any region above the separator would be shown.
-          Rectangle {
-            Layout.fillWidth: true
-            height: 3
-            visible: regionAuto.show || displayDedicatedIpsArray.length > 0
-            color: Theme.regions.itemSeparatorColor
-          }
-          Repeater {
-            id: regionsRepeater
-            model: displayRegionsArray
-            delegate: RegionDelegate {
-              region: modelData.region
-              regionCountry: modelData.regionCountry
-              regionChildren: modelData.regionChildren
-              portForwardEnabled: regionListView.portForwardEnabled
-              serviceLocations: regionListView.serviceLocations
-              canFavorite: regionListView.canFavorite
-              collapsedCountriesSettingName: regionListView.collapsedCountriesSettingName
-              highlightRow: keyboardRow
-              highlightColumn: regionListView.highlightColumn
-              onRegionSelected: regionListView.regionSelected(locationId)
-              onFocusCell: mouseFocusCell(row, keyColumn)
-            }
+            onClicked: regionListView.regionSelected(modelData.id)
+            onFocusCell: mouseFocusCell({country: "dip", location: region.id}, keyColumn)
           }
         }
+        // Separator between the "auto" + dedicated regions and the normal
+        // regions.  Show if any region above the separator would be shown.
+        Rectangle {
+          Layout.fillWidth: true
+          height: 3
+          visible: regionAuto.show || displayDedicatedIpsArray.length > 0
+          color: Theme.regions.itemSeparatorColor
+        }
+        Repeater {
+          id: regionsRepeater
+          model: displayRegionsArray
+          delegate: RegionDelegate {
+            region: modelData.region
+            regionCountry: modelData.regionCountry
+            regionChildren: modelData.regionChildren
+            portForwardEnabled: regionListView.portForwardEnabled
+            serviceLocations: regionListView.serviceLocations
+            canFavorite: regionListView.canFavorite
+            collapsedCountriesSettingName: regionListView.collapsedCountriesSettingName
+            highlightRow: keyboardRow
+            highlightColumn: regionListView.highlightColumn
+            onRegionSelected: regionListView.regionSelected(locationId)
+            onFocusCell: mouseFocusCell(row, keyColumn)
+          }
+        }
+      }
     }
   }
 
@@ -293,7 +293,7 @@ Rectangle {
                                      rowBounds.y, rowBounds.height)
   }
 
-  Keys.onPressed: {
+  Keys.onPressed: event => {
     // Arrow keys - simple navigation
     if(event.key === Qt.Key_Left) {
       keyboardColumn = Math.max(0, keyboardColumn-1)

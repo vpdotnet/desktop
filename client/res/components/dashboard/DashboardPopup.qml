@@ -19,7 +19,6 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.4
 import QtQuick.Window 2.10
-import QtGraphicalEffects 1.0
 
 import PIA.WindowClipper 1.0
 import PIA.WindowFormat 1.0
@@ -138,13 +137,13 @@ PiaWindow {
   WindowClipper {
     targetWindow: dashWindow
     // Window coordinates - scale dashPlacement's logical coordinates
-    clip: {
-      // Use the clip mask computed by dashPlacement, and scale to screen
+    clipRect: {
+      // Use the clipRect mask computed by dashPlacement, and scale to screen
       // coordinates.
-      return Qt.rect(dashPlacement.clip.x * dashPlacement.screenScale,
-                     dashPlacement.clip.y * dashPlacement.screenScale,
-                     dashPlacement.clip.width * dashPlacement.screenScale,
-                     dashPlacement.clip.height * dashPlacement.screenScale)
+      return Qt.rect(dashPlacement.clipRect.x * dashPlacement.screenScale,
+                     dashPlacement.clipRect.y * dashPlacement.screenScale,
+                     dashPlacement.clipRect.width * dashPlacement.screenScale,
+                     dashPlacement.clipRect.height * dashPlacement.screenScale)
     }
     // Round the clip region when shaping with the mask.  This isn't necessary
     // when alpha blending (and probably has a performance cost).

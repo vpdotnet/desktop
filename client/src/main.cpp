@@ -48,6 +48,7 @@ void dummyClientMain() {}
 #include <QFont>
 #include <QOpenGLContext>
 #include <QSurfaceFormat>
+#include <QQuickStyle>
 #include <iostream>
 #include <unordered_set>
 #ifdef Q_OS_LINUX
@@ -198,15 +199,11 @@ int clientMain(int argc, char *argv[])
    // Work-around Wayland bug to force X11 compatibility mode for now
    // TODO: Remove this in the future when Wayland support is complete
    qputenv("XDG_SESSION_TYPE", "X11");
+   qputenv("QT_QPA_PLATFORM", "xcb");
 #endif
 
 
     Path::initializePreApp();
-
-    // We never use Qt's built-in high-DPI scaling.  On Windows, it has a number
-    // of issues, mostly revolving around per-monitor scaling in 8.1+.  Even on
-    // Qt-based Linux environments it has other issues.
-    QCoreApplication::setAttribute(Qt::AA_DisableHighDpiScaling);
 
     bool quietLaunch{false};
     bool forceClearCache{false};
@@ -345,7 +342,9 @@ int clientMain(int argc, char *argv[])
     // The environment variables above must be set before setting the scene
     // graph backend, this causes Qt Quick to create the RHI interface, which
     // checks the environment then.
-    QQuickWindow::setSceneGraphBackend(QSGRendererInterface::GraphicsApi::Direct3D11Rhi);
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::Direct3D11Rhi);
+#else
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::Software);
 #endif
 
 #ifdef _DEBUG
@@ -422,6 +421,13 @@ int clientMain(int argc, char *argv[])
 #endif
 
     AppSingleton runGuard;
+    if(!runGuard.isValidResource(resourceURL))
+    {
+        // If the resource is not valid for any reason, just ignore it.
+        qWarning() << "Resource" << resourceURL << "is not valid, will be ignored";
+        resourceURL.clear();
+    }
+
     qint64 runningInstancePid = runGuard.isAnotherInstanceRunning();
     if(runningInstancePid > 0) {
         qWarning () << "Exiting because another instance appears to be running";
@@ -579,7 +585,7 @@ int main(int argc, char *argv[])
 #ifdef Q_OS_WIN
     setSafeDllSearchPaths();
 #endif
-
+    QQuickStyle::setStyle("Basic");
     return runClient(true, argc, argv, &clientMain);
 }
 

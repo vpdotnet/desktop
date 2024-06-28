@@ -28,8 +28,9 @@
 #include <QProcessEnvironment>
 #include <QString>
 #include <QThread>
+#include <QRegularExpression>
 #include "brand.h"
-
+#include "extras/openvpn/mac/scutil_parser.h"
 #include <unistd.h>
 #include <sys/sysctl.h>
 
@@ -58,7 +59,7 @@ pid_t getParentPID()
 QByteArray execute(const QString& command, ProcessErrorBehavior errorBehavior = HaltOnErrors)
 {
     QProcess p;
-    p.start(command, QProcess::ReadOnly);
+    p.startCommand(command, QProcess::ReadOnly);
     p.closeWriteChannel();
     int exitCode = waitForExitCode(p);
     if (exitCode == 0 || errorBehavior == IgnoreErrors)
@@ -99,64 +100,6 @@ QByteArray scutil(const QStringList& commands, ProcessErrorBehavior errorBehavio
     {
         qCritical("scutil failed with exit code %d", exitCode);
         throw exitCode;
-    }
-}
-
-QJsonValue scutilParse(const QString& text, int* offset = nullptr, const QString& indent = QString())
-{
-    int off = offset ? *offset : 0;
-    QRegExp re(QStringLiteral("^(?:(<dictionary>|<array>) \\{\\n(?:((?:%1  [^\\n]*\\n)*)%1\\}\\n))|^([^\\n]*)\\n").arg(indent));
-    if (off == re.indexIn(text, off, QRegExp::CaretAtOffset))
-    {
-        if (offset)
-            *offset = off + re.matchedLength();
-        if (!re.cap(1).isEmpty())
-        {
-            bool isArray = re.cap(1) == QLatin1String("<array>");
-            QJsonObject dictionary;
-            QJsonArray array;
-            QString members = re.cap(2);
-            QString indent2 = indent + QLatin1String("  ");
-            QRegExp re2(QStringLiteral("^%1(\\S+) : ").arg(indent2));
-            for (int i = 0; i < members.length();)
-            {
-                if (i == re2.indexIn(members, i, QRegExp::CaretAtOffset))
-                {
-                    i += re2.matchedLength();
-                    QJsonValue member = scutilParse(members, &i, indent2);
-                    if (member.isUndefined())
-                        return QJsonValue::Undefined;
-                    if (isArray)
-                        array.insert(re2.cap(1).toInt(), member);
-                    else
-                        dictionary.insert(re2.cap(1), member);
-                }
-                else
-                {
-                    qCritical() << "Failed to parse scutil output";
-                    return QJsonValue::Undefined;
-                }
-            }
-            if (isArray)
-                return array;
-            else if (dictionary.contains(QLatin1String("PIAEmpty")))
-                return QJsonValue::Null;
-            else
-                return dictionary;
-        }
-        else
-        {
-            return re.cap(3).trimmed();
-        }
-    }
-    else if (text == QLatin1String("  No such key\n"))
-    {
-        return QJsonValue::Null;
-    }
-    else
-    {
-        qCritical() << "Failed to parse scutil output";
-        return QJsonValue::Undefined;
     }
 }
 

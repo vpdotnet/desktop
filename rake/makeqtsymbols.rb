@@ -19,7 +19,7 @@ class MakeQtSymbols
         # Libs required for our application
         if Build.windows?
             $LIB_LIST.each do |i|
-                DumpSyms.dump_syms(File.join(lib_path, "Qt5#{i}.pdb"), output_dir, additional_suffixes)
+                DumpSyms.dump_syms(File.join(lib_path, "Qt6#{i}.pdb"), output_dir, additional_suffixes)
             end
         elsif Build.macos?
             $LIB_LIST.each do |i|
@@ -28,9 +28,9 @@ class MakeQtSymbols
             DumpSyms.dump_syms(File.join(lib_path, "../plugins/platforms/libqcocoa.dylib"), output_dir, additional_suffixes)
         elsif Build.linux?
             $LIB_LIST.each do |i|
-                DumpSyms.dump_syms(File.join(lib_path, "libQt5#{i}.so"), output_dir, additional_suffixes)
+                DumpSyms.dump_syms(File.join(lib_path, "libQt6#{i}.so"), output_dir, additional_suffixes)
             end
-            DumpSyms.dump_syms(File.join(lib_path, "libQt5XcbQpa.so"), output_dir, additional_suffixes)
+            DumpSyms.dump_syms(File.join(lib_path, "libQt6XcbQpa.so"), output_dir, additional_suffixes)
         end
     end
 end

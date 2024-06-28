@@ -30,7 +30,6 @@ int runClient(bool logToStdErr, int argc, char *argv[], int (*run)(int argc, cha
     // exception to stderr.
     try
     {
-        setUtf8LocaleCodec();
         Logger::initialize(logToStdErr);
     }
     catch(const Error &ex)

@@ -31,6 +31,7 @@ ThemedTextField {
 
   font.pixelSize: 13
   color: control.enabled ? Theme.settings.inputTextboxTextColor : Theme.settings.inputTextboxTextDisabledColor
+  placeholderTextColor: Theme.settings.inputDescriptionColor
   topPadding: textBoxVerticalPadding
   bottomPadding: textBoxVerticalPadding
   leftPadding: 7

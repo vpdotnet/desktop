@@ -33,7 +33,6 @@
 #include <QJsonObject>
 #include <QJsonDocument>
 #include <QJsonValue>
-#include <QLinkedList>
 #include <QList>
 #include <QMap>
 #include <QMetaObject>
@@ -277,9 +276,8 @@ template<typename From, typename To> bool json_cast_map(const From& from, To& to
         return true; \
     }
 
-IMPLEMENT_JSON_CAST_ARRAY(QList<T>)
-IMPLEMENT_JSON_CAST_ARRAY(QLinkedList<T>)
 IMPLEMENT_JSON_CAST_ARRAY(QVector<T>)
+IMPLEMENT_JSON_CAST_ARRAY(std::list<T>)
 IMPLEMENT_JSON_CAST_ARRAY(std::vector<T>)
 IMPLEMENT_JSON_CAST_ARRAY(std::deque<T>)
 IMPLEMENT_JSON_CAST_ARRAY(std::set<T>)
@@ -343,7 +341,7 @@ private:
         // property, this is nullptr, and unknownPropertyChanged() is emitted
         // instead
         std::function<void()> _specificSignal;
-        const QString _name; // for propertyChanged()
+        QString _name; // for propertyChanged()
     };
 protected:
     enum UnknownPropertyBehavior { DiscardUnknownProperties, SaveUnknownProperties };

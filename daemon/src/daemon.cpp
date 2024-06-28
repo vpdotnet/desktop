@@ -49,7 +49,7 @@
 #include <QDateTime>
 #include <QRegularExpression>
 #include <QRandomGenerator>
-#include <QRegExp>
+#include <QRegularExpression>
 #include <QStringView>
 
 #if defined(Q_OS_WIN)
@@ -323,7 +323,8 @@ Daemon::Daemon(QObject* parent)
     _serializationTimer.setSingleShot(true);
     connect(&_serializationTimer, &QTimer::timeout, this, &Daemon::serialize);
 
-    _accountRefreshTimer.setInterval(86400000);
+    // Refresh account information every 5 mins.
+    _accountRefreshTimer.setInterval(msec(std::chrono::minutes(5)));
     connect(&_accountRefreshTimer, &QTimer::timeout, this, &Daemon::refreshAccountInfo);
 
     _dedicatedIpRefreshTimer.setInterval(msec(dipRefreshFastInterval));
@@ -497,6 +498,16 @@ Daemon::Daemon(QObject* parent)
             else if(_state.hnsdSyncFailure() == 0)
                 _state.hnsdSyncFailure(QDateTime::currentMSecsSinceEpoch());
         });
+    connect(_connection, &VPNConnection::reconnectionNeeded, this,
+        [this]()
+        {
+            _state.needsReconnect(true);
+            Error err = connectVPN(ServiceQuality::ConnectionSource::Automatic);
+            if(err)
+            {
+                qError() << "Daemon was unable to reconnect after a network change while using OpenVPN";
+            }
+        });
 
     connect(&_modernLatencyTracker, &LatencyTracker::newMeasurements, this,
             &Daemon::newLatencyMeasurements);
@@ -543,7 +554,9 @@ Daemon::Daemon(QObject* parent)
 
         _environment.reload();
 
-        _modernLatencyTracker.start();
+        if(_settings.enableBackgroundLatencyChecks())
+            _modernLatencyTracker.start();
+
         _dedicatedIpRefreshTimer.start();
 
         _modernRegionRefresher.startOrOverride(environment().getModernRegionsListApi(),
@@ -627,6 +640,16 @@ Daemon::Daemon(QObject* parent)
             {
                 _updateDownloader.enableBetaChannel(_settings.offerBetaUpdates(), _environment.getUpdateApi());
             });
+
+    connect(&_settings, &DaemonSettings::enableBackgroundLatencyChecksChanged, this,
+            [this]()
+            {
+                if(_settings.enableBackgroundLatencyChecks())
+                    _modernLatencyTracker.start();
+                else
+                    _modernLatencyTracker.stop();
+            });
+
     connect(&_updateDownloader, &UpdateDownloader::updateRefreshed, this,
             &Daemon::onUpdateRefreshed);
     connect(&_updateDownloader, &UpdateDownloader::downloadProgress, this,
@@ -1105,18 +1128,18 @@ void DiagnosticsFile::execAndWriteOutput(QProcess &cmd, const QString &commandNa
     // the current lack of feedback that we're preparing the report.
     if(cmd.waitForFinished(5000))
     {
-        _fileWriter << "Exit code: " << cmd.exitCode() << endl;
-        _fileWriter << "STDOUT: " << endl;
+        _fileWriter << "Exit code: " << cmd.exitCode() << Qt::endl;
+        _fileWriter << "STDOUT: " << Qt::endl;
         QByteArray output = Logger::redactText(cmd.readAllStandardOutput());
-        _fileWriter << (processOutput ? processOutput(output) : output) << endl;
-        _fileWriter << "STDERR: " << endl;
-        _fileWriter << Logger::redactText(cmd.readAllStandardError()) << endl;
+        _fileWriter << (processOutput ? processOutput(output) : output) << Qt::endl;
+        _fileWriter << "STDERR: " << Qt::endl;
+        _fileWriter << Logger::redactText(cmd.readAllStandardError()) << Qt::endl;
     }
     else
     {
-        _fileWriter << "Failed to run command: " << cmd.program() << endl;
-        _fileWriter << qEnumToString(cmd.error()) << endl;
-        _fileWriter << cmd.errorString() << endl;
+        _fileWriter << "Failed to run command: " << cmd.program() << Qt::endl;
+        _fileWriter << qEnumToString(cmd.error()) << Qt::endl;
+        _fileWriter << cmd.errorString() << Qt::endl;
     }
 
     logPart(commandName, commandTime);
@@ -1183,7 +1206,7 @@ void DiagnosticsFile::writeText(const QString &title, QString text)
     commandTime.start();
 
     _fileWriter << diagnosticsCommandHeader(title);
-    _fileWriter << Logger::redactText(std::move(text)) << endl;
+    _fileWriter << Logger::redactText(std::move(text)) << Qt::endl;
 
     // Only the size is really important for logging a text part, but log the
     // time too for consistency (the time to generate the text isn't included,
@@ -1558,7 +1581,7 @@ void Daemon::RPC_logout()
     _settings.recentLocations({});
     _state.openVpnAuthFailed(0);
 
-    if(!tokenToExpire.isEmpty())
+    if(!_state.vpnSessionExpired() && !tokenToExpire.isEmpty())
     {
         _apiClient.postRetry(*_environment.getApiv2(), QStringLiteral("expire_token"),
                              QJsonDocument(), ApiClient::tokenAuth(tokenToExpire))
@@ -1576,6 +1599,9 @@ void Daemon::RPC_logout()
         });
     }
 
+    // Relevant only for displaying the token expiration message.
+    // Clear this upon logout.
+    _state.vpnSessionExpired(false);
 }
 
 Async<QJsonValue> Daemon::RPC_downloadUpdate()
@@ -2146,7 +2172,9 @@ void Daemon::vpnStateChanged(VPNConnection::State state,
     // Latency measurements only make sense when we're not connected to the VPN
     if(state == VPNConnection::State::Disconnected && isActive())
     {
-        _modernLatencyTracker.start();
+        if(_settings.enableBackgroundLatencyChecks())
+            _modernLatencyTracker.start();
+
         // Kick off a region refresh so we typically rotate servers on a
         // reconnect.  Usually the request right after connecting covers this,
         // but this is still helpful in case we were not able to load the
@@ -2713,6 +2741,8 @@ void Daemon::onNetworksChanged(const std::vector<NetworkConnection> &networks)
 
 void Daemon::refreshAccountInfo()
 {
+    qInfo() << "Refreshing account info";
+
     if (!_account.loggedIn())
         return;
     if (_account.username().isEmpty() || (_account.token().isEmpty() && _account.password().isEmpty()))
@@ -2723,7 +2753,10 @@ void Daemon::refreshAccountInfo()
         RPC_login(_account.username(), _account.password())
                 ->notify(this, [this](const Error& error) {
                     if (error.code() == Error::ApiUnauthorizedError)
+                    {
+                        qWarning() << "Received a 401 from endpoint - logging out.";
                         RPC_logout();
+                    }
                 });
     }
     else
@@ -2731,9 +2764,29 @@ void Daemon::refreshAccountInfo()
         loadAccountInfo(_account.username(), _account.password(), _account.token())
                 ->notify(this, [this](const Error& error, const QJsonObject& account) {
                     if (!error)
+                    {
                         _account.assign(account);
+
+                        // Refresh the expired state back from true to false.
+                        // In production this is unlikely to happen, but when testing with
+                        // the apiproxy it's possible we could fake an expiration
+                        // set this to true, and then want to reset it to false
+                        // when the apiproxy is no longer in use.
+                        _state.vpnSessionExpired(false);
+                    }
                     else if (error.code() == Error::ApiUnauthorizedError)
-                        RPC_logout();
+                    {
+                        qWarning() << "The user's VPN session has expired - communicating status to user.";
+
+                        // The user's session has expired. This could be due to them changing
+                        // their password or their subscription ending. We do not log them out -
+                        // as that would expose their traffic.
+                        // Instead we allow them to remain connected (if they are already) but they will not be able
+                        // to reconnect. We display a message in the UI explaining the situation
+                        // and giving them the option to logout (after which they can log back in with
+                        // new credentials).
+                        _state.vpnSessionExpired(true);
+                    }
                 });
     }
 }
@@ -3035,7 +3088,7 @@ void Daemon::reapplyFirewallRules()
         const auto &pAdapter = pMethod->getNetworkAdapter();
         if(pAdapter)
         {
-            auto &winAdapter = std::static_pointer_cast<WinNetworkAdapter>(pAdapter);
+            auto winAdapter = std::static_pointer_cast<WinNetworkAdapter>(pAdapter);
             params.tunnelDeviceName = QString::number(winAdapter->luid()).toStdString();
         }
 #endif
@@ -3191,10 +3244,10 @@ static QString decryptOldPassword(const QString& bytes)
         {
             if (!*k)
             {
-                s.append(bytes.midRef(4 + keyLength));
+                s.append(QStringView{bytes}.mid(4 + keyLength));
                 break;
             }
-            s.push_back(it->unicode() ^ *k);
+            s.push_back(static_cast<ushort>(it->unicode() ^ *k));
         }
         return s;
     }

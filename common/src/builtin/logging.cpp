@@ -34,7 +34,7 @@
 #include <QDir>
 #include <QFile>
 #include <QFileSystemWatcher>
-#include <QMutex>
+#include <QRecursiveMutex>
 #include <QMutexLocker>
 #include <QTextStream>
 #include <QThread>
@@ -50,7 +50,7 @@ extern "C" Q_DECL_IMPORT void __stdcall OutputDebugStringW(const wchar_t *str);
 // These globals are needed as they're used in Logger::initialize (before Logger::Logger)
 namespace
 {
-    QMutex g_logMutex(QMutex::Recursive);
+    QRecursiveMutex g_logMutex;
     bool g_logToStdErr = false;
 
     // kapps::core::LogCallback implementation, forwards to Logger::writeMessage()
@@ -354,7 +354,7 @@ void LoggerPrivate::readDebugFile(bool watchingDirectory)
     if (debugFile.open(QFile::ReadOnly | QFile::Text))
     {
         QString filterString = QTextStream(&debugFile).readAll();
-        QStringList filterLines = filterString.split('\n', QString::SkipEmptyParts);
+        QStringList filterLines = filterString.split('\n', Qt::SkipEmptyParts);
         qInfo() << "Loaded debug.txt with filter rules:" << filterLines;
         debugFile.close();
 
@@ -439,7 +439,7 @@ bool LoggerPrivate::openLogFile(bool newSession)
             {
                 {
                     QTextStream s(&logFile);
-                    s << endl << endl << endl;
+                    s << Qt::endl << Qt::endl << Qt::endl;
                 }
                 logSize = logFile.size();
             }
@@ -537,7 +537,7 @@ namespace
         tid ^= tid >> 32;
     #endif
         char tidHex[8];
-        std::sprintf(tidHex, "%04x", (quint16)tid);
+        std::snprintf(tidHex, sizeof(tidHex), "%04x", (quint16)tid);
 
         // TODO - Should render directly to UTF-8
         QDateTime now{QDateTime::currentDateTimeUtc()};

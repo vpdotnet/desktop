@@ -23,6 +23,7 @@ module PiaBreakpad
       'deps/breakpad/common/mac/macho_walker.cc',
       'deps/breakpad/common/mac/MachIPC.mm',
       'deps/breakpad/common/mac/bootstrap_compat.cc',
+      'deps/breakpad/common/mac/arch_utilities.cc',
     ]
 
     LinuxSources = [
@@ -35,6 +36,7 @@ module PiaBreakpad
       'deps/breakpad/client/linux/minidump_writer/linux_core_dumper.cc',
       'deps/breakpad/client/linux/minidump_writer/linux_ptrace_dumper.cc',
       'deps/breakpad/client/linux/minidump_writer/minidump_writer.cc',
+      'deps/breakpad/client/linux/minidump_writer/pe_file.cc',
       'deps/breakpad/client/linux/handler/minidump_descriptor.cc',
       'deps/breakpad/client/linux/handler/exception_handler.cc',
       'deps/breakpad/common/linux/guid_creator.cc',
@@ -49,7 +51,7 @@ module PiaBreakpad
     PosixSources = [
       'deps/breakpad/client/minidump_file_writer.cc',
       'deps/breakpad/common/string_conversion.cc',
-      'deps/breakpad/common/convert_UTF.c',
+      'deps/breakpad/common/convert_UTF.cc',
       'deps/breakpad/common/md5.cc',
     ]
 

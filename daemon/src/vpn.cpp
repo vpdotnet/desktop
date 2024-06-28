@@ -108,7 +108,7 @@ namespace
     // ConnectionConfig::ConnectionConfig()
     const int dipUsernameRandSuffixChars{8};
 
-    kapps::core::ConfigWriter &operator<<(kapps::core::ConfigWriter &w, const QString &str)
+    [[maybe_unused]] kapps::core::ConfigWriter &operator<<(kapps::core::ConfigWriter &w, const QString &str)
     {
         w << str.toStdString();
         return w;
@@ -1348,6 +1348,13 @@ void VPNConnection::doConnect()
     connect(_method, &VPNMethod::bytecount, this, &VPNConnection::updateByteCounts);
     connect(_method, &VPNMethod::firewallParamsChanged, this, &VPNConnection::firewallParamsChanged);
     connect(_method, &VPNMethod::error, this, &VPNConnection::raiseError);
+
+    // In order to avoid waiting for OpenVPN to timeout after a network change
+    // a reconnection is forced
+    connect(_method, &VPNMethod::networkHasChanged, this,
+        [this]() {
+            emit reconnectionNeeded();
+        });
 
     QHostAddress localBindAddress = _transportSelector.lastLocalAddress();
 

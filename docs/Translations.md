@@ -57,6 +57,8 @@ Any UI element that needs to be translated needs to be explicitly marked in the 
 
 Use `//: comment goes here` to add comments for the translators and for screen reader annotations.
 
+Note: in some situations, using `uiTranslate` can fail to get the translated string. You can try to use the optional `string dissambiguation` parameter in both `uiTr` and `uiTranslate`.
+
 ## 3. Combine strings with positional arguments
 
 When necessary, combine strings using positional arguments, like `uiTr("Connected (%1)").arg(/*...*/)`.

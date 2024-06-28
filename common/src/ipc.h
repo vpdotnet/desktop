@@ -107,6 +107,7 @@ public:
 
 // Implementation using QLocalServer / QLocalSocket ////////////////////////////
 
+class QLocalSocket;
 class COMMON_EXPORT LocalSocketIPCServer : public IPCServer
 {
     Q_OBJECT
@@ -118,6 +119,10 @@ public:
 
 private:
     class QLocalServer* _server;
+
+    // True if the clientSocket was initiated by a process that is allowed to
+    // control the daemon.
+    bool isClientAllowedToConnect(QLocalSocket* clientSocket);
 
     friend class LocalSocketIPCConnection;
 };

@@ -16,9 +16,8 @@
 // along with the Private Internet Access Desktop Client.  If not, see
 // <https://www.gnu.org/licenses/>.
 
-import QtQuick 2.0
-import QtQuick 2.9
-import QtQuick.Controls 2.3
+import QtQuick 2.15
+import QtQuick.Controls 2.4
 import QtQuick.Layouts 1.3
 import PIA.ReportHelper 1.0
 

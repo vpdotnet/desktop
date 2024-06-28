@@ -41,6 +41,8 @@ ErrorType InstallerError::raise(ErrorType type, UIString str)
     type |= ShouldIgnore;
 #endif
 
+    UINT mbType;
+    UINT msgSuffixId = 0; // Initialize before the goto skips it
     LOG("ERROR: %ls", str.str());
     // Never display dialog boxes in silent mode
     if (g_silent || type & Silent)
@@ -53,8 +55,6 @@ ErrorType InstallerError::raise(ErrorType type, UIString str)
     if (g_passive && (type & (Ignore | ShouldIgnore)) == (Ignore | ShouldIgnore))
         return Ignore;
 
-    UINT mbType;
-    UINT msgSuffixId = 0;
     switch (type & (Ignore | Retry))
     {
     case Ignore | Retry:

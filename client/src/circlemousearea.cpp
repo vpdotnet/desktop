@@ -80,7 +80,7 @@ void CircleMouseArea::handleHoverEvent(QHoverEvent *event)
 {
     Q_ASSERT(event);
 
-    bool inCircle = updateCursor(event->posF());
+    bool inCircle = updateCursor(event->position());
     updateContainsMouse(inCircle);
 
     // It doesn't matter whether we accept these events; hover events are
@@ -140,7 +140,7 @@ void CircleMouseArea::mouseMoveEvent(QMouseEvent *event)
     // We still always accept this event, since this item is currently receiving
     // all cursor input.
     Q_ASSERT(event);
-    bool inCircle = updateCursor(event->localPos());
+    bool inCircle = updateCursor(event->position());
     updateContainsMouse(inCircle);
 
     event->accept();
@@ -154,7 +154,7 @@ void CircleMouseArea::mousePressEvent(QMouseEvent *event)
     // check or store the button that was pressed.
 
     // Accept the event only if the cursor is actually inside the circle
-    bool inCircle = updateCursor(event->localPos());
+    bool inCircle = updateCursor(event->position());
     updatePressed(inCircle);
     event->setAccepted(inCircle);
 }
@@ -166,7 +166,7 @@ void CircleMouseArea::mouseReleaseEvent(QMouseEvent *event)
     // Qt only generates this event if a prior button press occurred on this
     // control, and we only accept one button, so we just have to check whether
     // the cursor is inside the circle.
-    bool inCircle = updateCursor(event->localPos());
+    bool inCircle = updateCursor(event->position());
     updatePressed(false);
     // Always accept this event, since this item is receiving all cursor input
     // anyway.

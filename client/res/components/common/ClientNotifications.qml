@@ -133,6 +133,23 @@ Item {
     active: Daemon.state.overridesActive.length > 0
   }
 
+  // This warning occurs when the user's token has expired.
+  // This could either mean that the user's subscription has ended
+  // or that the user has changed their password and they need to
+  // logout and login again.
+  NotificationStatus {
+    id: vpnSessionExpired
+    message: uiTr("Your VPN session token has expired. Please log in again.")
+    severity: severities.warning
+    dismissible: false
+    active: Daemon.state.vpnSessionExpired
+    tipText: uiTr("Please check your username and password, and verify that your account is not expired.")
+    links: [{
+      text: uiTranslate("HeaderBar", "Logout"),
+      clicked: function() { Daemon.logout() }
+    }]
+  }
+
   // TAP adapter isn't found (Windows only)
   //
   // This isn't dismissible - it's unlikely that we detect this incorrectly, and
@@ -650,6 +667,7 @@ Item {
     reconnectNeeded,
     forcedOpenVPN,
     alternateTransport,
+    vpnSessionExpired,
     accountExpiring,
     dedicatedIpExpiring,
     dedicatedIpChanged,

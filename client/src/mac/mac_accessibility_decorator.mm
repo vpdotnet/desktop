@@ -321,16 +321,6 @@ NSRange accessibilityRowIndexRange(id self, SEL)
 
 /*** General attribute fixups ***/
 
-// Qt incorrectly implements an "accessibilityEnabledAttribute" getter, it's
-// actually "isAccessibilityEnabled".
-// This means "is the control represented by the accessibility element enabled",
-// not whether accessibility is enabled at all for this control.
-BOOL isAccessibilityEnabled(id self, SEL)
-{
-    QAccessibleInterface *pAccItf = getAccInterface(self);
-    return pAccItf ? !pAccItf->state().disabled : true;
-}
-
 id accessibilityValue(id self, SEL _cmd)
 {
     Q_ASSERT(baseAccessibilityValue);
@@ -687,9 +677,6 @@ void macInitElementSubclass()
         addMethod(macElementSubclass, macElementBaseClass,
                   @selector(accessibilityRowIndexRange), &accessibilityRowIndexRange,
                   "{_NSRange=QQ}@:");
-        addMethod(macElementSubclass, macElementBaseClass,
-                  @selector(isAccessibilityEnabled), &isAccessibilityEnabled,
-                  "c@:");
         baseAccessibilityValue = subclassMethod(macElementSubclass,
             macElementBaseClass, @selector(accessibilityValue),
             &accessibilityValue, "@@:");
@@ -750,7 +737,7 @@ QMacAccessibilityElement *macElementForId(QAccessible::Id accId)
 {
     // macInitElementSubclass() is called by NativeAcc::init().
     Q_ASSERT(macElementBaseClass);
-    Q_ASSERT(classElementWithIdFunc);
+    Q_ASSERT(classElementWithIdFunc); //QMacAccessibilityElement
 
     return classElementWithIdFunc(macElementBaseClass,
                                   @selector(elementWithId:), accId);

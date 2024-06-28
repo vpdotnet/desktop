@@ -17,7 +17,6 @@
 // <https://www.gnu.org/licenses/>.
 
 import QtQuick 2.9
-import QtGraphicalEffects 1.0
 import QtQuick.Window 2.10
 import "../theme"
 import "../common"

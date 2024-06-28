@@ -19,6 +19,7 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.3
 import QtQuick.Window 2.3
+import QtQuick.Shapes 1.2
 import PIA.CircleMouseArea 1.0
 import PIA.NativeAcc 1.0 as NativeAcc
 import PIA.NativeHelpers 1.0
@@ -206,34 +207,23 @@ Item {
       implicitWidth: popupBackground.width
       implicitHeight: popupBackground.height + Theme.popup.tipArrowSize
 
-      // Layer this so the opacity is applied to the balloon and arrow as a
-      // single layer instead of blending them individually.
-      layer.enabled: true
-      layer.textureSize: {
-        // This size could be computed by mapping this item's bounds to the
-        // window's content item, but that would not create dependencies on all
-        // the intermediate transformations.
-        // Calculating with the content scale makes a lot of assumptions, but it
-        // updates correctly if the scale changes.
-        var scale = Window.window ? Window.window.contentScale : 1.0
-        return Qt.size(width * scale, height * scale)
-      }
-
-      Rectangle {
+      Shape {
         id: arrow
-
         x: {
           // Work around buggy Popup coordinate calculations
-          var actualPos = Util.calculatePopupActualPos(popup, popup.parent.Window.window,
-                                                       popup.parent.Overlay.overlay)
+          var actualPos = Util.calculatePopupActualPos(popup, popup.Window.window,
+                                                       popup.Overlay.overlay)
           return Math.round(infoTip.width / 2 - actualPos.x)
         }
-        y: infoTip.showBelow ? 0 : popupText.height - Theme.popup.tipArrowSize
-        width: Math.floor(Math.sqrt(2) * Theme.popup.tipArrowSize)
-        height: width
-        color: Theme.popup.tipBackgroundColor
-        rotation: 45
-        transformOrigin: Item.TopLeft
+        y: infoTip.showBelow ? 0 : popupText.height
+
+        ShapePath {
+            fillColor: Theme.popup.tipBackgroundColor
+            startX: -Theme.popup.tipArrowSize
+            startY: infoTip.showBelow ? Theme.popup.tipArrowSize : 0
+            PathLine { x: 0; y: infoTip.showBelow ? 0 : Theme.popup.tipArrowSize}
+            PathLine { x: Theme.popup.tipArrowSize; y: infoTip.showBelow ? Theme.popup.tipArrowSize : 0 }
+        }
       }
 
       Rectangle {

@@ -122,7 +122,9 @@ module Util
     def self.shellRun(*cmd)
         Rake.sh *cmd, verbose: self.verbose? do |ok, res|
             if !ok
-                raise "Command failed: #{cmd.join(' ')}"
+                # Escape cmd args for easier debugging
+                escaped_cmd = cmd.map { |arg| arg.include?(' ') ? "\"#{arg}\"" : arg }.join(' ')
+                raise "Command failed: #{escaped_cmd}"
             end
         end
     end

@@ -19,7 +19,7 @@
 #pragma once
 #include "stringslice.h"
 #if __clang__
-    #if __clang_major__ >= 16
+    #if __clang_major__ >= 16 || (defined(KAPPS_CORE_OS_MACOS) && __clang_major__ >= 15)
         #define IGNORE_CONSTEXPR_CONVERSION _Pragma("clang diagnostic ignored \"-Wenum-constexpr-conversion\"") 
     #else 
         #define IGNORE_CONSTEXPR_CONVERSION

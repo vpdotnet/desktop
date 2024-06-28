@@ -8,8 +8,8 @@
 # $ vagrant up
 # $ vagrant ssh
 # $ cd /home/vagrant
-# $ wget -c https://privateinternetaccess-storage.s3.amazonaws.com/pub/pia_desktop/qt/2021-01-23/qt-5.15.2-pia-linux-x86_64.run
-# $ chmod +x qt-5.15.2-pia-linux-x86_64.run && ./qt-5.15.2-pia-linux-x86_64.run
+# $ wget -c https://privateinternetaccess-storage.s3.amazonaws.com/pub/pia_desktop/qt/2024-03-10/qt-6.2.4-pia-linux-x86_64.run
+# $ chmod +x qt-6.2.4-pia-linux-x86_64.run && ./qt-6.2.4-pia-linux-x86_64.run
 # $ install Qt to /home/vagrant/Qt/
 # $ cd /pia
 # $ rake tools

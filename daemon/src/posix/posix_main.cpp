@@ -101,7 +101,6 @@ void setFileDescriptorLimits()
 
 int main(int argc, char** argv)
 {
-    setUtf8LocaleCodec();
     Logger::initialize(isatty(2));
     initKApps();
 

@@ -110,6 +110,7 @@ public:
     JsonField(bool, invalidClientExit, {})
     JsonField(bool, killedClient, {})
     JsonField(qint64, hnsdFailing, {})
+    JsonField(bool, vpnSessionExpired, {})
     JsonField(qint64, hnsdSyncFailure, {})
     JsonField(QString, originalGatewayIp, {})
     JsonField(QString, originalInterfaceIp, {})

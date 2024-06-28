@@ -143,7 +143,7 @@ double LinuxWindowScaler::getQtScreenScale(const QProcessEnvironment &env)
         // semicolon-delimited scale factors.
         // We're not quite that strict, since we're just picking a single factor
         // we allow each factor to be name=value or just value.
-        const auto &factorsList = screenScaleFactorsStr.split(';', QString::SplitBehavior::SkipEmptyParts);
+        const auto &factorsList = screenScaleFactorsStr.split(';', Qt::SkipEmptyParts);
 
         double qtScreenScale = 0;
         for(const auto &factor : factorsList)
@@ -234,39 +234,26 @@ double LinuxWindowScaler::detectScaleFactor()
     // them, even if an earlier guess overrides a later one, so diagnostics
     // indicate multiple or conflicting scale factors.
     double piaScale = getPiaScale(env);
-    double gsettingsScale = getGsettingsScale();
     double qtScale = getQtScale(env);
     double qtScreenScale = getQtScreenScale(env);
     double xftDpiScale = getXftDpiScale();
 
     qInfo() << "Scale factors:";
     qInfo() << " - PIA:" << piaScale;
-    qInfo() << " - gsettings:" << gsettingsScale;
     qInfo() << " - Qt:" << qtScale;
     qInfo() << " - Qt(screen):" << qtScreenScale;
     qInfo() << " - Xft.dpi:" << xftDpiScale;
 
-    // PIA_SCALE overrides all other guesses; this is intended as a workaround
-    // override if the guess is incorrect.
+    // PIA_SCALE overrides the scale. This is intended as a workaround
+    // override if Qt is incorrect.
     // Note that scale factors < 1 are not allowed for any of these methods;
     // these have known issues with the overlay layer (QQuickPopup is buggy when
     // trying to position itself in the overlay layer; we can work around it for
     // scale >=1 but not scale <1).
+    // We used to use the guesses above, but since Qt6 we trust Qt to deal with the
+    // scale on its own, except when overriding it.
     if(piaScale >= 1)
         return piaScale;
-    if(gsettingsScale >= 1)
-        return gsettingsScale;
-    // Prefer the single-valued QT_SCALE_FACTOR over the per-screen values
-    // because we cannot actually apply per-screen scale factors right now.  If
-    // both were set, this would be the sensible value to apply globally.
-    if(qtScale >= 1)
-        return qtScale;
-    if(qtScreenScale >= 1)
-        return qtScreenScale;
-    if(xftDpiScale >= 1)
-        return xftDpiScale;
-
-    // We didn't find anything.  Default to 1.0.
     return 1.0;
 }
 

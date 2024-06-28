@@ -20,7 +20,6 @@ import QtQuick 2.9
 import QtQuick.Controls 2.3
 import QtQuick.Layouts 1.3
 import QtQuick.Window 2.11
-import QtGraphicalEffects 1.0
 import "qrc:/javascript/util.js" as Util
 import "qrc:/javascript/keyutil.js" as KeyUtil
 import "../stores"
@@ -145,7 +144,7 @@ FocusScope {
       }
     }
 
-    onActivated: selectIndex(index)
+    onActivated: index => selectIndex(index)
   }
 
   OutlineFocusCue {

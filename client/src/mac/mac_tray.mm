@@ -33,7 +33,6 @@
 #include <QProcess>
 #include <QAccessibleActionInterface>
 #include <QRectF>
-#include <QtMac>
 
 #import <AppKit/AppKit.h>
 
@@ -342,7 +341,7 @@ namespace
         // Note that we can't use QProcess::execute() here, because it forwards
         // the child process's stdout to our own stdout - we would not be able
         // to read it.
-        defaultsProcess.start(QStringLiteral("defaults read -g AppleInterfaceStyle"),
+        defaultsProcess.startCommand(QStringLiteral("defaults read -g AppleInterfaceStyle"),
                               QProcess::ReadOnly);
         int exitCode = waitForExitCode(defaultsProcess);
         return (exitCode == 0 && defaultsProcess.readAllStandardOutput().trimmed() == QByteArrayLiteral("Dark"));
@@ -532,6 +531,17 @@ NativeTrayMac::NativeTrayMac(NativeTray::IconState initialIcon, const QString &i
 
 }
 
+
+NSImage* toNSImage(const QPixmap& pixmap) {
+    QImage image = pixmap.toImage();
+    CGImageRef cgImage = image.toCGImage();
+
+    NSSize imageSize = NSMakeSize(image.width(), image.height());
+    NSImage* nsImage = [[NSImage alloc] initWithCGImage:cgImage size:imageSize];
+
+    return nsImage;
+}
+
 NSMenu* NativeTrayMac::createMenu(const NativeMenuItem::List& items)
 {
     NSMenu *pMenu = [[NSMenu alloc] initWithTitle:@""];
@@ -563,7 +573,7 @@ NSMenu* NativeTrayMac::createMenu(const NativeMenuItem::List& items)
                 if (!pixmap.isNull())
                 {
                     int max = pixmap.width() > pixmap.height() ? pixmap.width() : pixmap.height();
-                    NSImage* image = QtMac::toNSImage(pixmap);
+                    NSImage* image = toNSImage(pixmap);
                     [image setSize:NSMakeSize(16 * pixmap.width() / max, 16 * pixmap.height() / max)];
                     _icons.insert(item->icon(), image);
                     pMenuItem.image = image;

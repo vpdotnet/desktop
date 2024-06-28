@@ -23,7 +23,7 @@
 #include <common/src/builtin/path.h>
 #include <QXmlStreamReader>
 #include <QFile>
-#include <QRegExp>
+#include <QRegularExpression>
 
 namespace
 {
@@ -33,7 +33,7 @@ namespace
     // We special-case "Windows Communications Apps" (i.e Mail, Calendar etc)
     // It uses an extra binary HxTsr.exe for network communication
     // which does not appear in the applications section of the manifest
-    const QRegExp winCommsApps{QStringLiteral("windowscommunicationsapps")};
+    const QRegularExpression winCommsApps{QStringLiteral("windowscommunicationsapps")};
 }
 
 bool findXmlStartNode(QXmlStreamReader &xmlReader, const QString &nodeNamespace,

@@ -1,9 +1,8 @@
 # Private Internet Access Desktop Client
-[![pia_desktop/pia_desktop](https://github.com/xvpn/pia_desktop/actions/workflows/release.yml/badge.svg)](https://github.com/xvpn/pia_desktop/actions/workflows/release.yml)
 
 This is the desktop client for the Private Internet Access VPN service. It consists of an unprivileged thin GUI client (the "client") and a privileged background service/daemon (the "daemon"). The daemon runs a single instance on the machine and is responsible for not only network configuration but also settings and account handling, talking to PIA servers as necessary. The client meanwhile runs in each active user's desktop and consists almost entirely of presentation logic. No matter how many users are active on a machine, they control the same single VPN instance and share a single PIA account.
 
-The project uses Qt 5 for cross-platform development, both in the client and daemon. The client GUI is based on Qt Quick, which uses declarative markup language and JavaScript and offers hardware accelerated rendering when available. Qt and Qt Quick tend to be more memory and CPU efficient compared to web-based UI frameworks like Electron or NW.js.
+The project uses Qt 6.2 for cross-platform development, both in the client and daemon. The client GUI is based on Qt Quick, which uses declarative markup language and JavaScript and offers hardware accelerated rendering when available. Qt and Qt Quick tend to be more memory and CPU efficient compared to web-based UI frameworks like Electron or NW.js.
 
 ## Building and developing
 
@@ -37,26 +36,28 @@ Filtering content: 100% (24/24), 17.13 MiB | 1.89 MiB/s, done.
 ### Prerequisites
 
 - On **Windows**:
-  - [Qt 5.15.2](https://www.qt.io/download)
-    - If you want to be able to fully debug into Qt code and debug QML as well, you will need to follow this process:
+  - Supported architectures: x86_64
+  - [Qt 6.2.4](https://www.qt.io/download)
+    - Follow this process if you want to be able to fully debug into Qt code and QML:  
       - Download Qt from the official website: https://www.qt.io/download-open-source, scroll down and click "Download the Qt Online Installer"
       - The installer name should look like this "qt-unified-windows-x64-4.6.0-online.exe"
       - You will need to create an account and login
       - Select path C:\Qt and "Custom installation"
       - When selecting components check these boxes:
-        - Qt / Qt 5.15.2 / MSVC2019 32-bit, MSVC2019 64-bit, Sources, Qt Debug Information Files
+        - Qt / Qt 6.2.4 / MSVC2019 32-bit, MSVC2019 64-bit, Sources, Qt Debug Information Files
         - Qt / Developer and Designer Tools / Qt Creator, ...CDB Debugger support, Debugging Tools for Windows, CMake
-      - (optional) If you have multiple installations of Qt, set user environment variable `QTROOT` to `C:\Qt\5.15.2`
-    - Otherwise, if you just need to build the client, you can use aqt. Run these commands in Powershell with admin priviledges:  
+      - (optional) If you have multiple installations of Qt, set user environment variable `QTROOT` to `C:\Qt\6.2.4`
+    - Otherwise, use aqtinstall if you just need to build the client:  
+      - Run these commands in Powershell with admin priviledges
       - Install choco: (skip this step if you already have a working choco. Run `choco` to find out)   
         `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))`
       - `choco install python`
-      - Close Powershell and open a new Admin istance
+      - Close Powershell and open a new Admin instance
       - `pip install aqtinstall`
       - `mkdir C:\Qt-aqt`
       - `cd C:\Qt-aqt`
-      - `aqt install-qt windows desktop 5.15.2 win64_msvc2019_64`
-      - (optional) If you have multiple installations of Qt, set user environment variable `QTROOT` to `C:\Qt-aqt\5.15.2`
+      - `aqt install-qt windows desktop 6.2.4 win64_msvc2019_64`
+      - (optional) If you have multiple installations of Qt, set user environment variable `QTROOT` to `C:\Qt-aqt\6.2.4`
   - [Visual Studio Community 2019](https://my.visualstudio.com/Downloads?q=visual%20studio%202019&wt.mc_id=o~msft~vscom~older-downloads)
      - Unfortunately now, you need to login in order to download the old installer
      - Select "Desktop development with C++" and check these boxes:
@@ -72,7 +73,7 @@ Filtering content: 100% (24/24), 17.13 MiB | 1.89 MiB/s, done.
   - [Git Bash](https://gitforwindows.org/)
     - Cloning and performing git operations via git bash instead of powershell is recommended, due to some knows bugs in Windows built-in openssh service in regards to git-lfs. 
 - On **macOS**:
-  - Qt 5.15.2
+  - Qt 6.2.4
     - PIA's universal build of Qt is recommended: [desktop-dep-build releases](https://github.com/pia-foss/desktop-dep-build/releases)
     - The universal Qt build can be used for universal or single-architecture PIA builds.
     - If you want Qt Creator, also install Qt from [qt.io](https://www.qt.io/download)
@@ -81,20 +82,19 @@ Filtering content: 100% (24/24), 17.13 MiB | 1.89 MiB/s, done.
   - Ruby, can be installed using [Homebrew](https://brew.sh) with `brew install ruby`
   - Install rake gem: `sudo gem install rake`
   - (Only on Apple silicon macs) Before running rake, install the arm64 version of Nokogiri  
-    `sudo ARCHFLAGS="-arch arm64" gem install nokogiri -v 1.13.10`
+    `sudo gem install nokogiri --platform=arm64-darwin -v 1.13.10`
 - On **Linux**:
-  - Supported distribution with clang 7 or newer
+  - Supported distribution with clang 11 or newer
   - Supported architectures: x86_64, armhf, arm64
-  - Qt 5.15 or later
+  - Qt 6.2.4 or later
     - PIA's build of Qt is recommended: [desktop-dep-build releases](https://github.com/pia-foss/desktop-dep-build/releases)
     - If you want Qt Creator, also install Qt from [qt.io](https://www.qt.io/download)
-  - Host build (Debian 10+ and derivatives):
+  - Host build (Debian 11+ and derivatives):
     - `sudo apt install build-essential rake clang mesa-common-dev libnl-3-dev libnl-route-3-dev libnl-genl-3-dev git git-lfs`
   - Host build (Arch and derivatives):
     - `sudo pacman -S base-devel git-lfs ruby-rake clang llvm libnl zip`
-  - Debian 9 chroot build (used to build published releases for maximum compatibility, and for cross builds)
-    - `sudo apt install schroot debootstrap`
-    - Then use `./scripts/chroot/setup.sh` to set up the build chroots, see "Building for Distribution - Linux" below
+  - Debian 11 docker image build (used to build published releases for maximum compatibility, and for cross builds)
+    - See [Building for Distribution](docs/Building-for-distribution.md)
 
 ### Running and debugging
 
@@ -110,7 +110,7 @@ To debug your own daemon, the installed daemon must first be stopped:
 The daemon must run as root. Consult your IDE/debugger documentation for how to safely run the debugger target as root.
 
 **Windows** only: 
-  - If you have installed Qt using the official installer, add `C:\Qt\5.15.2\msvc2019_64\bin` to your user environment variable path.   
+  - If you have installed Qt using the official installer, add `C:\Qt\6.2.4\msvc2019_64\bin` to your user environment variable path.   
     This is needed if you want to run `pia-client.exe` or `pia-service.exe` via command line.
   - To run the pia-daemon, execute `.\pia-service.exe run` in Powershell with admin privileges
 
@@ -128,9 +128,15 @@ In order to enable all the logs, in PIA app *Settings* page go to Help and selec
 * To run tests: `rake test`
 * To build for release instead of debug, set `VARIANT=release` with any of the above
 
+### Updating the built dependencies
+
+Linux: check that the symbolic links are correct using `ls -lah -R deps/built/linux/`.  
+If they are not, create them using `ln -sf libfile linkname`.
+
 ### Qt Creator
 
 To open the project in Qt Creator, open CMakeLists.txt as a project.  This CMake script defines targets for Qt Creator and hooks them up to the appropriate rake tasks, which allows Qt Creator to build, run, and debug targets.
+Run `rake stage` before this operation, otherwise CMake will fail.
 
 Some specific configuration changes are useful in Qt Creator:
 
@@ -157,7 +163,7 @@ To run or debug unit tests and other targets from Qt Creator, tell it to build t
 
 #### Kit and Qt version
 
-Qt Creator will still ask to select a kit, which includes a Qt version, compiler, etc.  Just select Qt 5.15.2 (on Windows, the MSVC 2019 64-bit target), so the code model will work.
+Qt Creator will still ask to select a kit, which includes a Qt version, compiler, etc.  Just select Qt 6.2.4 (on Windows, the MSVC 2019 64-bit target), so the code model will work.
 
 This has no effect on the build output - the Rake scripts find Qt and the compiler on their own, which allows them to be run with no prior setup.
 
@@ -195,60 +201,7 @@ Some additional environment variables can be configured:
 
 | Variable | Example | Explanation |
 |----------|---------|-------------|
-| `QTROOT` | /opt/Qt/5.15.2 | Path to the installed Qt version, if qt.rb can't find it or you want to force a specific version |
-
-### Building for distribution
-
-`rake artifacts` (or `rake all`) produces the final artifacts for distribution, including signing if code signing details are provided.  Code signing environment variables are defined below.
-
-Build scripts in the `scripts` directory are also provided that clean, then build for all architectures supported on a given platform.
-
-#### Windows
-
-Set environment variables:
-
-| Variable | Value |
-|----------|-------|
-| BRAND | (Optional) Brand to build (defaults to `pia`) |
-| PIA_SIGNTOOL_CERTFILE | Path to certificate file (if signing with PFX archived cert) |
-| PIA_SIGNTOOL_PASSWORD | Password to decrypt cert file (if signing with encrypted PFX archived cert) |
-| PIA_SIGNTOOL_THUMBRPINT | Thumbprint of certificate - signs with cert from cert store instead of PFX archive |
-
-Then call `scripts/build-windows.bat`
-
-#### Mac
-
-Set environment variables:
-
-| Variable | Value |
-|----------|-------|
-| BRAND | (Optional) Brand to build (defaults to `pia`) |
-| PIA_CODESIGN_CERT | Common name of the signing certificate.  Must be the complete common name, not a partial match. |
-| PIA_APPLE_ID_EMAIL | Apple ID used to notarize build. |
-| PIA_APPLE_ID_PASSWORD | Password to Apple ID for notarization. |
-| PIA_APPLE_ID_PROVIDER | (Optional) Provider to use if Apple ID is member of multiple teams. |
-
-Call `scripts/build-macos.sh`
-
-A certificate is required for the Mac build to be installable (even for local builds), see below to generate a self-signed certificate for local use.  Unsigned builds can be manually installed by running the install script with `sudo`.
-
-#### Linux
-
-If you have not already done so, set up Debian 9 build chroots.  This requires `debootstrap` and `schroot`.
-
-```shell
-$ ./scripts/chroot/setup.sh # native x86_64 build environment
-$ ./scripts/chroot/setup.sh --cross-target arm64 # arm64 cross build environment
-$ ./scripts/chroot/setup.sh --cross-target armhf # armhf cross build environment
-```
-
-Set environment variables:
-
-| Variable | Value |
-|----------|-------|
-| BRAND | (Optional) Brand to build (defaults to `pia`) |
-
-Then call `scripts/build-linux.sh`.
+| `QTROOT` | /opt/Qt/6.2.4 | Path to the installed Qt version, if qt.rb can't find it or you want to force a specific version |
 
 ### Mac installation
 

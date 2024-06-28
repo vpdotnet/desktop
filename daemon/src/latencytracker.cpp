@@ -294,6 +294,7 @@ void LatencyTracker::start()
 {
     if(!_measureTrigger.isActive())
     {
+        qInfo() << "Starting background latency checks";
         _measureTrigger.start();
         //Trigger measurements for anything that hasn't been measured yet
         measureNewLocations();
@@ -302,6 +303,7 @@ void LatencyTracker::start()
 
 void LatencyTracker::stop()
 {
+    qInfo() << "Stopping background latency checks";
     _measureTrigger.stop();
 }
 

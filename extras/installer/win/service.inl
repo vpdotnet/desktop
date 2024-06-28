@@ -222,6 +222,7 @@ std::wstring quotePath(LPCWSTR path)
 
 bool setExtraServiceConfig(const ServiceParams &params)
 {
+    static wchar_t empty_string[] = L"";
     // We need full access for setting up the recovery options
     openManager(SC_MANAGER_ALL_ACCESS, false);
     openService(params.pName, SERVICE_ALL_ACCESS, false);
@@ -232,8 +233,8 @@ bool setExtraServiceConfig(const ServiceParams &params)
         // Reset failures if no failures for 60 seconds
         autoRestart.dwResetPeriod = (DWORD)60;
         autoRestart.cActions = (DWORD)1;
-        autoRestart.lpCommand = L"";
-        autoRestart.lpRebootMsg = L"";
+        autoRestart.lpCommand = empty_string;
+        autoRestart.lpRebootMsg = empty_string;
         struct _SC_ACTION actions[1];
         autoRestart.lpsaActions = actions;
         autoRestart.lpsaActions[0].Delay = (DWORD)0;

@@ -195,6 +195,7 @@ signals:
     void bytecount(quint64 received, quint64 sent);
     void firewallParamsChanged();
     void error(const Error &err);
+    void networkHasChanged();
 
 private:
     State _state;

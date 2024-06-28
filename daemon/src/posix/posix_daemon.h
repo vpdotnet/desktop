@@ -93,8 +93,7 @@ private:
     MacDns _macDnsMonitor;
     // Network scan last used to create bound route (see applyFirewallRules())
     std::unique_ptr<NetExtensionChecker> _pNetExtensionChecker;
-    StateModel::NetExtensionState getNetExtensionState() const;
-    void monitorNetExtensionInstallation();
+    void setUpMacosSTMonitoring();
 #endif
 
     // The firewall implementation from kapps::net.  Note that unlike WinDaemon,

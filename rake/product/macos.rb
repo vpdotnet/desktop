@@ -113,6 +113,7 @@ module PiaMacOS
 
         openvpnHelper = Executable.new("#{Build::Brand}-openvpn-helper")
             .use(clientlib.export)
+            .sourceFile('extras/openvpn/mac/scutil_parser.cpp')
             .sourceFile('extras/openvpn/mac_openvpn_helper.cpp')
             .useQt('Network')
             .install(stage, :bin)
@@ -284,9 +285,13 @@ module PiaMacOS
 
         # FileUtils::sh doesn't accept environment variables
         puts macdeployArgs.join(" ")
-        system(macdeployEnv, *macdeployArgs)
-        if !$?.success?
-            raise "macdeployqt failed with result #{$?.to_s}"
+        Open3.popen3(macdeployEnv, *macdeployArgs) do |stdin, stdout, stderr, wait_thr|
+            # Here, stdout and stderr are ignored, effectively silencing them.
+            # This is because we often get error messages that don't really break the build
+            exit_status = wait_thr.value
+            if !exit_status.success?
+                raise "macdeployqt failed with result #{exit_status.to_s}. stdout: #{stdout.read}, stderr: #{stderr.read}"
+            end
         end
 
         # Qt 5.15.2 doesn't actually support cross-arch builds, and macdeployqt

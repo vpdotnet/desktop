@@ -303,7 +303,10 @@ Item {
     case 'show-changelog':
       wChangeLog.show()
       wChangeLog.raise()
-      wChangeLog.requestActivate()
+      if(Qt.platform.os !== 'linux')
+      {
+        wChangeLog.requestActivate()
+      }
       break
     case 'toggle-debug-logging':
       Daemon.applySettings({ debugLogging: Daemon.settings.debugLogging !== null ? null : Daemon.settings.defaultDebugLogging })

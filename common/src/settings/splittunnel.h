@@ -63,7 +63,7 @@ public:
     // executables, etc.)  That's done when the firewall rules are applied,
     // rather than when the selection is made, so we can update that logic in
     // the future.
-    JsonField(QString, path, {})
+    JsonField(QString, path, {});
     // On Windows only, if the path identifies a shortcut, target is the target
     // of that shortcut as resolved by the user that added the rule.
     //
@@ -74,7 +74,7 @@ public:
     //
     // This field isn't used for manually-browsed executables, and it isn't used
     // on any other platform.
-    JsonField(QString, linkTarget, {})
+    JsonField(QString, linkTarget, {});
     // The behavior to apply for this rule.  The terminology is historical:
     // - "exclude" = Bypass VPN (exclude from VPN)
     // - "include" = Only VPN

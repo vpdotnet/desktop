@@ -21,19 +21,19 @@
 
 #ifndef FLEXVALIDATOR_H
 #define FLEXVALIDATOR_H
-#include <QRegExpValidator>
+#include <QRegularExpressionValidator>
 
-// This validator works exactly like QRegExpValidator but
+// This validator works exactly like QRegularExpressionValidator but
 // gives the opportunity to fix the input before validation.
 // Such fixes could involve trimming whitespace, forcing the input into a certain format, etc
 // The fixInput() method must be implemented in QML by the user, and is optional.
 // e.g: The following validator trims whitespace from the input before attempting validation
 //    FlexValidator {
 //      id: loginValidator
-//      regExp: /(?:[0-9A-Za-z])+$/
+//      regularExpression: /(?:[0-9A-Za-z])+$/
 //      function fixInput(input) { return input.trim() }
 //    }
-class FlexValidator : public QRegExpValidator
+class FlexValidator : public QRegularExpressionValidator
 {
     Q_OBJECT
 
@@ -41,7 +41,7 @@ public:
     QValidator::State virtual validate(QString &input, int &pos) const
     {
         invokefixInputCallback(input);
-        return QRegExpValidator::validate(input, pos);
+        return QRegularExpressionValidator::validate(input, pos);
     }
 
 private:

@@ -617,6 +617,7 @@ signals:
     void usingTunnelConfiguration(const QString &deviceName,
                                   const QString &deviceLocalAddress,
                                   const QString &deviceRemoteAddress);
+    void reconnectionNeeded();
 
 private:
     void updateAttemptCount(int newCount);

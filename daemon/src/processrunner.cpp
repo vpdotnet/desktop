@@ -79,41 +79,43 @@ std::chrono::milliseconds RestartStrategy::processFailed(std::chrono::millisecon
     return thisDelay;
 }
 
-void UidGidProcess::setupChildProcess()
+UidGidProcess::UidGidProcess()
 {
 #ifdef Q_OS_UNIX
-    // Must set group first (otherwise we might not have privs to set group later if setUser is successful)
-    if(!_desiredGroup.isEmpty())
-    {
-        struct group* gr = getgrnam(qPrintable(_desiredGroup));
-        if(!gr)
+    setChildProcessModifier([this]() {
+        // Must set group first (otherwise we might not have privs to set group later if setUser is successful)
+        if(!_desiredGroup.isEmpty())
         {
-            qWarning().nospace() << "Failed to set group to "
-                << _desiredGroup << " (" << errno << ": "
-                << qt_error_string(errno) << ")";
+            struct group* gr = getgrnam(qPrintable(_desiredGroup));
+            if(!gr)
+            {
+                qWarning().nospace() << "Failed to set group to "
+                    << _desiredGroup << " (" << errno << ": "
+                    << qt_error_string(errno) << ")";
+            }
+            else if(setegid(gr->gr_gid) == -1 && setgid(gr->gr_gid) == -1)
+            {
+                qWarning().nospace() << "Failed to set group id to "
+                    << gr->gr_gid << " (" << errno << ": "
+                    << qt_error_string(errno) << ")";
+            }
         }
-        else if(setegid(gr->gr_gid) == -1 && setgid(gr->gr_gid) == -1)
-        {
-            qWarning().nospace() << "Failed to set group id to "
-                << gr->gr_gid << " (" << errno << ": "
-                << qt_error_string(errno) << ")";
-        }
-    }
 
-    if(!_desiredUser.isEmpty())
-    {
-        struct passwd* pw = getpwnam(qPrintable(_desiredUser));
-        if(!pw)
+        if(!_desiredUser.isEmpty())
         {
-            qWarning().nospace() << "Failed to set user to " << _desiredUser
-                << " (" << errno << ": " << qt_error_string(errno) << ")";
+            struct passwd* pw = getpwnam(qPrintable(_desiredUser));
+            if(!pw)
+            {
+                qWarning().nospace() << "Failed to set user to " << _desiredUser
+                    << " (" << errno << ": " << qt_error_string(errno) << ")";
+            }
+            else if(seteuid(pw->pw_uid) == -1 && setuid(pw->pw_uid) == -1)
+            {
+                qWarning().nospace() << "Failed to set user id to " << pw->pw_uid
+                    << " (" << errno << ": " << qt_error_string(errno) << ")";
+            }
         }
-        else if(seteuid(pw->pw_uid) == -1 && setuid(pw->pw_uid) == -1)
-        {
-            qWarning().nospace() << "Failed to set user id to " << pw->pw_uid
-                << " (" << errno << ": " << qt_error_string(errno) << ")";
-        }
-    }
+    });
 #endif
 }
 

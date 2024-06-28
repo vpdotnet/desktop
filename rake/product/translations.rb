@@ -69,7 +69,6 @@ def defineTranslationTargets(stage, artifacts)
             (inputExtensions + almostUnusedExtensions).join(','),
             '-tr-function-alias', 'qsTr=uiTr,qsTranslate=uiTranslate',
             '-disable-heuristic', 'sametext', '-disable-heuristic', 'similartext',
-            '-disable-heuristic', 'number'
         ]
         args += inputFolders
         args << '-ts'

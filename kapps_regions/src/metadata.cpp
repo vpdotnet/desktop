@@ -288,6 +288,8 @@ std::pair<double, double> Metadata::findPiav2RegionCoords(const nlohmann::json &
 {
     try
     {
+        // Ensure the locale is able to parse decimals separated by '.'
+        setlocale(LC_NUMERIC, "C");
         const auto &gpsArray = metadata.at("gps").at(regionId.to_string());
         if(core::jsonArray(gpsArray).size() != 2)
             throw std::runtime_error{"GPS coordinates must be array of 2 elements"};

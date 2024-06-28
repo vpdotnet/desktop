@@ -120,7 +120,7 @@ every symbol must be resolved, otherwise the loading will not be successful.
 
 Qt is made of multiple dynamic libraries, shipped together with all the other dependencies.  
 The current known Qt components that use/load Openssl libs are:
-  - QtNetwork (called libQt5Network.so.5 on Linux)
+  - QtNetwork (called libQt5Network.so.6 on Linux)
 
 Qt is loading Openssl dynamically at run-time and it is **NOT** linking against it at build-time.  
 (Dynamic loading / Run-time dynamic linking)  

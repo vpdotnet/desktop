@@ -277,7 +277,7 @@ void ClientInterface::addCheckedLanguage(QVector<ClientLanguage> &languages,
     newLang.locale(locale);
     newLang.rtlMirror(rtlMirror);
 
-    if(!QFontDatabase{}.families(writingSystem).isEmpty())
+    if(!QFontDatabase::families(writingSystem).isEmpty())
     {
         // This script is supported, use the native name and allow this language
         newLang.displayName(nativeName);
@@ -569,9 +569,9 @@ Client::Client(bool hasExistingSettingsFile, const QJsonObject &initialSettings,
     qmlRegisterType<ClientSettings>("PIA.NativeClient.Settings", 1, 0, "NativeClientSettings");
 
     qmlRegisterType<TrayIconManager>("PIA.Tray", 1, 0, "TrayIconManager");
-    qmlRegisterType<TrayMetrics>(); // Not instantiated by QML.
+    qmlRegisterType<TrayMetrics>("PIA.TrayMetrics", 1, 0, "TrayMetrics"); // Not instantiated by QML.
     // QmlCallResult objects are used by QML but not instantiated by it.
-    qmlRegisterType<QmlCallResult>();
+    qmlRegisterType<QmlCallResult>("PIA.QMLCallResult", 1, 0, "QMLCallResult");
     // The Error type is used by QML to refer to Error::Code values.
     // Note that we call this type 'NativeError' in QML because 'Error' refers
     // to the JS Error class.

@@ -50,6 +50,7 @@ QtObject {
   readonly property double connectionTimestamp: NativeDaemon.state.connectionTimestamp
   readonly property var overridesFailed: NativeDaemon.state.overridesFailed
   readonly property var overridesActive: NativeDaemon.state.overridesActive
+  readonly property bool vpnSessionExpired: NativeDaemon.state.vpnSessionExpired
   readonly property double openVpnAuthFailed: NativeDaemon.state.openVpnAuthFailed
   readonly property double connectionLost: NativeDaemon.state.connectionLost
   readonly property double proxyUnreachable: NativeDaemon.state.proxyUnreachable

@@ -16,7 +16,6 @@
 // along with the Private Internet Access Desktop Client.  If not, see
 // <https://www.gnu.org/licenses/>.
 
-.pragma library
 /*
 ===keyutil.js===
  This library contains utilities used to implement keyboard navigation for
@@ -229,7 +228,7 @@ function handleButtonKeyEvent(keyEvent) {
   // 'Enter' to refer to the one on the numeric keypad.  Both should work for
   // this type of control.
   if(keyEvent.key === Qt.Key_Return || keyEvent.key === Qt.Key_Enter ||
-     keyEvent.key === Qt.Key_Space) {
+    keyEvent.key === Qt.Key_Space) {
     keyEvent.accepted = true
     return true
   }
@@ -258,6 +257,7 @@ function handlePartialButtonKeyEvent(keyEvent, focusCue) {
       focusCue.reveal()
     return true // Caller handles the event
   }
+
   return false
 }
 

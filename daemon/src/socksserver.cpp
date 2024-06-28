@@ -271,13 +271,11 @@ SocksConnection::SocksConnection(QTcpSocket &socksSocket,
     _targetSocket.setProxy({QNetworkProxy::ProxyType::NoProxy});
 
     connect(&_socksSocket, &QTcpSocket::readyRead, this, &SocksConnection::onSocksReadyRead);
-    connect(&_socksSocket, QOverload<QTcpSocket::SocketError>::of(&QTcpSocket::error),
-            this, &SocksConnection::onSocksError);
+    connect(&_socksSocket, &QTcpSocket::errorOccurred, this, &SocksConnection::onSocksError);
     connect(&_socksSocket, &QTcpSocket::disconnected, this, &SocksConnection::onSocksDisconnected);
     connect(&_targetSocket, &QTcpSocket::connected, this, &SocksConnection::onTargetConnected);
     connect(&_targetSocket, &QTcpSocket::readyRead, this, &SocksConnection::onTargetReadyRead);
-    connect(&_targetSocket, QOverload<QTcpSocket::SocketError>::of(&QTcpSocket::error),
-            this, &SocksConnection::onTargetError);
+    connect(&_targetSocket, &QTcpSocket::errorOccurred, this, &SocksConnection::onTargetError);
     connect(&_targetSocket, &QTcpSocket::disconnected, this, &SocksConnection::onTargetDisconnected);
 
     _abortTimer.setSingleShot(true);

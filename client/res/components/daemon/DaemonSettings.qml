@@ -66,6 +66,8 @@ QtObject {
   readonly property bool surveyRequestEnabled: NativeDaemon.settings.surveyRequestEnabled
   readonly property int lastDismissedAppMessageId: NativeDaemon.settings.lastDismissedAppMessageId
   readonly property bool showAppMessages: NativeDaemon.settings.showAppMessages
+  readonly property bool enableBackgroundLatencyChecks: NativeDaemon.settings.enableBackgroundLatencyChecks
+
   readonly property var manualServer: NativeDaemon.settings.manualServer
   readonly property var automationRules: NativeDaemon.settings.automationRules
   readonly property bool automationEnabled: NativeDaemon.settings.automationEnabled

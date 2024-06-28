@@ -447,8 +447,8 @@ private:
     // If was disconnected: just update the state
     void systemWake();
     // Call this function in key places where we know the system must be awake.
-    // This is to avoid a potential situation where the system goes to sleep but 
-    // we never receive the wake notification (client crashed for instance?). 
+    // This is to avoid a potential situation where the system goes to sleep but
+    // we never receive the wake notification (client crashed for instance?).
     // If we never set it back to awake the killswitch would be stuck on, without giving
     // the user a way to know it.
     void mustBeAwake();
@@ -459,7 +459,7 @@ private:
     // i.e. connected before disconnecting, and disconnected before connecting.
     // This is to make sure the action really resolves, and the VPN is not left in
     // an invalid state.
-    // 
+    //
     // Will be called whenever the state transitions from sleep to awake and whenever
     // the VPN connection changes state.
     void handleSleepWakeTransitions();

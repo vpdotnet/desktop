@@ -53,6 +53,7 @@ module PiaUnitTest
            t << 'core_fs'
            t << 'constrainedhash'
            t << 'flow_tracker'
+           t << 'scutilparse'
         end
     end
 
@@ -102,11 +103,10 @@ module PiaUnitTest
         if(Build.windows?)
             allTestsLib
                 .useQt('xml')
-                .useQt('WinExtras')
         elsif(Build.macos?)
             allTestsLib
+                .sourceFile('extras/openvpn/mac/scutil_parser.cpp') # Only used by tst_scutilparse.cpp on macOS
                 .include('extras/installer/mac/helper')
-                .useQt('MacExtras')
         elsif(Build.linux?)
             allTestsLib
                 .useQt('Widgets')
@@ -151,7 +151,6 @@ module PiaUnitTest
             if(Build.windows?)
                 testExec
                     .useQt('Xml')
-                    .useQt('WinExtras')
                     .linkArgs(['/IGNORE:4099'])
             elsif(Build.macos?)
                 testExec
@@ -160,7 +159,6 @@ module PiaUnitTest
                     .framework('Security')
                     .framework('ServiceManagement')
                     .framework('SystemConfiguration') # Daemon dependencies
-                    .useQt('MacExtras')
             elsif(Build.linux?)
                 testExec.useQt('Widgets')
             end

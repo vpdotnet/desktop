@@ -66,7 +66,6 @@ module PiaDesktop
             .resource("brands/#{Build::Brand}/gen_res", ['img/**/*'])
             .resource('.', ['CHANGELOG.md', 'BETA_AGREEMENT.md'])
             .useQt('Qml')
-            .useQt('QmlModels') # TODO - should pick up as dependency of Qml
             .useQt('Quick')
             .useQt('QuickControls2')
             .useQt('Gui')
@@ -74,20 +73,15 @@ module PiaDesktop
         if(Build.windows?)
             client
                 .sourceFile("brands/#{Build::Brand}/brand_client.rc")
-                .resource('client/shader_res_rhi', ['**/*'], [])
-                .useQt('WinExtras')
                 .linkArgs(["/MANIFESTINPUT:#{File.absolute_path('client/src/win/res/dpiManifest.xml')}"])
         elsif(Build.macos?)
             client
                 .include('extras/installer/mac/helper')
-                .resource('client/shader_res_gl', ['**/*'], [])
                 .framework('AppKit')
                 .framework('Security')
                 .framework('ServiceManagement')
-                .useQt('MacExtras')
         elsif(Build.linux?)
             client
-                .resource('client/shader_res_gl', ['**/*'], [])
                 .useQt('Widgets')
         end
         client.define("QT_QML_DEBUG") if Build.debug?
@@ -101,11 +95,11 @@ module PiaDesktop
             .resource('extras/support-tool', ['components/**/*', 'qtquickcontrols2.conf'])
             .use(commonlib.export)
             .use(version.export)
-            .useQt('Quick')
-            .useQt('Gui')
             .useQt('Qml')
-            .useQt('QmlModels') # TODO - should come from Qml dep
+            .useQt('Quick')
             .useQt('QuickControls2')
+            .useQt('Gui')
+            .useQt('Widgets')
             .install(stage, :bin)
 
         daemonName = Build.windows? ? "#{Build::Brand}-service" : "#{Build::Brand}-daemon"
@@ -235,7 +229,7 @@ module PiaDesktop
                                 installerArtifact] do |t|
             FileList[File.join(debugSymbols.componentDir, '*')].each { |f| FileUtils.rm_rf(f) }
             symbols_path = File.join(debugSymbols.componentDir, "syms")
-            
+
             skipDebugSymbols = Util.selectBooleanSymbol('SKIP_DEBUG_SYMBOLS', false)
             skipQtDebugSymbols = Util.selectBooleanSymbol('SKIP_QT_DEBUG_SYMBOLS', false)
             # We can skip Qt symbols separately because some Qt installs do not have debug symbols.
@@ -255,7 +249,7 @@ module PiaDesktop
 
                 clientBin = Build.selectDesktop("#{Build::Brand}-client.exe", version.productName, "#{Build::Brand}-client")
                 DumpSyms.dump_syms(File.join(stage.dir, binPath, clientBin), symbols_path)
-                
+
                 ["#{Build::Brand}-clientlib", "kapps_core", "kapps_net", "kapps_regions", "#{Build::Brand}-commonlib"].each do |libname|
                     lib = "#{libname}.#{Build::selectDesktop('dll', 'dylib', 'so')}"
                     DumpSyms.dump_syms(File.join(stage.dir, libPath, lib), symbols_path)

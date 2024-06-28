@@ -136,6 +136,13 @@ class Build
         return linuxVal if linux?
         raise "Cannot build desktop component when targeting #{Platform}"
     end
+
+    # Select a value based on arch, for x64 and arm only.
+    def self.selectArch(x64Val, arm64Val)
+        return x64Val if Util.hostArchitecture == :x86_64
+        return arm64Val if Util.hostArchitecture == :arm64
+    end
+
     # Select a value based on platform
     # For example:
     # binDir = Build.selectPlatform('/', 'Contents/MacOS', 'bin', 'bin', 'Contents/iOS')
@@ -161,8 +168,7 @@ class Build
         # Otherwise, this is a cross arch for the host platform.  Check if this
         # is possible on this platform.
 
-        # Windows only supports x86_64 hosts, and either x86 or x86_64
-        # targets.  Both can be executed.
+        # Windows only supports x86_64 hosts and targets.
         return true if windows?
 
         # The only cross execution possible on macOS is executing x86_64 on an
@@ -208,18 +214,20 @@ class Build
     # Apple platforms support a "universal" architecture that creates "fat"
     # builds including all supported architectures for that platform.  The
     # default is still the host machine arch only for dev workflow.
+    # Note: we haven't worked on android and ios builds in over a year now,
+    # so support will be lacking.
     PlatformSupportedArchitectures = {
-        windows: [:x86, :x86_64],
+        windows: [:x86_64],
         macos: PlatformUniversalArchitectures[:macos] + [:universal],
-        linux: [:x86_64, :armhf, :arm64],
-        android: [:x86, :x86_64, :armhf, :arm64],
+        linux: [:x86_64, :arm64],
+        android: [:x86_64, :arm64],
         ios: PlatformUniversalArchitectures[:ios] + [:universal],
         iossim: PlatformUniversalArchitectures[:iossim] + [:universal]
     }
     # Default to the host architecture for everything except iOS:
     # - desktop - default to host for testing
-    # - Android - default to host for testing in virtual device, all host archs
-    #   are supported, even x86/x86_64
+    # - Android - default to host for testing in virtual device, most host archs
+    #   are supported, even x86_64
     # - iOS simulator - default to host for testing in simulator, supports both
     #   extant macOS architectures.
     #
@@ -258,6 +266,7 @@ class Build
 
     # Minimum macOS version supported by the project.  (In addition to clang.rb,
     # also used in some generated Info.plist files.)
+    # Current minimum supported version is 10.14
     MacosVersionMajor = 10
     MacosVersionMinor = 14
 

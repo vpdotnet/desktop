@@ -6,16 +6,15 @@ require 'forwardable'
 
 # Locate Qt to use:
 # - Build-time tools: rcc, lupdate, moc, etc.
-# - Qt modules, such as Qt5Core, Qt5Network, etc.
+# - Qt modules, such as Qt6Core, Qt6Network, etc.
 class Qt
     extend Forwardable
 
-    # Specify the preferred minor/patch version of Qt 5 here (the major version
-    # must be 5).
+    # Specify the preferred minor/patch version of Qt 6 here (the major version
+    # must be 6).
     #
-    # We use PIA's build of Qt on Linux; PIA may build with the qt.io releases
-    # but we do not test it.  Windows and Mac still currently use the qt.io
-    # builds but will likely switch to PIA's build in the future.
+    # We are currently using PIA's build of Qt on Linux.
+    # Windows and Mac are using aqt build.
     #
     # - If the PIA build of the exact preferred version is available, it's used.
     # - Otherwise, if a PIA build of another patch level of the preferred minor
@@ -28,8 +27,8 @@ class Qt
     # while still allowing the product to be built with whatever version of Qt
     # is available.  (Later releases may likely work, but there are no
     # guarantees.)
-    PreferredQtMinorVersion = 15
-    PreferredQtPatchVersion = 2
+    PreferredQtMinorVersion = 2
+    PreferredQtPatchVersion = 4
 
     # Score biases to implement the preferences above
     ExactMatchBias = 2000000
@@ -51,8 +50,8 @@ class Qt
             searchRoots << '/opt' if Build.linux?
             searchRoots << ENV['HOME'] if Build.posix?
 
-            # Allow C:/Qt/... as well as C:/Qt5.12/..., etc.
-            searchPatterns = Util.joinPaths([searchRoots, ['Qt*/5.*']])
+            # Allow C:/Qt/... as well as C:/Qt6.2/..., etc.
+            searchPatterns = Util.joinPaths([searchRoots, ['Qt*/6.*']])
 
             qtVersion = FileList[*searchPatterns].max_by do |p|
                 # Both host and target Qt roots must be present
@@ -73,7 +72,7 @@ class Qt
                 sampleRoot = (searchRoots.length > 0 ? searchRoots[0] : "...")
                 raise "Unable to find Qt installation in #{searchPatterns}\n" +
                     "Install Qt and/or set QTROOT to the preferred Qt build, such as:\n" +
-                    "QTROOT=#{File.join(sampleRoot, "Qt/5.#{PreferredQtMinorVersion}.#{PreferredQtPatchVersion}")}"
+                    "QTROOT=#{File.join(sampleRoot, "Qt/6.#{PreferredQtMinorVersion}.#{PreferredQtPatchVersion}")}"
             end
         end
 
@@ -84,13 +83,13 @@ class Qt
             # deprecate functionality frequently in minor versions, and in
             # particular the Mac accessibility code fills in a lot of missing
             # internals from Qt
-            puts "warning: Differs from preferred version 5.#{PreferredQtMinorVersion}.#{PreferredQtPatchVersion}"
+            puts "warning: Differs from preferred version 6.#{PreferredQtMinorVersion}.#{PreferredQtPatchVersion}"
         elsif(@actualVersion[1] != PreferredQtPatchVersion)
             # Minor version matches, but patch level is different.  This will
             # probably work, but we haven't tested it.
             # If the actual patch version is lower, it may reintroduce Qt bugs
             # that have been fixed.
-            puts "note: Different patch number from preferred version 5.#{PreferredQtMinorVersion}.#{PreferredQtPatchVersion}"
+            puts "note: Different patch number from preferred version 6.#{PreferredQtMinorVersion}.#{PreferredQtPatchVersion}"
         end
 
         # Determine the Qt build to use for the specified architecture.  Select
@@ -113,7 +112,7 @@ class Qt
 
         # Use a probe to detect if the Qt directory changes
         @qtProbe = Probe.new('qt')
-        @qtProbe.file('qtversion.txt', "5.#{@actualVersion[0]}.#{@actualVersion[1]}\n")
+        @qtProbe.file('qtversion.txt', "6.#{@actualVersion[0]}.#{@actualVersion[1]}\n")
         @qtProbe.file('qtroot.txt', "#{@hostQtRoot}\n#{@targetQtRoot}\n")
         qtProbeArtifact = @qtProbe.artifact('qtroot.txt')
 
@@ -127,8 +126,8 @@ class Qt
             .include(File.join(@targetQtRoot, "include"))
             .include(File.join(@targetQtRoot, "mkspecs/#{mkspec}"))
             .libPath(File.join(@targetQtRoot, "lib"))
-        @core.lib('qtmain') if Build.windows? && Build.release?
-        @core.lib('qtmaind') if Build.windows? && Build.debug?
+        @core.lib('Qt6EntryPoint') if Build.windows? && Build.release?
+        @core.lib('Qt6EntryPointd') if Build.windows? && Build.debug?
         @core.lib('Shell32') if Build.windows? # Required by qtmain for CommandLineToArgvW
         if(Build.macos?)
             # Specify Qt framework path on Mac
@@ -168,8 +167,7 @@ class Qt
     # on the host.
     def getQtRoots(qtVersionPath)
         # * Windows always uses the target arch for tools.  We only support
-        #   x86_64 hosts and either x86_64/x86 targets, so the target arch can
-        #   always be executed.  windeployqt does not work across architectures,
+        #   x86_64 hosts and targets. windeployqt does not work across architectures,
         #   it deploys the wrong libraries.
         # * macOS prefers a "universal" build because it works for any target
         #   (host, cross, or universal), but the host arch can be used if
@@ -205,11 +203,12 @@ class Qt
         qtToolchains = ['clang', 'gcc'] if Build.linux?
 
         suffix = '' # :x86 has no suffix
-        if(arch == :x86_64)
+        if(arch == :x86)
+            raise "Unsupported architecture: x86"
+        elsif(arch == :x86_64)
             suffix = '_64'
-        elsif(arch != :x86)
-            # Qt doesn't provide armhf, arm64, or universal builds.  The PIA Qt
-            # builds include the entire architecture name here.
+        else
+            # Our Qt builds include the entire architecture name here.
             suffix = '_' + arch.to_s
         end
         qtToolchains.map { |t| t + suffix }
@@ -248,9 +247,9 @@ class Qt
     def getQtPathVersion(path)
         # Valid paths need to end in the versioned directory, but a parent
         # called Qt is only required for autodetection in /opt or C:/
-        #   e.g [/opt/Qt/5.15.2, /opt/5.15.2, /home/user/5.15.2, /home/user/5.15.2, C:/5.15.2]
+        #   e.g [/opt/Qt/6.2.4, /opt/6.2.4, /home/user/6.2.4, /home/user/6.2.4, C:/6.2.4]
         # Note that the path must use forward slash, even on windows.
-        verMatch = path.match('^.*/5\.(\d+)\.?(\d*)$')
+        verMatch = path.match('^.*/6\.(\d+)\.?(\d*)$')
         if(verMatch == nil)
             raise "Cannot parse Qt version from #{path}"
         else
@@ -267,14 +266,14 @@ class Qt
 
         if(Build.windows?)
             comp.include(File.join(@targetQtRoot, "include/Qt#{name}"))
-            comp.lib("Qt5#{name}") if Build.release?
-            comp.lib("Qt5#{name}d") if Build.debug?
+            comp.lib("Qt6#{name}") if Build.release?
+            comp.lib("Qt6#{name}d") if Build.debug?
         elsif(Build.macos?)
             comp.include(File.join(@targetQtRoot, "lib/Qt#{name}.framework/Headers"))
             comp.framework("Qt#{name}")
         elsif(Build.linux?)
             comp.include(File.join(@targetQtRoot, "include/Qt#{name}"))
-            comp.lib(File.join(@targetQtRoot, 'lib', "libQt5#{name}.so.5.#{@actualVersion[0]}.#{@actualVersion[1]}"))
+            comp.lib(File.join(@targetQtRoot, 'lib', "libQt6#{name}.so.6.#{@actualVersion[0]}.#{@actualVersion[1]}"))
         else
             raise "Don't know how to define Qt component #{name} for #{Build::Platform}"
         end
@@ -328,7 +327,12 @@ class Qt
     # Get the path to a tool, such as rcc, lupdate, moc, etc.  The tool name
     # should include the .exe extension on Windows.
     def tool(name)
-        File.join(@hostQtRoot, 'bin', name).tap{|v| v << '.exe' if Build.windows?}
+        found_tool = File.join(@hostQtRoot, 'bin', name).tap{|v| v << '.exe' if Build.windows?}
+        if File.file? found_tool
+            found_tool
+        else
+            File.join(@hostQtRoot, 'libexec', name).tap{|v| v << '.exe' if Build.windows?}
+        end
     end
 
     # Get an artifact path (for probe text files)

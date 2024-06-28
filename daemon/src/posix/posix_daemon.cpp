@@ -54,14 +54,18 @@
 
 #include <QDir>
 
+#include <QOperatingSystemVersion>
+
 #define VPN_GROUP BRAND_CODE "vpn"
 
+#ifdef Q_OS_MACOS
 namespace
 {
     // Periodic checks of MacOS Network Extension (aka Split Tunnel) Status
-    const std::chrono::seconds netExtensionCheckerShortInterval{1};
-    const std::chrono::seconds netExtensionCheckerLongInterval{30};
+    const std::chrono::seconds netExtensionCheckerShortInterval{2};
+    const std::chrono::seconds netExtensionCheckerLongInterval{60};
 }
+#endif
 
 void setUidAndGid()
 {
@@ -126,6 +130,15 @@ PosixDaemon::PosixDaemon()
     config.transparentProxyLogFile = Path::TransparentProxyLogFile;
 #endif
 
+#if defined(Q_OS_MAC)
+    // Force Split tunnel off for unsupported versions of macOS.
+    // We do this as early as possible, before firewall rules are applied
+    if(QOperatingSystemVersion::current().majorVersion() < 11)
+    {
+        _settings.splitTunnelEnabled(false);
+    }
+#endif
+
     KAPPS_CORE_INFO() << "Configuring firewall";
     _pFirewall.emplace(config);
 
@@ -135,10 +148,7 @@ PosixDaemon::PosixDaemon()
     // There's no installation required for split tunnel on Linux (!)
     _state.netExtensionState(qEnumToString(StateModel::NetExtensionState::Installed));
 #elif defined(Q_OS_MACOS)
-    // This will create and start the service that will monitor the network
-    // extension installation state. The service is long-lived and will
-    // periodically actively check for the state
-    monitorNetExtensionInstallation();
+    setUpMacosSTMonitoring();
 #endif
 
 #ifdef Q_OS_LINUX
@@ -187,6 +197,68 @@ PosixDaemon::PosixDaemon()
 #endif
 }
 
+#ifdef Q_OS_MAC
+void PosixDaemon::setUpMacosSTMonitoring()
+{
+    _pNetExtensionChecker = std::make_unique<NetExtensionChecker>(
+        Path::TransparentProxyCliExecutable,
+        netExtensionCheckerShortInterval,
+        netExtensionCheckerLongInterval);
+
+    if(_settings.splitTunnelEnabled())
+    {
+        // Check and set the sysext's state, this will update the tooltip
+        const auto NEState = _pNetExtensionChecker->checkInstallationState();
+        _state.netExtensionState(qEnumToString(NEState));
+        _pNetExtensionChecker->start(NEState);
+    }
+    else
+    {
+        // We do not check the sysext installation state if Split Tunnel is disabled.
+        // We might also be on an unsupported os version, but we lack a specific tooltip for that case
+        _state.netExtensionState(qEnumToString(StateModel::NetExtensionState::NotInstalled));
+    }
+
+    // React to Split tunnel state changes: start or stop monitoring
+    connect(&_settings, &DaemonSettings::splitTunnelEnabledChanged,
+            this, [&]()
+            {
+                if(_settings.splitTunnelEnabled())
+                {
+                    const auto NEState = _pNetExtensionChecker->checkInstallationState();
+                    _state.netExtensionState(qEnumToString(NEState));
+                    _pNetExtensionChecker->start(NEState);
+                }
+                else
+                {
+                    _pNetExtensionChecker->stop();
+                }
+            });
+
+    // React to sysext installation state change: adjust timer
+    connect(_pNetExtensionChecker.get(), &NetExtensionChecker::stateChanged,
+            this, [this](StateModel::NetExtensionState NEState)
+            {
+                if(_settings.splitTunnelEnabled())
+                {
+                    _state.netExtensionState(qEnumToString(NEState));
+                    _pNetExtensionChecker->updateTimer(NEState);
+                    if(NEState == StateModel::NetExtensionState::NotInstalled)
+                    {
+                        // Very weird state:
+                        // - Split tunnel is enabled (so monitoring of the extension is running)
+                        // - User removes the proxy
+                        // It's better if we disable the feature, since the proxy has been removed anyway.
+                        // Users will have to enable the feature again (instead of having to manually disable it first)
+                        qInfo() << "MacOS Network Extension has been uninstalled by the user. Disabling Split tunnel";
+                        _settings.splitTunnelEnabled(false);
+                    }
+                }
+            });
+}
+
+#endif
+
 PosixDaemon::~PosixDaemon()
 {
 #ifdef Q_OS_LINUX
@@ -203,47 +275,6 @@ PosixDaemon::~PosixDaemon()
     }
 #endif
 }
-
-#ifdef Q_OS_MAC
-StateModel::NetExtensionState PosixDaemon::getNetExtensionState() const
-{
-    if(_state.netExtensionState() == "Installed")
-        return StateModel::NetExtensionState::Installed;
-    else
-        return StateModel::NetExtensionState::NotInstalled;
-}
-
-void PosixDaemon::monitorNetExtensionInstallation()
-{
-    _pNetExtensionChecker = std::make_unique<NetExtensionChecker>(
-        Path::TransparentProxyCliExecutable,
-        netExtensionCheckerShortInterval,
-        netExtensionCheckerLongInterval);
-    // Manually checking once, at startup
-    auto state = _pNetExtensionChecker->checkInstallationState();
-    // Setting the state
-    _state.netExtensionState(qEnumToString(state));
-
-    // Dynamically update installation state based on the signal value
-    connect(_pNetExtensionChecker.get(), &NetExtensionChecker::stateChanged,
-            this, [this](StateModel::NetExtensionState netExtState)
-            {
-                _state.netExtensionState(qEnumToString(netExtState));
-                _pNetExtensionChecker->updateTimer(getNetExtensionState(), _settings.splitTunnelEnabled());
-            });
-
-    // Dynamically adjust timer.
-    // We set the short one if Split Tunnel is enabled and the extension
-    // is not (yet) installed
-    connect(&_settings, &DaemonSettings::splitTunnelEnabledChanged,
-            this, [&]()
-            {
-                _pNetExtensionChecker->updateTimer(getNetExtensionState(), _settings.splitTunnelEnabled());
-            });
-
-    _pNetExtensionChecker->start(getNetExtensionState(), _settings.splitTunnelEnabled());
-}
-#endif
 
 std::shared_ptr<NetworkAdapter> PosixDaemon::getNetworkAdapter()
 {

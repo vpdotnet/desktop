@@ -16,7 +16,7 @@
 // along with the Private Internet Access Desktop Client.  If not, see
 // <https://www.gnu.org/licenses/>.
 
-import QtQuick 2.9
+import QtQuick 2.15
 import QtQuick.Controls 2.3
 import QtQuick.Layouts 1.3
 import QtQuick.Window 2.3
@@ -37,12 +37,14 @@ import "../"
 
 OverlayDialog {
   id: ipSubnetDialog
-  buttons: [ Dialog.Ok, Dialog.Cancel ]
+  // standard buttons like Dialog.Ok are not displayed on this page.
+  // This is why we switched to using custom button
+  buttons: [{ text: uiTranslate("OverlayDialog", "OK", "dialog button"), role: DialogButtonBox.AcceptRole }, { text: uiTranslate("OverlayDialog", "Cancel", "dialog button"), role: DialogButtonBox.RejectRole }]
   canAccept: (!ipSubnet.visible || (ipSubnet.text.length > 0 && ipSubnet.acceptableInput))
   contentWidth: 300
-  RegExpValidator {
+  RegularExpressionValidator {
     id: ipValidator;
-    regExp: {
+    regularExpression: {
         // Regex for ipv4 section (the part between successive dots)
         var ipv4Section = /(?:(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))/.source
         return new RegExp(
@@ -91,27 +93,33 @@ OverlayDialog {
       color: Theme.settings.inputDescriptionColor
     }
   }
-  function setSubnets() {
+  function showDialog() {
     title = uiTranslate("SplitTunnelAddIpRow", "Add IP Address")
     ipSubnet.setting.currentValue = ""
-    ipSubnet.visible = true;
+    ipSubnet.visible = true
     ipSubnet.focus = true
-    open();
+    open()
   }
   onAccepted: {
+    // This is probably a Qt 6.2.4 bug that happens only on macos.
+    // Without manually de-focusing the TextboxInput, the value in the text box
+    // is written to ipSubnet.currentValue only AFTER the onAccepted callback
+    // is executed.
+    ipSubnet.focus = false
     var subnets = Daemon.settings.bypassSubnets
     var normalizedSubnets = subnets.map(rule => SplitTunnelManager.normalizeSubnet(rule.subnet))
-    if(ipSubnet.currentValue !== '')
-    {
+    if(ipSubnet.currentValue !== '') {
       var newSubnet = SplitTunnelManager.normalizeSubnet(ipSubnet.currentValue)
       if(newSubnet !== '' && !normalizedSubnets.includes(newSubnet))
         subnets.push({mode: "exclude", subnet: newSubnet})
+    } else {
+        console.log("ipSubnet.currentValue is empty")
     }
 
     if(subnets.length > 0)
       Daemon.applySettings({bypassSubnets: subnets})
   }
   onRejected: {
-    ipSubnet.setting.currentValue = ipSubnet.setting.sourceValue;
+    ipSubnet.setting.currentValue = ipSubnet.setting.sourceValue
   }
 }

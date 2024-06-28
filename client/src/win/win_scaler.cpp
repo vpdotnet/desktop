@@ -137,7 +137,8 @@ qreal WinScaler::applyInitialScale()
     HWND winHandle = reinterpret_cast<HWND>(targetWindow().winId());
     HMONITOR windowMonitor = ::MonitorFromWindow(winHandle,
                                                  MONITOR_DEFAULTTONEAREST);
-    _scale = checkScaleLock(_monitorScale.getMonitorScale(windowMonitor));
+    // Hardcoded to 1.0 to let Qt6 handle dpi changes.
+    _scale = 1.0;
 
     // Apply the initial scale factor
     reapplyScale();
@@ -148,6 +149,7 @@ qreal WinScaler::applyInitialScale()
 void WinScaler::updateLogicalSize(const QSizeF &logicalSize)
 {
     _logicalSize = logicalSize;
+    qInfo() << "Logical size" << logicalSize.width() << logicalSize.height();
     reapplyScale();
 }
 
@@ -158,64 +160,11 @@ void WinScaler::reapplyScale() const
 
 LRESULT WinScaler::onGetDpiScaledSizeMsg(WPARAM wParam, LPARAM lParam)
 {
-    // This message was added in Windows 10 along with
-    // AdjustWindowRectExForDpi(). Just bail out if we could not find this
-    // function for some reason.
-    if(!_awrefd.funcAvailable())
-    {
-        qWarning() << "Could not find AdjustWindowRectExForDpi(), WM_GETDPISCALEDSIZE will have default behavior";
-        return FALSE;
-    }
-
-    // Calculate the size for the new DPI based on the logical size with the new
-    // DPI and the size of the nonclient area for the new DPI.
-    //
-    // If we don't handle this message, Windows by default just scales our size
-    // linearly.  That seems to work OK for windows that are resizeable, but it
-    // does not work well for windows that are intended to have a specific size.
-    //
-    // The problem is that Windows attempts to choose a DPI based on the monitor
-    // that the center point of the window is on, but resizing the window to
-    // account for the DPI can move the window's center point to another
-    // monitor.
-    //
-    // It appears that Windows attempts to detect this by preventing the window
-    // from immediately switching back to the previous monitor in response to a
-    // DPI-induced resize.  However, when the window overlaps *three* monitors,
-    // that code breaks down, the resize can still cause another DPI change to
-    // occur.  Windows' default handling of WM_GETDPISCALEDSIZE breaks down
-    // catastrophically.
-    //
-    // This can even be observed in File Explorer and Settings, they both
-    // exhibit strange behavior when dragged around the intersection of three
-    // monitors that have at least two different DPIs.
-    //
-    // Calculating the size based on the desired logical size mitigates this,
-    // but we can't quite work around all of Windows' bugs, because sometimes it
-    // fails to send us a second WM_GETDPISCALEDSIZE during that transition.
-    // Handling this message ourselves means that we recover the next time the
-    // window changes DPI though; the default behavior would leave us stuck at
-    // the wrong size since it just scales from the previous size.
-    const qreal defaultDpi{USER_DEFAULT_SCREEN_DPI};
-    UINT newDpi = static_cast<UINT>(wParam);
-    qreal newScale = checkScaleLock(static_cast<qreal>(newDpi)/defaultDpi);
-    QSize newClientSize = (_logicalSize * newScale).toSize();
-
-    // Apply the nonclient area size using ::AdjustWindowRectExForDpi().
-    RECT nonClientRect{0, 0, newClientSize.width(), newClientSize.height()};
-    _awrefd.call(nonClientRect, getHwnd(), newDpi);
-
-    SIZE *pNewSize = reinterpret_cast<SIZE*>(lParam);
-    pNewSize->cx = nonClientRect.right - nonClientRect.left;
-    pNewSize->cy = nonClientRect.bottom - nonClientRect.top;
-
-    qInfo() << "scaling - DPI:" << newDpi << "scale:" << newScale;
-    qInfo() << "log size:" << _logicalSize.width() << "x" << _logicalSize.height();
-    qInfo() << "new client:" << newClientSize.width() << "x" << newClientSize.height();
-    qInfo() << "new size:" << pNewSize->cx << "x" << pNewSize->cy;
-
-    // TRUE indicates that we've written a new size and Windows should use that.
-    return TRUE;
+    return FALSE;
+    // Before updating to Qt6, we had a pretty intricate setup to adjust scaling.
+    // Now we just let Qt6 handle the whole thing, and this function is left for
+    // compatibility.
+    // Do look at the history for the original implementation.
 }
 
 LRESULT WinScaler::onDpiChangedMsg(WPARAM wParam, LPARAM lParam)
@@ -237,6 +186,9 @@ LRESULT WinScaler::onDpiChangedMsg(WPARAM wParam, LPARAM lParam)
     //
     // Qt actually has code to apply this change itself, but for whatever reason
     // it does not do this for windows with Qt::MSWindowsFixedSizeDialogHint.
+    // With Qt6, we still need to get the window resized, but we keep the scale set
+    // to 1.0 to let Qt6 draw the window.
+    // We still compute the previous values and log them in case we get issues in the future.
     const RECT *pNewSize = reinterpret_cast<const RECT*>(lParam);
     ::SetWindowPos(reinterpret_cast<HWND>(targetWindow().winId()), nullptr,
                    pNewSize->left, pNewSize->top,
@@ -250,11 +202,15 @@ LRESULT WinScaler::onDpiChangedMsg(WPARAM wParam, LPARAM lParam)
     // The wParam contains the X and Y DPI values in the low and high words, but
     // they're always identical (per doc).
     WORD newDpi{LOWORD(wParam)};
-    _scale = checkScaleLock(static_cast<qreal>(newDpi) / defaultDpi);
+    // We will let Qt6 handle scaling, so we force dpi to 1.0 but keep all checks and logs
+    // as they were. This way if users report issues with scaling we will still have scale information.
+    _scale = 1.0;
     emit scaleChanged(_scale);
 
-    qInfo() << "new dpi:" << newDpi << "rect:" << pNewSize->left << pNewSize->top
+    qInfo() << "detected dpi change:" << newDpi << "rect:" << pNewSize->left << pNewSize->top
         << pNewSize->right - pNewSize->left << pNewSize->bottom - pNewSize->top;
+    qInfo() << "computed scale is:" << checkScaleLock(static_cast<qreal>(newDpi) / defaultDpi);
+    qInfo() << "scale is set to 1.0 to let Qt handle it";
     return 0;
 }
 
@@ -304,7 +260,9 @@ double WinWindowMetrics::calcScreenScaleFactor(const PlatformScreens::Screen &sc
                      geometry.bottom()};
     HMONITOR monitorHandle = ::MonitorFromRect(&screenBound,
                                                MONITOR_DEFAULTTONEAREST);
-    return _monitorScale.getMonitorScale(monitorHandle);
+    // Hardcode the scale to 1.0 to let Qt6 do its thing.
+    qInfo() << "computed screen scale factor" << _monitorScale.getMonitorScale(monitorHandle) << ". Will be forced to 1.0";
+    return 1.0;
 }
 
 QMarginsF WinWindowMetrics::calcDecorationSize(const QWindow &window,

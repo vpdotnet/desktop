@@ -148,7 +148,7 @@ FocusScope {
       }
     }
 
-    Keys.onPressed: {
+    Keys.onPressed: event => {
       var pagesTranslated = tabLayout.pages.map(function(page) {
         return pageTitleFunc(page.name)
       })
@@ -221,7 +221,7 @@ FocusScope {
   }
 
   // Handle Ctrl+[Shift]+Tab anywhere in the tabs or the page content
-  Keys.onPressed: {
+  Keys.onPressed: event => {
     var nextIndex = KeyUtil.handleSettingsTabKeyEvent(event, listView.currentIndex,
                                                       pagesRepeater.count)
     if(nextIndex >= 0) {

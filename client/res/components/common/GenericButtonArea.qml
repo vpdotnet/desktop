@@ -125,13 +125,13 @@ Item {
   // button.
   property var inKeyPress: null
 
-  Keys.onPressed: {
+  Keys.onPressed: event => {
     if(KeyUtil.handleButtonKeyEvent(event)) {
       focusCue.reveal()
       inKeyPress = event.key
     }
   }
-  Keys.onReleased: {
+  Keys.onReleased: event => {
     if(inKeyPress && inKeyPress === event.key) {
       event.accepted = true
       inKeyPress = null

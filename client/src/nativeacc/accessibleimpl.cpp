@@ -43,16 +43,6 @@ QAccessibleInterface *AccessibleImpl::interfaceFactory(const QString &,
     QQuickItem *pItem = dynamic_cast<QQuickItem*>(pObject);
     if(pItem)
     {
-        // It's not possible for there to be an AccessibleItem for this item
-        // already.  (We don't have to check for notifying an existing one,
-        // etc.)
-        //
-        // When AccessibleItem is created, it calls
-        // QAccessible::queryAccessibleInterface() to either attach an existing
-        // interface or create it if it doesn't exist yet.  Since that ensures
-        // that an interface is created at that time, it's not possible to
-        // create one later.
-        Q_ASSERT(!AccessibleItem::getAccItem(pObject));
         return new AccessibleImpl{*pItem};
     }
 

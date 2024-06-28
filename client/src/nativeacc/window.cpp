@@ -170,7 +170,7 @@ bool WindowAccImpl::isOverlayLayer(const QQuickItem &item) const
 
     // Check if the object is a QQuickOverlay.
     const QMetaObject *pItemMeta = item.metaObject();
-    return pItemMeta && pItemMeta->className() == QLatin1Literal("QQuickOverlay");
+    return pItemMeta && pItemMeta->className() == QLatin1String("QQuickOverlay");
 }
 
 void WindowAccImpl::appendLayerChildren(QList<QAccessibleInterface*> &accChildren,

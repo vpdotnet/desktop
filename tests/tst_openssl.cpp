@@ -134,16 +134,17 @@ private slots:
     // created using the correct key, but are not valid for the payload given
     void testMismatchedSignatures()
     {
-        QTest::ignoreMessage(QtMsgType::QtWarningMsg, QRegularExpression{R"(^\d+:error:04091068:rsa routines:int_rsa_verify:bad signature:crypto[\/\\]+rsa[\/\\]+rsa_sign\.c:220:\n$)"});
+        QTest::ignoreMessage(QtMsgType::QtWarningMsg, QRegularExpression{R"(^.*:error:02000068:rsa routines:ossl_rsa_verify:bad signature:crypto[\/\\]rsa[\/\\]rsa_sign\.c:430:\n$)"});
         QVERIFY(!verifySignature(Environment::defaultRegionsListPublicKey, validSig2, samplePayload1));
-        QTest::ignoreMessage(QtMsgType::QtWarningMsg, QRegularExpression{R"(^\d+:error:04091068:rsa routines:int_rsa_verify:bad signature:crypto[\/\\]+rsa[\/\\]+rsa_sign\.c:220:\n$)"});
+
+        QTest::ignoreMessage(QtMsgType::QtWarningMsg, QRegularExpression{R"(^.*:error:1C880004:Provider routines:rsa_verify:RSA lib:providers[\/\\]implementations[\/\\]signature[\/\\]rsa_sig\.c:788:\n$)"});
         QVERIFY(!verifySignature(Environment::defaultRegionsListPublicKey, validSig1, samplePayload2));
     }
-
+    
     // Test that the garbage signature is rejected
     void testGarbageSignature()
     {
-        QTest::ignoreMessage(QtMsgType::QtWarningMsg, QRegularExpression{R"(^\d+:error:0407008A:rsa routines:RSA_padding_check_PKCS1_type_1:invalid padding:crypto[\/\\]+rsa[\/\\]+rsa_pk1.c:\d+:\n$)"});
+        QTest::ignoreMessage(QtMsgType::QtWarningMsg, QRegularExpression{R"(^.*:error:02000068:rsa routines:ossl_rsa_verify:bad signature:crypto[\/\\]rsa[\/\\]rsa_sign\.c:430:\n$)"});
         QVERIFY(!verifySignature(Environment::defaultRegionsListPublicKey, garbageSig, samplePayload1));
     }
 
@@ -154,10 +155,10 @@ private slots:
         QVERIFY(verifySignature(bogusPubKey, bogusSig2, samplePayload2));
         // That bogus signature should be rejected when expecting the real
         // public key
-        QTest::ignoreMessage(QtMsgType::QtWarningMsg, QRegularExpression{R"(^\d+:error:04067072:rsa routines:rsa_ossl_public_decrypt:padding check failed:crypto[\/\\]+rsa[\/\\]+rsa_ossl.c:588:\n$)"});
+        QTest::ignoreMessage(QtMsgType::QtWarningMsg, QRegularExpression{R"(^.*:error:1C880004:Provider routines:rsa_verify:RSA lib:providers[\/\\]implementations[\/\\]signature[\/\\]rsa_sig\.c:788:\n$)"});
         QVERIFY(!verifySignature(Environment::defaultRegionsListPublicKey, bogusSig2, samplePayload2));
     }
-
+    
     // Verify a real certificate with the real PIA RSA-4096 CA certificate
     void testPiaCACertificate()
     {
@@ -211,7 +212,7 @@ private slots:
         // Including the root itself in the cert chain doesn't affect the result
         certChain.push_back(QSslCertificate{testchainRootCert});
         QTest::ignoreMessage(QtMsgType::QtWarningMsg, R"(Cert validation failed with result 0 for "us-california.privateinternetaccess.com")");
-        QTest::ignoreMessage(QtMsgType::QtWarningMsg, R"(Validation error 19 at depth 2 - "self signed certificate in certificate chain")");
+        QTest::ignoreMessage(QtMsgType::QtWarningMsg, R"(Validation error 19 at depth 2 - "self-signed certificate in certificate chain")");
         QVERIFY(!pPiaCA->verifyHttpsCertificate(certChain, testchainName, true));
         QVERIFY(otherCA.verifyHttpsCertificate(certChain, testchainName, true));
     }

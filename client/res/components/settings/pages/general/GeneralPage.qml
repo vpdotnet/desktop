@@ -65,8 +65,8 @@ Page {
     setting: ClientSetting { name: "connectOnLaunch" }
   }
   CheckboxInput {
-    label: uiTr("Show Service Communication Messages")
-    setting: DaemonSetting { name: 'showAppMessages' }
+    label: uiTr("Allow Background Latency Checks")
+    setting: DaemonSetting { name: 'enableBackgroundLatencyChecks' }
   }
 
   // Row 3: [ colSpan: 2 ]

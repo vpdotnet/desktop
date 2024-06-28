@@ -47,7 +47,7 @@ public:
     // Target window to clip
     Q_PROPERTY(QQuickWindow *targetWindow READ targetWindow WRITE setTargetWindow NOTIFY targetWindowChanged)
     // Rectangular clip bound
-    Q_PROPERTY(QRect clip READ clip WRITE setClip NOTIFY clipChanged)
+    Q_PROPERTY(QRect clipRect READ clipRect WRITE setClipRect NOTIFY clipRectChanged)
     // Rounding radius to apply to the clip bound.  Default is 0, which means
     // the region is an ordinary rectangle.  Positive values cause the region to
     // be a rounded rectangle.
@@ -56,20 +56,20 @@ public:
 private:
     QQuickWindow *_pTargetWindow = nullptr;
     // The clip rectangle assigned to the clip property
-    QRect _clip;
+    QRect _clipRect;
     // The effective clip rectangle - the intersection of the clip rect with the
     // window's client bound.  (Stored to detect changes due to window
     // resizing.)  This does not account for the round radius.
-    QRect _effectiveClip;
+    QRect _effectiveClipRect;
     int _round = 0;
 
 public:
     using QObject::QObject;
 
 private:
-    // Update _effectiveClip - return value indicates whether it changed
-    bool updateEffectiveClip();
-    // Generate a clip mask using the current _effectiveClip and _round
+    // Update _effectiveClipRect - return value indicates whether it changed
+    bool updateEffectiveClipRect();
+    // Generate a clip mask using the current _effectiveClipRect and _round
     QRegion generateClipMask();
     // Apply the current clip mask to the window
     void applyClipMask();
@@ -79,14 +79,14 @@ private:
 public:
     QQuickWindow *targetWindow() const {return _pTargetWindow;}
     void setTargetWindow(QQuickWindow *pTargetWindow);
-    const QRect &clip() const {return _clip;}
-    void setClip(const QRect &clip);
+    const QRect &clipRect() const {return _clipRect;}
+    void setClipRect(const QRect &clipRect);
     int round() const {return _round;}
     void setRound(int round);
 
 signals:
     void targetWindowChanged();
-    void clipChanged();
+    void clipRectChanged();
     void roundChanged();
 };
 

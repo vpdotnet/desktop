@@ -95,6 +95,7 @@ FocusScope {
     padding: 0
     anchors.top: parent.top
     spacing: 8
+    hoverEnabled: false
 
     // This doesn't account for the InfoTip's width, it's allowed to spill into
     // the right margin

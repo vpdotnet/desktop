@@ -96,7 +96,7 @@ namespace Uapi
     // parsed.
     void parseWireguardKey(const QLatin1String &value, wg_key &key);
     // Parse a peer endpoint - parses to either addr4 or addr6.
-    void parsePeerEndpoint(const QLatin1String &value, decltype(wg_peer{}.endpoint) &endpoint);
+    void parsePeerEndpoint(const QLatin1String &value, wg_peer &endpoint);
     void parseAllowedIp(const QLatin1String &value, wg_allowedip &ip);
 
     // Append an IP address to a request

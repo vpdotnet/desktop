@@ -447,7 +447,8 @@ void NativeTrayWin::getIconBound(QRect &iconBound, qreal &screenScale)
                       iconBound.bottom()};
     HMONITOR iconMonitor = ::MonitorFromRect(&winIconBound,
                                              MONITOR_DEFAULTTONEAREST);
-    screenScale = WinScaler::checkScaleLock(_monitorScale.getMonitorScale(iconMonitor));
+    // Hardcoded to 1.0 to let Qt6 handle dpi changes.
+    screenScale = 1.0;
 }
 
 void NativeTrayWin::onLeftClicked()

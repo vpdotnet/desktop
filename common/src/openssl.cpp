@@ -30,18 +30,17 @@
 
 #if defined(Q_OS_WIN)
     #if defined(_WIN64)
-        static const QString libsslName = QStringLiteral("libssl-1_1-x64.dll");
-        static const QString libcryptoName = QStringLiteral("libcrypto-1_1-x64.dll");
+        static const QString libsslName = QStringLiteral("libssl-3-x64.dll");
+        static const QString libcryptoName = QStringLiteral("libcrypto-3-x64.dll");
     #else
-        static const QString libsslName = QStringLiteral("libssl-1_1.dll");
-        static const QString libcryptoName = QStringLiteral("libcrypto-1_1.dll");
+        #error Unsupported OS/arch
     #endif
 #elif defined(Q_OS_MACOS)
-        static const QString libsslName = QStringLiteral("libssl.1.1.dylib");
-        static const QString libcryptoName = QStringLiteral("libcrypto.1.1.dylib");
+        static const QString libsslName = QStringLiteral("libssl.3.dylib");
+        static const QString libcryptoName = QStringLiteral("libcrypto.3.dylib");
 #elif defined(Q_OS_LINUX)
-        static const QString libsslName = QStringLiteral("libssl.so.1.1");
-        static const QString libcryptoName = QStringLiteral("libcrypto.so.1.1");
+        static const QString libsslName = QStringLiteral("libssl.so.3");
+        static const QString libcryptoName = QStringLiteral("libcrypto.so.3");
 #endif
 
 // libssl
@@ -151,14 +150,14 @@ static bool checkOpenSSL()
     // unload the library)
     QLibrary libcrypto{libcryptoPath};
 
-    // We load libcrypto from our App Library path. 
+    // We load libcrypto from our App Library path.
     // We specify the full path to the library to prevent it falling back to system libraries if it fails.
     // (Path::LibraryDir - /opt/piavpn/lib/ on Linux)
     // The LibraryDir path depends on QCoreApplication::applicationDirPath(),
     // which is where the pia-daemon binary is located.
     //
-    // Qt (via the QtNetwork library) also attempts to load libcrypto (and libssl). 
-    // It starts its search in our App Library path too (as we set an rpath) but upon failure, 
+    // Qt (via the QtNetwork library) also attempts to load libcrypto (and libssl).
+    // It starts its search in our App Library path too (as we set an rpath) but upon failure,
     // it WILL search and use system libraries if it finds them.
     // Check the section "Where does the system look for dynamic libraries?"
     // in this document: docs/Dynamic libraries.md
@@ -168,7 +167,7 @@ static bool checkOpenSSL()
     // to prevent them loading incompatible versions of libcrypto.
     //
     //
-    // On Linux use this command: 
+    // On Linux use this command:
     // `sudo pldd $(pgrep pia-daemon) | grep crypto`
     // to list both:
     // - the libraries that have been dynamically loaded using dlopen(3)
@@ -253,10 +252,10 @@ static bool checkOpenSSL()
 
     unsigned long libVersion{OpenSSL_version_num()};
     // The OpenSSL version number has the form:
-    // 0xMNNFFPPS
-    //   || | | ^status (f == release)
-    //   || | ^patch
-    //   || ^ fix
+    // 0xMNNPPPS
+    //   || |  ^status (f == release)
+    //   || ^patch
+    //   ||
     //   |^ minor
     //   ^ major
     auto patchChar = [](unsigned idx) -> char
@@ -271,10 +270,12 @@ static bool checkOpenSSL()
     // text version returned by OpenSSL later.
     qInfo().nospace() << "Loaded OpenSSL " << (libVersion >> 28) << '.'
         << ((libVersion >> 20) & 0xFF) << '.'
-        << ((libVersion >> 12) & 0xFF)
-        << patchChar((libVersion >> 4 & 0xFF));
-    if((libVersion & 0xF) != 0xF)
-        qWarning() << "Not a final release: status" << (libVersion & 0xF);
+        << ((libVersion >> 4) & 0xFFF)
+        << patchChar(libVersion & 0xF);
+    qInfo().nospace() << "Check that the loaded OpenSSL version matches the one below";
+
+    if((libVersion >> 28) != 0x3)
+        qWarning() << "Using an unsupported OpenSSL version!";
 
     // Trace some build info from OpenSSL.  Print everything available, ranging
     // from OPENSSL_VERSION (0) to OPENSSL_ENGINES_DIR (5)

@@ -52,22 +52,22 @@ test_cases.each do |test_case|
             end
 
             if test_case[:allowed_to_leak]
-                it "DNS requests leak" do
-                    Retriable.run(attempts: 2, delay: 2) { PiaCtl.connect }
-                    leak_found = Retriable.run(attempts: 3, delay: 2, expect: true) { DNSLeakChecker.dns_leaks? }
-                    if !leak_found
-                        skip "No leak was found, we can skip this test"
-                    end
-                    expect(leak_found).to be_truthy
+                it "DNS requests can leak" do
+                    expect {
+                        Retriable.run(attempts: 4, delay: 0.5) { 
+                            PiaCtl.disconnect
+                            Retriable.run(attempts: 2, delay: 2) { PiaCtl.connect }
+                            Retriable.run(attempts: 2, delay: 2) {DNSLeakChecker.dns_leaks?}
+                        }
+                    }.not_to raise_error
                 end
             else
                 it "DNS requests do not leak" do
 
                     leak_found = Retriable.run(attempts: 4, delay: 0.5, expect: false) { 
-                        Retriable.run(attempts: 2, delay: 2) { PiaCtl.connect }
-                        result = Retriable.run(attempts: 3, delay: 2, expect: false) { DNSLeakChecker.dns_leaks? }
                         PiaCtl.disconnect
-                        leak_found
+                        Retriable.run(attempts: 2, delay: 2) { PiaCtl.connect }
+                        Retriable.run(attempts: 2, delay: 2, expect: false) { DNSLeakChecker.dns_leaks? }
                     }
                     expect(leak_found).to be_falsey, "Unexpected DNS leak detected"
                 end

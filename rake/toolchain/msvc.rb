@@ -38,7 +38,10 @@ class MsvcToolchain
         #
         # This dump will include the variables already in Rake's environment
         # too, but there's no harm in re-applying those.
-        vcArch = (@architecture == :x86_64) ? 'x64' : 'x86'
+        if @architecture != :x86_64
+            raise "Unsupported arquitecture: #{@architecture}"
+        end
+        vcArch = 'x64'
         vcEnvScript = File.absolute_path('rake/toolchain/msvc_env.bat')
         invokeVcEnvScript = "\"#{vcEnvScript}\" \"#{vcvars}\" #{vcArch}"
         vcEnv = `#{Util.cmd(invokeVcEnvScript)}`
@@ -122,7 +125,6 @@ class MsvcToolchain
 
     # Macros that are always defined when compiling for Windows
     WinMacros = [
-        'QT_NO_DEPRECATED_WARNINGS',
         'UNICODE',
         '_UNICODE',
         'WIN32',
@@ -136,7 +138,7 @@ class MsvcToolchain
     # Macros that depend on variant
     VariantMacros = {
         debug: [
-            # None
+            'PIA_DEBUG'
         ],
         release: [
             'NDEBUG',
@@ -361,7 +363,9 @@ class MsvcToolchain
             '/Fd' + objectFile.ext('.pdb'),
             '/Fo' + objectFile,
             File.absolute_path(sourceFile) # Absolute path allows Qt Creator to open files from diagnostics
-        ].compact
+        ]
+        params += ['/Zc:__cplusplus', '/permissive-']
+        params = params.compact
         params.flatten!
         Util.shellRun winJoinArgs(params)
         CompilerDatabase.create_fragment(sourceFile, objectFile, params)
@@ -436,7 +440,7 @@ class MsvcToolchain
             raise "Unknown target interface: #{interface}"
         end
         params = [
-            Build::CompilerLauncher, 
+            Build::CompilerLauncher,
             @cl,
             '/nologo',
             objFiles,

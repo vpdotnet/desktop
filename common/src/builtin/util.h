@@ -18,7 +18,6 @@
 
 #include "common.h"
 #line HEADER_FILE("builtin/util.h")
-
 #ifndef BUILTIN_UTIL_H
 #define BUILTIN_UTIL_H
 #pragma once
@@ -474,7 +473,9 @@ namespace impl {
     // This cheekily borrows straight from Qt internals, but it was the only
     // way to provide this functionality in a SFINAE friendly manner.
     template<typename T>
-    static inline std::enable_if_t<QMetaTypeId2<T>::Defined, const char*> qTypeName(T*) { return QMetaType::typeName(qMetaTypeId<T>()); }
+    static inline std::enable_if_t<QMetaTypeId2<T>::Defined, const char*> qTypeName(T*) {
+        return QMetaType(qMetaTypeId<T>()).name();
+    }
     static inline const char* qTypeName(...) { return nullptr; }
 }
 
@@ -606,31 +607,6 @@ COMMON_EXPORT bool isDebuggerPresent();
 // currently the only supported values for mode is "logs" and "crash".
 // Pass the path to the diagnostics file if one was written.
 COMMON_EXPORT void startSupportTool(const QString &mode, const QString &diagFile);
-
-// Set the default QTextCodec::codecForLocale() to UTF-8.
-//
-// Without this, QTextStream (and other uses of codecForLocale()) would by
-// default use a codec that depends on the OS locale.  (For example, a Russian-
-// language version of Windows uses Windows-1251 (Cyrillic) by default; English
-// uses Windows-1251 by default.)
-//
-// This is virtually never what we want.  Files like log files might even be
-// corrupted by this behavior if the OS locale changes, since we could write
-// differently encoded text in the same file.  This is also error-prone and
-// difficult to test.
-//
-// On Windows, this would depend on the "language for non-Unicode programs"
-// setting buried in the region and language settings, which sets the system
-// ANSI code page.  (It does _not_ depend on the system's display language,
-// though it appears to be defaulted differently on installation for different
-// languages.)  On Linux, the encoding can be part of the locale, but it's UTF-8
-// on virtually all modern distributions.  On Mac, it's always UTF-8, this is
-// hard-coded in Qt.
-//
-// Instead, call this in main() to set the default to UTF-8 universally.  Note
-// that this is not thread-safe, it must be done before any threads or any text
-// streams (including the Logger) have been created.
-COMMON_EXPORT void setUtf8LocaleCodec();
 
 // Used by the logger to detect a Qt trace that indicates that OpenGL couldn't
 // be initialized on Linux.  This is only detected for the client, not the

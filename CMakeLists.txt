@@ -33,7 +33,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOGEN OFF) # suppress CMake moc/rcc rules
-find_package(Qt5 COMPONENTS Core Quick Network Qml Quick QuickControls2 Gui Test REQUIRED)
+find_package(Qt6 COMPONENTS Core Quick Network Qml Quick QuickControls2 Gui Test REQUIRED)
 
 file(GLOB CLIENT_RES "client/res/**/*")
 file(GLOB SUPPORTTOOL_COMPONENTS "extras/support-tool/components/**/*")
@@ -129,7 +129,7 @@ rake_target(rake-clean clean)
 set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND} -E true")
 set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK "${CMAKE_COMMAND} -E true")
 
-set(RAKE_OUT "${CMAKE_SOURCE_DIR}/out/${BRAND}_${RAKE_VARIANT}_x86_64")
+set(RAKE_OUT "${CMAKE_SOURCE_DIR}/out/${BRAND}_${RAKE_VARIANT}_arm64")
 set_for_platform(RAKE_STAGE_BIN
                  "${RAKE_OUT}/stage"
                  "${RAKE_OUT}/stage/${BRAND_NAME}.app/Contents/MacOS"
@@ -201,25 +201,25 @@ stage_lib(common common "${BRAND}-commonlib")
 stage_lib(clientlib clientlib "${BRAND}-clientlib")
 
 stage_target(cli cli "${BRAND}ctl" "${BRAND}ctl" "${BRAND}ctl")
-target_link_libraries(cli Qt5::Core Qt5::Network)
+target_link_libraries(cli Qt6::Core Qt6::Network)
 
 stage_target(client client "${BRAND}-client" ${BRAND_NAME} "${BRAND}-client")
-target_link_libraries(client Qt5::Core Qt5::Network Qt5::Qml Qt5::Quick Qt5::QuickControls2 Qt5::Gui)
+target_link_libraries(client Qt6::Core Qt6::Network Qt6::Qml Qt6::Quick Qt6::QuickControls2 Qt6::Gui)
 # Annoyingly, Qt's CMake support only permits listing resources via a QRC file.
 # The rake build system (like qbs) allows picking up resources automatically
 # so we don't have to repeat them all in the build script.
 # Use the generated QRC file, although this means a build must be performed for
 # Qt Creator to find QML sources.
-target_sources(client PRIVATE "${RAKE_OUT}/pia-client/qrc_pia-client.qrc")
+target_sources(client PRIVATE "${RAKE_OUT}/Private Internet Access/qrc_Private Internet Access.qrc")
 
 stage_target(daemon daemon "${BRAND}-service" "${BRAND}-daemon" "${BRAND}-daemon")
-target_link_libraries(daemon Qt5::Core Qt5::Network)
+target_link_libraries(daemon Qt6::Core Qt6::Network)
 
 function(unit_test name)
     set(TESTNAME "test-${name}")
     rake_target("rake-${TESTNAME}" ${TESTNAME})
     add_executable(${TESTNAME} EXCLUDE_FROM_ALL "tests/tst_${name}.cpp")
-    target_link_libraries(${TESTNAME} Qt5::Core Qt5::Qml Qt5::Quick Qt5::QuickControls2 Qt5::Gui Qt5::Network)
+    target_link_libraries(${TESTNAME} Qt6::Core Qt6::Qml Qt6::Quick Qt6::QuickControls2 Qt6::Gui Qt6::Network)
     set_property(TARGET ${TESTNAME} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${RAKE_OUT}/${TESTNAME}")
     add_dependencies(${TESTNAME} "rake-${TESTNAME}")
 endfunction()

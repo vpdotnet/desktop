@@ -211,12 +211,21 @@ public:
     // by default and can only be turned on using the CLI
     JsonField(bool, largeLogFiles, false)
 
+    // Whether to allow server latency to be calculated in the background
+    // when the VPN is disconnected
+    JsonField(bool, enableBackgroundLatencyChecks, true)
+
     // Whether to show in-app communication messages to the user
     JsonField(bool, showAppMessages, true)
 
     // Manual server dev setting - for testing specific servers
     JsonField(ManualServer, manualServer, {})
 
+    // Whether the VPN should connect on wake after a sleep - currently only applies to macOS.
+    // This feature exists to work-around a bug where if the VPN goes to sleep and is
+    // still connected it can burn through file descriptors constantly trying to reconnect.
+    // So our approach is to disconnect the VPN when asleep (if it was previously connected),
+    // engage killswitch and then reconnect immediately upon waking.
     JsonField(bool, connectOnWake, false);
 };
 

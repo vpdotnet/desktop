@@ -263,6 +263,7 @@ public:
     void cancelDownload();
 
 private:
+    void downloadTimerElapsed();
     void onDownloadProgress(qint64 bytesReceived, qint64 bytesTotal);
     void onDownloadReadyRead();
     void onDownloadFinished();
@@ -291,6 +292,8 @@ signals:
     void downloadFailed(const QString &version, bool error);
 
 private:
+    // Used to distinguish between a timeout during download or a user manual interruption
+    bool _downloadTimedOut;
     // The version of this daemon.
     SemVersion _daemonVersion;
     // Whether we are running based on calls to start()/stop().
@@ -313,6 +316,9 @@ private:
     // When a download is in progress, the file we are writing to.  This holds
     // an open file when _pDownloadReply is set, it is closed otherwise.
     QFile _installerFile;
+    // When this timer finishes, too much time has passed since the onDownloadProgress()
+    // call. The download is aborted.
+    QTimer _progressTimer;
 };
 
 #endif

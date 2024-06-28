@@ -20,20 +20,20 @@
 #line SOURCE_FILE("networkmonitor.cpp")
 
 #include "networkmonitor.h"
-#include <QTextCodec>
+#include <QStringConverter>
 
 QString NetworkConnection::parseSsidWithCodec(const char *data, std::size_t len,
                                               const char *codec)
 {
-    QTextCodec *pCodec = QTextCodec::codecForName(codec);
-    Q_ASSERT(pCodec);   // UTF-8 and Latin-1 are provided by Qt
-    QTextCodec::ConverterState convState{};
-    convState.flags |= QTextCodec::ConversionFlag::IgnoreHeader;
-    QString result = pCodec->toUnicode(data, static_cast<int>(len), &convState);
-    // If any data were not consumed (UTF-8 data ended in a partial character
-    // sequence, for example), or if invalid characters occurred, the result is
-    // not valid
-    if(convState.remainingChars || convState.invalidChars)
+    std::optional<QStringConverter::Encoding> encoding = QStringConverter::encodingForName(codec);
+    if(!encoding)
+    {
+        qError() << "Failed to retrieve encoding for codec" << codec;
+        return {};
+    }
+    QStringDecoder decoder{*encoding, QStringConverter::Flag::Stateless};
+    QString result = decoder(QByteArrayView(data, len));
+    if(decoder.hasError())
         return {};
     return result;
 }

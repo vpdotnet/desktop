@@ -181,7 +181,10 @@ PiaWindow {
     // Make the window the active window; raise() accomplishes this on macOS
     // whereas requestActivate() does the trick on Windows.
     raise();
-    requestActivate();
+    if(Qt.platform.os !== 'linux')
+    {
+      requestActivate();
+    }
     // The window is now visible, we're done positioning for the initial show
     positioningForShow = false
   }

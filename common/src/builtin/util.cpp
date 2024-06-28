@@ -42,7 +42,7 @@
 #include <QDir>
 #include <QDirIterator>
 #include <QDateTime>
-#include <QTextCodec>
+#include <QStringConverter>
 #include <QElapsedTimer>
 #include <QTimeZone>
 #include <QRect>
@@ -137,11 +137,6 @@ void startSupportTool (const QString &mode, const QString &diagFile)
     crashReportProcess.setProgram(Path::SupportToolExecutable);
     crashReportProcess.setArguments(args);
     crashReportProcess.startDetached();
-}
-
-void setUtf8LocaleCodec()
-{
-    QTextCodec::setCodecForLocale(QTextCodec::codecForName("UTF-8"));
 }
 
 QString getVersionInfo()
@@ -338,7 +333,7 @@ void stopCrashReporting()
     // Breakpad has been observed to deadlock in this state.
     // This is the only thing Breakpad checks before locking its mutex,
     // which seems to cause the deadlock.
-    google_breakpad::SetFirstChanceExceptionHandler([](int, void*, void*) {return true;});
+    google_breakpad::SetFirstChanceExceptionHandler([](int, siginfo_t*, void*) {return true;});
 }
 #endif
 

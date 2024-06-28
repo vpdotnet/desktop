@@ -175,7 +175,7 @@
   <context>
     <name>AutomationPage</name>
     <message>
-      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="55"/>
+      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="54"/>
       <location filename="../../../client/res/components/settings/pages/automation/AutomationPage.qml" line="30"/>
       <source>Connection Automation</source>
       <translation>연결 자동화</translation>
@@ -300,40 +300,40 @@
       <translation>새로운 기능</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="23"/>
+      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="22"/>
       <source>Checkmark bullet</source>
       <extracomment>Screen reader annotation for the &quot;checkmark&quot; bullets used in the What&apos;s New view</extracomment>
       <translation>체크 표시 글머리 기호</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="66"/>
+      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="65"/>
       <source>Control which apps use our VPN!</source>
       <translation>VPN을 사용할 앱을 관리하세요!</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="70"/>
+      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="69"/>
       <source>With our comprehensive split tunneling functionality, you can control which apps use the VPN and when. Check out our Split Tunnel [[app examples]] to see what&apos;s possible.</source>
       <extracomment>The [[double square brackets]] are replaced by a link. Please use them for the relavant link text.</extracomment>
       <translation>완벽한 분할 터널 기능을 사용해 VPN을 사용할 앱과 그 시간을 관리할 수 있습니다. 분할 터널 [[앱 예시]] 페이지에서 자세한 사항을 확인해 보세요.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="78"/>
+      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="77"/>
       <source>Split tunnel feature</source>
       <extracomment>Screen reader annotation for the split tunnel image in the What&apos;s New view</extracomment>
       <translation>분할 터널 기능</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="83"/>
+      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="82"/>
       <source>Have you tried our command-line interface (CLI)?</source>
       <translation>당사의 커맨드 라인 인터페이스(CLI)를 사용해 보셨습니까?</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="85"/>
+      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="84"/>
       <source>The PIA desktop app comes with a CLI for added functionality. Invoke &quot;piactl&quot; and check it out today! You can do things like control PIA, integrate PIA hotkeys, and even automate PIA functionality with scripts, or make custom integrations.</source>
       <translation>PIA 데스크톱 앱은 기능이 추가된 CLI을 제공합니다. 지금 &quot;piactl&quot;을 호출하여 기능을 확인해 보세요! PIA 제어, PIA 핫키 통합, 스크립트를 사용한 PIA 기능 자동화, 사용자 지정 통합 생성 등 다양한 작업을 수행할 수 있습니다.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="91"/>
+      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="90"/>
       <source>Command-line interface feature</source>
       <extracomment>Screen reader annotation for the command-line interface image in the What&apos;s New view</extracomment>
       <translation>커맨드 라인 인터페이스 기능</translation>
@@ -373,288 +373,298 @@
       <translation>이 운영 체제 버전은 더 이상 지원되지 않습니다. 업그레이드하여 최신 PIA 업데이트를 이용하세요.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="133"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="124"/>
+      <source>Your VPN session token has expired. Please log in again.</source>
+      <translation>VPN 세션 토큰이 만료되었습니다. 다시 로그인하세요.</translation>
+    </message>
+    <message>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="128"/>
+      <source>Please check your username and password, and verify that your account is not expired.</source>
+      <translation>사용자 이름 및 비밀번호를 확인하고 계정이 만료되지 않았는지 확인하세요.</translation>
+    </message>
+    <message>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="150"/>
       <source>The TAP adapter for the VPN tunnel is not installed.  You can reinstall it from Settings.</source>
       <extracomment>&quot;TAP&quot; is the type of virtual network adapter used on Windows and is not generally localized.</extracomment>
       <translation>VPN 터널용 TAP 어댑터가 설치되지 않았습니다.  설정에서 다시 설치할 수 있습니다.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="145"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="162"/>
       <source>Restart to complete installation.</source>
       <translation>설치를 완료하려면 다시 시작하세요.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="146"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="163"/>
       <source>The system must be restarted before you can connect.</source>
       <translation>연결하려면 먼저 시스템을 다시 시작해야 합니다.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="159"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="176"/>
       <source>The WinTUN adapter for the VPN tunnel is not installed.  You can reinstall it from Settings.</source>
       <extracomment>&quot;WinTUN&quot; is name of the virtual network adapter and is not localized.</extracomment>
       <translation>VPN 터널용 WinTUN 어댑터가 설치되지 않았습니다.  설정에서 다시 설치할 수 있습니다.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="172"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="189"/>
       <source>The split tunnel filter is not installed.</source>
       <translation>분할 터널 필터가 설치되지 않았습니다.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="173"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="190"/>
       <source>The App Exclusion feature requires the split tunnel filter.  Reinstall it from Settings.</source>
       <translation>앱 제외 기능은 분할 터널 필터를 필요로 합니다.  설정에서 다시 설치하세요.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="184"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="201"/>
       <location filename="../../../client/res/components/common/DriverNotificationStatus.qml" line="12"/>
       <source>Reinstall</source>
       <translation>다시 설치</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="198"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="215"/>
       <source>The App Exclusion feature requires the split tunnel filter.  Restart to finish installation.</source>
       <translation>앱 제외 기능은 분할 터널 필터를 필요로 합니다.  설치를 완료하려면 다시 시작하세요.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="211"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="228"/>
       <location filename="../../../client/res/components/settings/SettingsMessages.qml" line="45"/>
       <source>Iptables is not installed.</source>
       <extracomment>Message for Linux indicating that iptables is missing</extracomment>
       <translation>Iptables가 설치되지 않았습니다.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="212"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="229"/>
       <source>Iptables is required to connect to the VPN. Reinstall the application or manually install the iptables or iptables-nft package, then restart your computer.</source>
       <translation>VPN에 연결하려면 iptables가 필요합니다. 애플리케이션을 다시 설치하거나 iptables 또는 iptables-nft 패키지를 수동으로 설치한 후 컴퓨터를 다시 시작하십시오.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="225"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="242"/>
       <source>Connection refused.</source>
       <translation>연결이 거부되었습니다.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="231"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="248"/>
       <source>The server refused the connection.  Please check your username and password, and verify that your account is not expired.</source>
       <extracomment>This error could be caused by incorrect credentials or an expired account, but it could have other causes too. The message should suggest checking those things without implying that they&apos;re necessarily the cause (to avoid frustrating users who are sure their account is current).</extracomment>
       <translation>서버가 연결을 거부했습니다.  사용자 이름과 비밀번호를 확인하고, 계정이 만료되지 않았는지 확인하세요.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="240"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="257"/>
       <source>Could not configure DNS.</source>
       <translation>DNS를 구성하지 못했습니다.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="241"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="258"/>
       <source>Enable debug logging and check the daemon log for specific details.</source>
       <translation>자세한 사항을 보려면 디버그 로깅을 활성화하고 데몬 로그를 확인하세요.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="244"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="261"/>
       <source>Daemon Log</source>
       <translation>데몬 로그</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="246"/>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="278"/>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="337"/>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="419"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="263"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="295"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="354"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="436"/>
       <source>Settings</source>
       <translation>설정</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="254"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="271"/>
       <source>Failed to run /usr/bin/xdg-open.  Please open the daemon log file from:</source>
       <translation>/usr/bin/xdg-open을 실행하지 못했습니다. 다음 위치에서 데몬 로그 파일을 여세요.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="271"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="288"/>
       <source>Can&apos;t connect to Handshake.</source>
       <extracomment>Indicates that we can&apos;t connect to the Handshake name-resolution network. &quot;Handshake&quot; is a brand name and should be left as-is.</extracomment>
       <translation>Handshake에 연결할 수 없습니다.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="275"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="292"/>
       <source>Can&apos;t set up name resolution with Handshake.  Continue waiting, or try a different Name Server setting.</source>
       <extracomment>Detailed message about failure to connect to the Handshake name- resolution network. &quot;Handshake&quot; is a brand name and should be left as-is.</extracomment>
       <translation>Handshake를 통해 이름 확인을 설정할 수 없습니다. 계속 기다리거나 다른 이름 서버 설정을 사용해 보세요.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="289"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="306"/>
       <source>Running PIA as administrator is not recommended.</source>
       <translation>PIA를 관리자로 실행하는 것은 권장하지 않습니다.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="290"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="307"/>
       <source>Running PIA as administrator can prevent Launch on System Startup from working and may cause other problems.</source>
       <translation>PIA를 관리자로 실행하면 시스템 가동 시 자동 실행 작동을 차단하고 그 외에 다른 문제도 일으킬 수 있습니다.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="302"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="319"/>
       <source>KILLSWITCH ENABLED</source>
       <translation>킬 스위치가 활성화됨</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="303"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="320"/>
       <source>Killswitch is enabled.</source>
       <translation>킬 스위치가 활성화되었습니다.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="304"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="321"/>
       <source>Access to the Internet is blocked because the killswitch feature is enabled in Settings.</source>
       <translation>설정에서 킬 스위치 기능이 활성화되어서 인터넷 접속이 차단되었습니다.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="307"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="324"/>
       <source>Change</source>
       <translation>변경</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="320"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="337"/>
       <source>RECONNECTING...</source>
       <translation>다시 연결 중...</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="321"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="338"/>
       <source>The connection to the VPN server was lost.</source>
       <translation>VPN 서버의 연결이 끊겼습니다.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="330"/>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="348"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="347"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="365"/>
       <source>CONNECTING...</source>
       <translation>연결 중...</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="333"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="350"/>
       <source>Can&apos;t connect to the proxy.</source>
       <extracomment>Warning message used when the app is currently trying to connect to a proxy, but the proxy can&apos;t be reached.</extracomment>
       <translation>프록시에 연결할 수 없습니다.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="334"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="351"/>
       <source>The proxy can&apos;t be reached.  Check your proxy settings, and check that the proxy is available.</source>
       <translation>프록시에 연결할 수 없습니다. 프록시 설정을 확인하고, 프록시를 사용할 수 있는지 확인하세요.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="349"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="366"/>
       <source>We couldn&apos;t establish the connection to the VPN server. Please get in touch with our support department.</source>
       <translation>VPN 서버에 연결을 설정하지 못했습니다. 고객 지원팀에 문의해 주세요.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="362"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="379"/>
       <source>RECONNECT NEEDED</source>
       <translation>재연결 필요</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="363"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="380"/>
       <source>Reconnect to apply settings.</source>
       <translation>설정을 적용하려면 다시 연결하세요.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="364"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="381"/>
       <source>Some settings changes won&apos;t take effect until the next time you connect. Click to reconnect now.</source>
       <translation>다시 연결할 때까지 설정 변경 사항의 일부는 적용되지 않습니다. 지금 다시 연결하려면 클릭하세요.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="373"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="390"/>
       <source>Connected with OpenVPN.</source>
       <translation>OpenVPN으로 연결됨.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="376"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="393"/>
       <source>Connected with OpenVPN to log in for the first time. Reconnect to use WireGuard.</source>
       <translation>처음 로그인할 때 OpenVPN으로 연결됨. WireGuard를 사용해 다시 연결하세요.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="378"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="395"/>
       <source>Connected with OpenVPN to log in for the first time.</source>
       <translation>처음 로그인할 때 OpenVPN으로 연결됨.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="397"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="414"/>
       <source>Connected using %1 port %2.</source>
       <extracomment>Message when the client automatically uses a transport other than the user&apos;s chosen transport (because the user&apos;s settings did not work). &quot;Connected&quot; means the client is currently connected right now using this setting. %1 is the protocol used (&quot;UDP&quot; or &quot;TCP&quot;), and %2 is the port number. For example: &quot;UDP port 8080&quot; or &quot;TCP port 443&quot;.</extracomment>
       <translation>%1 포트 %2을(를) 사용해 연결됨</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="406"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="423"/>
       <source>Try Alternate Settings is enabled.  The server could not be reached on the default %1 port, so %2 port %3 was used instead.</source>
       <extracomment>Detailed message used when the client automatically uses an alternate transport, and the user has selected the &quot;default&quot; port (the actual value used for the default is not shown, since it could vary among servers). %1 is the chosen protocol (&quot;UDP&quot; or &quot;TCP&quot;), and &quot;%2 port %3&quot; refers to the actual transport used, such as &quot;TCP port 443&quot; or &quot;UDP port 8080&quot;.</extracomment>
       <translation>다른 설정 시도가 활성화되었습니다. 기본 %1 포트로 서버에 연결할 수 없어서 %2 포트 %3이(가) 대신 사용되었습니다.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="414"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="431"/>
       <source>Try Alternate Settings is enabled.  The server could not be reached on %1 port %2, so %3 port %4 was used instead.</source>
       <extracomment>Detailed message when the client automatically uses an alternate transport. &quot;%1 port %2&quot; refers to the chosen transport, and &quot;%3 port %4&quot; refers to the actual transport; for example &quot;TCP port 443&quot; or &quot;UDP port 8080&quot;. The &quot;Try Alternate Settings&quot; setting is on the Connection page.</extracomment>
       <translation>다른 설정 시도가 활성화되었습니다. %1 포트 %2(으)로 서버에 연결할 수 없어서 %3 포트 %4이(가) 대신 사용되었습니다.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="428"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="445"/>
       <source>Subscription expires in %1 days.</source>
       <translation>%1일 후 구독이 만료됩니다.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="431"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="448"/>
       <source>Renew</source>
       <translation>갱신</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="445"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="462"/>
       <source>Your dedicated IP will expire in %1 days.</source>
       <extracomment>Message displayed when a purchased dedicated IP will expire soon. %1 is at least 2; there are specific messages for 1 day or 0 days remaining.</extracomment>
       <translation>회원님의 전용 IP는 %1일 후 만료됩니다.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="451"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="468"/>
       <source>Your dedicated IP will expire in 1 day.</source>
       <extracomment>Message displayed when a purchased dedicated IP will expire in 1 day. (Specifically, in 12-36 hours, since the time remaining is rounded to the nearest day.)</extracomment>
       <translation>회원님의 전용 IP는 1일 후 만료됩니다.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="456"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="473"/>
       <source>Your dedicated IP will expire today.</source>
       <extracomment>Message displayed when a purchased dedicated IP will expire in less than 12 hours.</extracomment>
       <translation>회원님의 전용 IP는 오늘 만료됩니다.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="461"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="478"/>
       <source>Get a new one</source>
       <translation>새로 획득하기</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="473"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="490"/>
       <source>Your dedicated IP was updated.</source>
       <translation>회원님의 전용 IP가 업데이트되었습니다.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="489"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="506"/>
       <source>Unable to reach login server.</source>
       <extracomment>Dashboard notification for being unable to reach our main API server in order to authenticate the user&apos;s account. The phrase should convey that the problem is network related and that we are merely offline or &quot;out of touch&quot; rather than there being any account problem.</extracomment>
       <translation>로그인 서버에 접속할 수 없습니다.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="493"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="510"/>
       <source>Your account details are unavailable, but you may still be able to connect to the VPN.</source>
       <extracomment>Infotip to explain to the user that a login authentication failure is not necessarily a critical problem, but that the app will have reduced functionality until this works.</extracomment>
       <translation>계정 정보를 사용할 수 없습니다. 하지만, VPN에는 여전히 연결할 수 있습니다.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="497"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="514"/>
       <source>Retry</source>
       <translation>다시 시도</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="510"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="527"/>
       <source>Private Internet Access was updated.</source>
       <translation>Private Internet Access가 업데이트되었습니다.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="513"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="530"/>
       <source>See what&apos;s new</source>
       <translation>새로운 기능 보기</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="530"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="547"/>
       <source>The application quit unexpectedly. Your VPN connection was preserved.</source>
       <extracomment>Indicates that Private Internet Access had previously crashed or otherwise stopped unexpectedly - shown the next time the user starts the app.</extracomment>
       <translation>애플리케이션이 예기치 않게 종료되었습니다. VPN 연결은 보존되었습니다.</translation>
@@ -748,34 +758,34 @@
     <message>
       <location filename="../../../client/res/components/settings/pages/multihop/MultihopPage.qml" line="56"/>
       <location filename="../../../client/res/components/settings/pages/multihop/MultihopPage.qml" line="137"/>
-      <location filename="../../../client/res/components/settings/pages/multihop/MultihopPage.qml" line="239"/>
+      <location filename="../../../client/res/components/settings/pages/multihop/Socks5ProxyDialog.qml" line="20"/>
       <source>SOCKS5 Proxy</source>
       <translation>SOCKS5 프록시</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/settings/pages/multihop/MultihopPage.qml" line="265"/>
+      <location filename="../../../client/res/components/settings/pages/multihop/Socks5ProxyDialog.qml" line="48"/>
       <source>Server IP Address</source>
       <extracomment>The IP address of the SOCKS proxy server to use when connecting. Labeled with &quot;IP Address&quot; to indicate that it can&apos;t be a hostname.</extracomment>
       <translation>서버 IP 주소</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/settings/pages/multihop/MultihopPage.qml" line="278"/>
+      <location filename="../../../client/res/components/settings/pages/multihop/Socks5ProxyDialog.qml" line="61"/>
       <source>Port</source>
       <translation>포트</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/settings/pages/multihop/MultihopPage.qml" line="285"/>
+      <location filename="../../../client/res/components/settings/pages/multihop/Socks5ProxyDialog.qml" line="65"/>
       <location filename="../../../client/res/components/settings/SettingsMessages.qml" line="58"/>
       <source>Default</source>
       <translation>기본값</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/settings/pages/multihop/MultihopPage.qml" line="292"/>
+      <location filename="../../../client/res/components/settings/pages/multihop/Socks5ProxyDialog.qml" line="75"/>
       <source>User (optional)</source>
       <translation>사용자 (선택 사항)</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/settings/pages/multihop/MultihopPage.qml" line="302"/>
+      <location filename="../../../client/res/components/settings/pages/multihop/Socks5ProxyDialog.qml" line="85"/>
       <source>Password (optional)</source>
       <translation>비밀번호 (선택 사항)</translation>
     </message>
@@ -938,7 +948,7 @@
   <context>
     <name>DashboardPopup</name>
     <message>
-      <location filename="../../../client/res/components/dashboard/DashboardPopup.qml" line="78"/>
+      <location filename="../../../client/res/components/dashboard/DashboardPopup.qml" line="77"/>
       <source>PIA Dashboard</source>
       <extracomment>Title of the dashboard window (the main UI that users interact with. This isn&apos;t normally shown, but it is used by screen readers, and it is occasionally used by tools on Windows that list open application windows. &quot;PIA&quot; stands for Private Internet Access. We refer to this window as the &quot;dashboard&quot;, but this term doesn&apos;t currently appear elsewhere in the product.</extracomment>
       <translation>PIA 대시보드</translation>
@@ -1178,8 +1188,8 @@
     </message>
     <message>
       <location filename="../../../client/res/components/settings/pages/general/GeneralPage.qml" line="50"/>
-      <source>Show Service Communication Messages</source>
-      <translation>서비스 통신 메시지 표시</translation>
+      <source>Allow Background Latency Checks</source>
+      <translation type="unfinished">Allow Background Latency Checks</translation>
     </message>
     <message>
       <location filename="../../../client/res/components/settings/pages/general/GeneralPage.qml" line="57"/>
@@ -1292,6 +1302,12 @@
   <context>
     <name>HeaderBar</name>
     <message>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="130"/>
+      <location filename="../../../client/res/components/dashboard/HeaderBar.qml" line="416"/>
+      <source>Logout</source>
+      <translation>로그아웃</translation>
+    </message>
+    <message>
       <location filename="../../../client/res/components/common/Messages.qml" line="12"/>
       <source>Alpha pre-release</source>
       <extracomment>Screen reader annotation for the &quot;Alpha&quot; banner shown in alpha prerelease builds</extracomment>
@@ -1355,11 +1371,6 @@
       <location filename="../../../client/res/components/dashboard/HeaderBar.qml" line="412"/>
       <source>Settings</source>
       <translation>설정</translation>
-    </message>
-    <message>
-      <location filename="../../../client/res/components/dashboard/HeaderBar.qml" line="416"/>
-      <source>Logout</source>
-      <translation>로그아웃</translation>
     </message>
     <message>
       <location filename="../../../client/res/components/dashboard/HeaderBar.qml" line="421"/>
@@ -1570,42 +1581,42 @@
   <context>
     <name>HeroCard</name>
     <message>
-      <location filename="../../../client/res/components/changelog/HeroCard.qml" line="24"/>
+      <location filename="../../../client/res/components/changelog/HeroCard.qml" line="23"/>
       <source>Get Your Dedicated IP!</source>
       <translation>나만의 전용 IP를 받으세요!</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/changelog/HeroCard.qml" line="25"/>
+      <location filename="../../../client/res/components/changelog/HeroCard.qml" line="24"/>
       <source>Get your own unique IP without sacrificing any of your privacy or security. Enjoy all the benefits of a fully anonymous dedicated IP:</source>
       <translation>프라이버시나 보안을 희생하지 않고 나만의 고유한 IP를 획득하세요. 완전한 익명성이 보장되는 전용 IP의 혜택을 누려 보세요:</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/changelog/HeroCard.qml" line="27"/>
+      <location filename="../../../client/res/components/changelog/HeroCard.qml" line="26"/>
       <source>Stop triggering security warnings</source>
       <translation>보안 경고 유발 중지</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/changelog/HeroCard.qml" line="28"/>
+      <location filename="../../../client/res/components/changelog/HeroCard.qml" line="27"/>
       <source>Smoother account access</source>
       <translation>더 부드러운 계정 액세스</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/changelog/HeroCard.qml" line="29"/>
+      <location filename="../../../client/res/components/changelog/HeroCard.qml" line="28"/>
       <source>See fewer CAPTCHAs</source>
       <translation>더 적은 CAPTCHA 출현</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/changelog/HeroCard.qml" line="30"/>
+      <location filename="../../../client/res/components/changelog/HeroCard.qml" line="29"/>
       <source>Protect your IoT devices</source>
       <translation>자신의 IoT 기기 보호</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/changelog/HeroCard.qml" line="32"/>
+      <location filename="../../../client/res/components/changelog/HeroCard.qml" line="31"/>
       <source>GET YOUR DEDICATED IP</source>
       <translation>전용 IP 받기</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/changelog/HeroCard.qml" line="144"/>
+      <location filename="../../../client/res/components/changelog/HeroCard.qml" line="143"/>
       <source>Dedicated IP feature</source>
       <translation>전용 IP 기능</translation>
     </message>
@@ -2064,28 +2075,29 @@
       <translation>이 기능을 활성화하면 분할 터널 필터가 설치됩니다.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelPage.qml" line="123"/>
-      <source>The split tunnel filter is not installed.  Reinstall it on the Help page.</source>
-      <translation>분할 터널 필터가 설치되지 않았습니다.  도움말 페이지에서 다시 설치하세요.</translation>
-    </message>
-    <message>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelPage.qml" line="113"/>
       <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelPage.qml" line="128"/>
-      <source>Choose which applications use the VPN.</source>
-      <translation>VPN을 사용할 애플리케이션을 선택하세요.</translation>
-    </message>
-    <message>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelPage.qml" line="129"/>
       <source>Learn More</source>
       <translation>자세히 보기</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelPage.qml" line="216"/>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelPage.qml" line="221"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelPage.qml" line="122"/>
+      <source>The split tunnel filter is not installed.  Reinstall it on the Help page.</source>
+      <translation>분할 터널 필터가 설치되지 않았습니다.  도움말 페이지에서 다시 설치하세요.</translation>
+    </message>
+    <message>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelPage.qml" line="127"/>
+      <source>Choose which applications use the VPN.</source>
+      <translation>VPN을 사용할 애플리케이션을 선택하세요.</translation>
+    </message>
+    <message>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelPage.qml" line="215"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelPage.qml" line="220"/>
       <source>App Exclusions</source>
       <translation>앱 제외</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelPage.qml" line="287"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelPage.qml" line="286"/>
       <source>Apps may need to be restarted for changes to be applied.</source>
       <translation>변경 사항이 적용되려면 앱을 다시 시작해야 할 수 있습니다.</translation>
     </message>
@@ -2141,6 +2153,8 @@
     <name>OverlayDialog</name>
     <message>
       <location filename="../../../client/res/components/common/OverlayDialog.qml" line="97"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAddIpDialog.qml" line="24"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="29"/>
       <source>OK</source>
       <comment>dialog button</comment>
       <translation>확인</translation>
@@ -2148,6 +2162,8 @@
     <message>
       <location filename="../../../client/res/components/common/OverlayDialog.qml" line="98"/>
       <location filename="../../../client/res/components/common/OverlayDialog.qml" line="100"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAddIpDialog.qml" line="24"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="29"/>
       <source>Cancel</source>
       <comment>dialog button</comment>
       <translation>취소</translation>
@@ -2264,32 +2280,32 @@
   <context>
     <name>Page2Theme</name>
     <message>
-      <location filename="../../../client/res/components/onboarding/pages/Page2Theme.qml" line="21"/>
+      <location filename="../../../client/res/components/onboarding/pages/Page2Theme.qml" line="20"/>
       <source>GETTING STARTED</source>
       <translation>시작하기</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/onboarding/pages/Page2Theme.qml" line="22"/>
+      <location filename="../../../client/res/components/onboarding/pages/Page2Theme.qml" line="21"/>
       <source>Choose your theme</source>
       <translation>테마 선택</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/onboarding/pages/Page2Theme.qml" line="23"/>
+      <location filename="../../../client/res/components/onboarding/pages/Page2Theme.qml" line="22"/>
       <source>Private Internet Access comes with light and dark themes to fit the look and feel of your desktop.</source>
       <translation>Private Internet Access는 데스크톱의 외관과 느낌에 잘 맞는 라이트 테마와 다크 테마를 제공합니다.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/onboarding/pages/Page2Theme.qml" line="77"/>
+      <location filename="../../../client/res/components/onboarding/pages/Page2Theme.qml" line="76"/>
       <source>Dark Theme</source>
       <translation>다크 테마</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/onboarding/pages/Page2Theme.qml" line="110"/>
+      <location filename="../../../client/res/components/onboarding/pages/Page2Theme.qml" line="109"/>
       <source>Light Theme</source>
       <translation>라이트 테마</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/onboarding/pages/Page2Theme.qml" line="130"/>
+      <location filename="../../../client/res/components/onboarding/pages/Page2Theme.qml" line="129"/>
       <source>Theme preview</source>
       <translation>테마 미리 보기</translation>
     </message>
@@ -2297,22 +2313,22 @@
   <context>
     <name>Page3Customize</name>
     <message>
-      <location filename="../../../client/res/components/onboarding/pages/Page3Customize.qml" line="17"/>
+      <location filename="../../../client/res/components/onboarding/pages/Page3Customize.qml" line="16"/>
       <source>PRO TIP</source>
       <translation>전문가 팁</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/onboarding/pages/Page3Customize.qml" line="18"/>
+      <location filename="../../../client/res/components/onboarding/pages/Page3Customize.qml" line="17"/>
       <source>Customize Your VPN Experience</source>
       <translation>VPN 이용 환경 커스터마이징</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/onboarding/pages/Page3Customize.qml" line="19"/>
+      <location filename="../../../client/res/components/onboarding/pages/Page3Customize.qml" line="18"/>
       <source>Choose from a variety of tiles to customize your dashboard to display the information and controls most relevant to you.</source>
       <translation>다양한 타일 중에서 선택하여 대시보드를 취향에 맞게 변경하고 자신에게 가장 관련된 정보와 컨트롤을 표시하세요.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/onboarding/pages/Page3Customize.qml" line="42"/>
+      <location filename="../../../client/res/components/onboarding/pages/Page3Customize.qml" line="41"/>
       <source>Customization preview</source>
       <translation>커스터마이징 미리 보기</translation>
     </message>
@@ -2886,7 +2902,7 @@
   <context>
     <name>RatingRequestNotificationStatus</name>
     <message>
-      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="352"/>
+      <location filename="../../../client/res/components/common/ClientNotifications.qml" line="369"/>
       <location filename="../../../client/res/components/common/RatingRequestNotificationStatus.qml" line="39"/>
       <source>Contact Support</source>
       <translation>고객 지원 문의</translation>
@@ -2931,7 +2947,7 @@
   <context>
     <name>ReconnectWarning</name>
     <message>
-      <location filename="../../../client/res/components/settings/ReconnectWarning.qml" line="62"/>
+      <location filename="../../../client/res/components/settings/ReconnectWarning.qml" line="61"/>
       <source>Reconnect to apply settings.</source>
       <translation>설정을 적용하려면 다시 연결하세요.</translation>
     </message>
@@ -3188,21 +3204,6 @@
     </message>
     <message>
       <location filename="../../../client/res/components/settings/SettingsMessages.qml" line="73"/>
-      <source>Split Tunnel is not installed.</source>
-      <translation>분할 터널이 설치되지 않았습니다.</translation>
-    </message>
-    <message>
-      <location filename="../../../client/res/components/settings/SettingsMessages.qml" line="75"/>
-      <source>Go to System Settings -&gt; Privacy &amp; Security, then click &quot;Allow&quot; in the Security section.</source>
-      <translation>시스템 설정 -&gt; 개인 정보 보호 &amp; 보안으로 이동한 뒤 보안 섹션에서 &quot;허용&quot;을 클릭하세요.</translation>
-    </message>
-    <message>
-      <location filename="../../../client/res/components/settings/SettingsMessages.qml" line="77"/>
-      <source>Allow PIA Proxy Configurations.</source>
-      <translation>PIA 프록시 구성을 허용하세요.</translation>
-    </message>
-    <message>
-      <location filename="../../../client/res/components/settings/SettingsMessages.qml" line="79"/>
       <source>Split Tunnel is not installed. Go to System Settings -&gt; Privacy &amp; Security, scroll down to Security section and &quot;Allow&quot; PIA. Then click &quot;Allow&quot; on the Proxy Configurations popup</source>
       <translation>분할 터널이 설치되지 않았습니다. 시스템 설정 -&gt; 개인 정보 보호 &amp; 보안으로 이동한 뒤 보안 섹션 및 PIA &quot;허용&quot;으로 스크롤을 내리세요. 그다음 프록시 구성 팝업에서 &quot;허용&quot;을 클릭하세요.</translation>
     </message>
@@ -3333,61 +3334,61 @@
   <context>
     <name>SnoozeModule</name>
     <message>
-      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="18"/>
+      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="17"/>
       <source>VPN Snooze tile</source>
       <extracomment>Screen reader annotation for the Snooze tile</extracomment>
       <translation>VPN 스누즈 타일</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="35"/>
+      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="34"/>
       <source>RESUMING CONNECTION</source>
       <translation>연결 재개 중</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="37"/>
+      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="36"/>
       <source>SNOOZED</source>
       <translation>스누즈됨</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="39"/>
+      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="38"/>
       <source>SNOOZING</source>
       <translation>스누즈 중</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="42"/>
+      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="41"/>
       <source>VPN SNOOZE</source>
       <translation>VPN 스누즈</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="179"/>
+      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="178"/>
       <source>Decrease snooze time</source>
       <extracomment>Screen reader name for the &quot;minus&quot; button that decreases snooze time</extracomment>
       <translation>스누즈 시간 감소</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="202"/>
+      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="201"/>
       <source>Snooze time</source>
       <extracomment>Screen reader annotation for the snooze time display in the Snooze tile</extracomment>
       <translation>스누즈 시간</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="252"/>
+      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="251"/>
       <source>Increase snooze time</source>
       <extracomment>Screen reader name for the &quot;plus&quot; button that increases snooze time</extracomment>
       <translation>스누즈 시간 증가</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="274"/>
+      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="273"/>
       <source>Snooze</source>
       <translation>스누즈</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="274"/>
+      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="273"/>
       <source>Resume</source>
       <translation>재개</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="288"/>
+      <location filename="../../../client/res/components/dashboard/connect/modules/SnoozeModule.qml" line="287"/>
       <source>Snooze temporarily disconnects the VPN and automatically reconnects when the timer elapses.</source>
       <translation>스누즈는 일시적으로 VPN을 연결 해제하고, 타이머가 경과하면 자동으로 다시 연결합니다.</translation>
     </message>
@@ -3421,8 +3422,8 @@
   <context>
     <name>SplitTunnelAddAppRow</name>
     <message>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="158"/>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelPage.qml" line="253"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="31"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelPage.qml" line="252"/>
       <source>Add Application</source>
       <translation>애플리케이션 추가</translation>
     </message>
@@ -3430,18 +3431,18 @@
   <context>
     <name>SplitTunnelAddIpRow</name>
     <message>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAddIpDialog.qml" line="59"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAddIpDialog.qml" line="61"/>
       <source>IP Address or Subnet</source>
       <translation>IP 주소 또는 서브넷</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAddIpDialog.qml" line="66"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAddIpDialog.qml" line="68"/>
       <source>You can enter an IPv4/IPv6 address, or a subnet in CIDR notation:</source>
       <translation>CIDR 표기법으로 IPv4/IPv6 주소 또는 서브넷을 입력할 수 있습니다:</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAddIpDialog.qml" line="77"/>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelPage.qml" line="262"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAddIpDialog.qml" line="79"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelPage.qml" line="261"/>
       <source>Add IP Address</source>
       <translation>IP 주소 추가</translation>
     </message>
@@ -3449,50 +3450,50 @@
   <context>
     <name>SplitTunnelAppDialog</name>
     <message>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="88"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="112"/>
       <source>Only executable files can be excluded from VPN. Please select an executable program or shell script.</source>
       <translation>실행 가능한 파일만 VPN에서 제외할 수 있습니다. 실행 가능한 프로그램 또는 셸 스크립트를 선택하세요.</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="88"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="112"/>
       <source>Unable to exclude application</source>
       <translation>애플리케이션을 제외할 수 없습니다</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="201"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="203"/>
       <source>Search</source>
       <translation>검색</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="214"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="216"/>
       <source>Browse</source>
       <translation>찾아보기</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="266"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="268"/>
       <source>Applications</source>
       <translation>애플리케이션</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="482"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="484"/>
       <source>App list, loading</source>
       <extracomment>Screen reader annotation for the &quot;application list&quot; from which a user can select an application to exclude. Screen reader annotation used for the split tunnel app list when the apps are still being loaded.</extracomment>
       <translation>앱 목록, 불러오는 중</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="485"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="487"/>
       <source>App list</source>
       <extracomment>Screen reader annotation for the split tunnel app list.</extracomment>
       <translation>앱 목록</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="491"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="493"/>
       <source>App</source>
       <extracomment>Screen reader annotation for the column listing the application in the existing application list (this table has only one column)</extracomment>
       <translation>앱</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="517"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelAppDialog.qml" line="519"/>
       <source>Refresh</source>
       <translation>새로 고침</translation>
     </message>
@@ -3544,7 +3545,7 @@
   <context>
     <name>SplitTunnelPage</name>
     <message>
-      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelPage.qml" line="247"/>
+      <location filename="../../../client/res/components/settings/pages/split-tunnel/SplitTunnelPage.qml" line="246"/>
       <source>Your Split Tunnel Rules</source>
       <translation>회원님의 분할 터널 규칙</translation>
     </message>
@@ -4025,28 +4026,28 @@
   <context>
     <name>WhatsNewContent</name>
     <message>
-      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="34"/>
+      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="33"/>
       <source>WireGuard Protocol</source>
       <translation>WireGuard 프로토콜</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="35"/>
+      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="34"/>
       <source>It&apos;s a new, more efficient protocol that offers better performance, lower CPU usage, and longer battery life.  [[Try it now]]</source>
       <translation>새롭고 더 효율적인 VPN 프로토콜을 통해 더 우수한 성능, 더 적은 CPU 사용량 및 더 긴 배터리 수명을 제공합니다.  [[지금 체험해 보기]]</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="50"/>
+      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="49"/>
       <source>WireGuard feature</source>
       <extracomment>Screen reader annotation for the WireGuard image in the What&apos;s New view</extracomment>
       <translation>WireGuard 기능</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="56"/>
+      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="55"/>
       <source>Create rules to automatically connect or disconnect the VPN when you join a particular network.  [[Go to Settings]]</source>
       <translation>특정 네트워크에 접속할 때 VPN을 자동으로 연결 또는 연결 해제할지에 대한 규칙을 설정하세요.  [[설정으로 이동]]</translation>
     </message>
     <message>
-      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="61"/>
+      <location filename="../../../client/res/components/changelog/WhatsNewContent.qml" line="60"/>
       <source>Automation feature</source>
       <extracomment>Screen reader annotation for the automation image in the What&apos;s New view</extracomment>
       <translation>자동화 기능</translation>

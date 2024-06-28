@@ -18,58 +18,78 @@
 
 #include "net_extension_checker.h"
 NetExtensionChecker::NetExtensionChecker(std::string transparentProxyCliExecutable,
-                    std::chrono::milliseconds shortInterval, std::chrono::milliseconds longInterval)
+                                         std::chrono::milliseconds shortInterval,
+                                         std::chrono::milliseconds longInterval)
 : _transparentProxyCliExecutable{transparentProxyCliExecutable}
 , _shortInterval{shortInterval}
 , _longInterval{longInterval}
-{}
-
-StateModel::NetExtensionState NetExtensionChecker::checkInstallationState()
 {
-    qInfo() << "Checking MacOS Network Extension Status";
+    // Creating the timer, but not starting it
+    connect(&_timer, &QTimer::timeout, this,
+            &NetExtensionChecker::checkIfNetExtensionStateChanged);
+}
 
+void NetExtensionChecker::start(StateModel::NetExtensionState installState)
+{
+    if(!_timer.isActive())
+    {
+        qInfo() << "Starting MacOS Network Extension Checker. ";
+        _lastState = installState;
+        updateTimer(installState);
+        _timer.start();
+    }
+}
+
+void NetExtensionChecker::stop()
+{
+    if(_timer.isActive())
+    {
+        qInfo() << "Stopping MacOS Network Extension Checker";
+        _timer.stop();
+    }
+}
+
+void NetExtensionChecker::updateTimer(StateModel::NetExtensionState installState)
+{
+    std::chrono::milliseconds newInterval = _longInterval;
+    if(installState != StateModel::NetExtensionState::Installed)
+    {
+        qDebug() << "MacOS Network Extension is not installed and Split Tunnel is enabled. Timer set to short interval";
+        newInterval = _shortInterval;
+    }
+    _timer.setInterval(newInterval);
+}
+
+StateModel::NetExtensionState NetExtensionChecker::checkInstallationState() const
+{
+    qDebug() << "Checking MacOS Network Extension Status";
     if(isInstalled())
         return StateModel::NetExtensionState::Installed;
     else
         return StateModel::NetExtensionState::NotInstalled;
 }
 
-void NetExtensionChecker::start(StateModel::NetExtensionState installState, bool isEnabled)
-{
-    qInfo() << "MacOS Network Extension Checker start";
-    _lastState = installState;
-    connect(&_timer, &QTimer::timeout, this,
-                &NetExtensionChecker::checkIfStateChanged);
-    updateTimer(installState, isEnabled);
-    _timer.start();
-}
+// private methods
 
-void NetExtensionChecker::updateTimer(StateModel::NetExtensionState installState, bool isEnabled)
+void NetExtensionChecker::checkIfNetExtensionStateChanged()
 {
-    std::chrono::milliseconds newInterval = _longInterval;
-    if(installState != StateModel::NetExtensionState::Installed)
+    auto currentState = checkInstallationState();
+    if(currentState != _lastState)
     {
-        if(isEnabled)
-        {
-            qDebug() << "MacOS Network Extension is not installed and Split Tunnel is enabled. Timer set to short interval";
-            newInterval = _shortInterval;
-        }
-    }
-    _timer.setInterval(newInterval);
-}
-
-void NetExtensionChecker::checkIfStateChanged()
-{
-    auto state = checkInstallationState();
-    if(state != _lastState)
-    {
-        qInfo() << "MacOS Network Extension installation state has changed to: " << qEnumToString(state);
-        _lastState = state;
-        emit stateChanged(state);
+        qInfo() << "MacOS Network Extension installation state has changed from:" <<qEnumToString(_lastState) << "to:" << qEnumToString(currentState);
+        _lastState = currentState;
+        emit stateChanged(currentState);
     }
 }
 
-bool NetExtensionChecker::isNetExtensionInstalled()
+bool NetExtensionChecker::isInstalled() const
+{
+    bool netExtensionInstalled = isNetExtensionInstalled();
+    bool proxyInstalled = isProxyInstalled();
+    return netExtensionInstalled && proxyInstalled;
+}
+
+bool NetExtensionChecker::isNetExtensionInstalled() const
 {
     std::string sysextStatus = kapps::core::Exec::cmdWithOutput(_transparentProxyCliExecutable, {"sysext", "status"});
     // We accept two possible states here:
@@ -82,7 +102,7 @@ bool NetExtensionChecker::isNetExtensionInstalled()
         return false;
 }
 
-bool NetExtensionChecker::isProxyInstalled()
+bool NetExtensionChecker::isProxyInstalled() const
 {
     std::string sysextStatus = kapps::core::Exec::cmdWithOutput(_transparentProxyCliExecutable, {"proxy", "status"});
     // Any status is accepted, except for uninstalled or invalid
@@ -90,11 +110,4 @@ bool NetExtensionChecker::isProxyInstalled()
         return true;
     else
         return false;
-}
-
-bool NetExtensionChecker::isInstalled()
-{
-    bool netExtensionInstalled = isNetExtensionInstalled();
-    bool proxyInstalled = isProxyInstalled();
-    return netExtensionInstalled && proxyInstalled;
 }

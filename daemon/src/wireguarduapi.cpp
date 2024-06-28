@@ -175,7 +175,7 @@ namespace Uapi
     }
 
     // Parse a peer endpoint - parses to either addr4 or addr6.
-    void parsePeerEndpoint(const QLatin1String &value, decltype(wg_peer{}.endpoint) &endpoint)
+    void parsePeerEndpoint(const QLatin1String &value, wg_peer &peer)
     {
         // The permitted formats are:
         //  IPv4: IP:port
@@ -194,9 +194,9 @@ namespace Uapi
             copyParseIp(AF_INET6, value.data()+1, itIpv6End, &addr6);
             uint16_t port = parseInt<uint16_t>(value.mid(static_cast<int>(itColon - value.begin() + 1)));
             // Parse succeeded, store back
-            endpoint.addr6.sin6_family = AF_INET6;
-            endpoint.addr6.sin6_port = htons(port);
-            endpoint.addr6.sin6_addr = addr6;
+            peer.endpoint.addr6.sin6_family = AF_INET6;
+            peer.endpoint.addr6.sin6_port = htons(port);
+            peer.endpoint.addr6.sin6_addr = addr6;
         }
         else
         {
@@ -208,9 +208,9 @@ namespace Uapi
             copyParseIp(AF_INET, value.data(), itColon, &addr4);
             uint16_t port = parseInt<uint16_t>(value.mid(static_cast<int>(itColon - value.begin() + 1)));
             // Parse succeeded
-            endpoint.addr4.sin_family = AF_INET;
-            endpoint.addr4.sin_port = htons(port);
-            endpoint.addr4.sin_addr = addr4;
+            peer.endpoint.addr4.sin_family = AF_INET;
+            peer.endpoint.addr4.sin_port = htons(port);
+            peer.endpoint.addr4.sin_addr = addr4;
         }
     }
 
@@ -367,7 +367,7 @@ WireguardIpc::WireguardIpc(std::shared_ptr<QLocalSocket> pIpcSocket)
             }
         }, Qt::ConnectionType::QueuedConnection);
     connect(_pIpcSocket.get(),
-        QOverload<QLocalSocket::LocalSocketError>::of(&QLocalSocket::error),
+        &QLocalSocket::errorOccurred,
         this,
         [this](QLocalSocket::LocalSocketError err)
         {
@@ -670,7 +670,7 @@ void WireguardDeviceStatusTask::applyValue(Uapi::Key key, const QLatin1String &v
             break;
         case Uapi::Key::Endpoint:
             ensureHasPeer();
-            Uapi::parsePeerEndpoint(value, _pDev->device().last_peer->endpoint);
+            Uapi::parsePeerEndpoint(value, *_pDev->device().last_peer);
             break;
         case Uapi::Key::PersistentKeepaliveInterval:
             ensureHasPeer();

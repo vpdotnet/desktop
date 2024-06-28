@@ -176,7 +176,7 @@ Item {
         inside: true
       }
 
-      Keys.onPressed: {
+      Keys.onPressed: event => {
         var currentIndex = choices.findIndex(function(c){return c.id === regionListView.sortKey.currentValue})
         var nextIndex = KeyUtil.handleHorzKeyEvent(event, choices, 'display',
                                                    currentIndex)

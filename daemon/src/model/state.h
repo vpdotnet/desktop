@@ -335,7 +335,7 @@ public:
     // that the connection duration would exclude the sleep time.
     JsonProperty(qint64, connectionTimestamp);
 
-    // Set to true when the system goes in sleep mode. 
+    // Set to true when the system goes in sleep mode.
     // Set to false when waking up
     // Note: Only implemented on macOS.
     JsonProperty(bool, systemSleeping, false);
@@ -361,6 +361,10 @@ public:
     // Testing override(s) are active.  Human-readable names of the overridden
     // features; set at daemon startup, like overridesFailed.
     JsonProperty(std::deque<QString>, overridesActive);
+    // User's token has expired - this either indicates their subscription has expired
+    // or that they changed their password. In either case the user
+    // needs to logout and log back in.
+    JsonProperty(bool, vpnSessionExpired);
     // Authorization failed in the OpenVPN connection (timestamp of failure).
     // Note that this does not really mean that the user's credentials are
     // incorrect, see ClientNotifications.qml.
@@ -478,9 +482,9 @@ public:
     // loaded on Linux.)
     JsonProperty(std::vector<QString>, splitTunnelSupportErrors);
 
-    // A key component for the VPN is not available, all connections must be 
-    // prevented the user should be warned and the daemon should not start in 
-    // this state. 
+    // A key component for the VPN is not available, all connections must be
+    // prevented the user should be warned and the daemon should not start in
+    // this state.
     JsonProperty(std::vector<QString>, vpnSupportErrors);
 
     // On Mac/Linux, the name of the tunnel device being used.  Set during the

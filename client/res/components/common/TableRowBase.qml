@@ -59,7 +59,9 @@ Item {
   // Signal emitted if a cell in this row is focused by the mouse.  Causes the
   // list control to take focus.
   signal focusCell(int column)
-  onFocusCell: parentTable && parentTable.mouseFocusCell(rowId, column)
+  onFocusCell: column => {
+    parentTable && parentTable.mouseFocusCell(rowId, column)
+  }
 
   // Screen reader annotation for the whole row
   property NativeAcc.TableRow accRow

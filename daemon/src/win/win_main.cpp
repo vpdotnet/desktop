@@ -38,7 +38,6 @@ void dummyWinMain() {}
 
 int main(int argc, char** argv)
 {
-    setUtf8LocaleCodec();
     Logger::initialize(true);
     initKApps();
 

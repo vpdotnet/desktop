@@ -72,19 +72,6 @@ namespace
 
 ApiNetwork::ApiNetwork()
 {
-    // By default, Qt Bearer Management will try to poll network interfaces
-    // every 10 seconds.  We don't care about this functionality (it doesn't
-    // really even work), so disable it by overriding the poll interval with -1.
-    // (This does work, internally a QTimer is set with an interval of -1, which
-    // is rejected by QObject::setTimer with a warning.)
-    //
-    // The bearer management functionality is anecdotally reported to have a
-    // negative impact on the system (lots of wakes for the bearer thread,
-    // latency spikes during the interface polls, etc.), and it doesn't really
-    // work anyway - https://bugreports.qt.io/browse/QTBUG-65586
-    //
-    // This must be done before creating any QNetworkAccessManager objects.
-    qputenv("QT_BEARER_POLL_TIMEOUT", "-1");
     _pAccessManager.reset(TestShim::create<QNetworkAccessManager>());
 }
 
@@ -121,26 +108,6 @@ void ApiNetwork::clearProxy()
 QNetworkAccessManager &ApiNetwork::getAccessManager() const
 {
     Q_ASSERT(_pAccessManager);  // Class invariant
-
-    // Additionally, Qt 5.15 on Mac added even more network state monitoring
-    // beyond the "bearer management" stuff worked around in the constructor.
-    // This doesn't work either - it never seems to update the state after the
-    // app starts, which means if the network isn't up when the daemon starts,
-    // we can never send API requests even after the network comes up.
-    //
-    // Strangely, it tracks the "accessibility" state reported by
-    // QNetworkStatusMonitor in QNetworkAccessManagerPrivate::networkAccessible,
-    // which is also used to allow the app to override the network
-    // accessibility.  This probably means that manually overriding the network
-    // state wouldn't really work, but fortunately we can work around the
-    // QNetworkStatusMonitor issues by manually setting the state to Accessible
-    // before any request.
-    //
-    // Setting it once might be OK if QNetworkStatusMonitor never emits any
-    // updates, but setting it for each request will also cover us if it does
-    // ever emit an update.
-    _pAccessManager->setNetworkAccessible(QNetworkAccessManager::NetworkAccessibility::Accessible);
-
     return *_pAccessManager;
 }
 

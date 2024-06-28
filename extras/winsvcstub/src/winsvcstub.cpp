@@ -33,7 +33,7 @@ int main(int argc, char **argv)
 {
     SERVICE_TABLE_ENTRYW svcTable[] =
     {
-        { L"Dnscache", &svcMain },
+        { const_cast<wchar_t*>(L"Dnscache"), &svcMain },
         { nullptr, nullptr }
     };
 

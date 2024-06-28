@@ -17,13 +17,14 @@
 // <https://www.gnu.org/licenses/>.
 
 #include <kapps_core/src/winapi.h>
-#include <QGuiApplication>
+#include <QApplication>
 #include <QQmlApplicationEngine>
 #include <QObject>
 #include <QPalette>
 #include <QCommandLineParser>
 #include <QQuickWindow>
 #include <QStandardPaths>
+#include <QQuickStyle>
 #ifdef Q_OS_LINUX
 #include <fcntl.h>
 #endif
@@ -52,14 +53,7 @@ void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QS
 
 int main(int argc, char *argv[])
 {
-    // The support tool doesn't currently use QTextStream/QTextCodec/
-    // QString::toLocal8Bit(), but this fix is here anyway because it's too easy
-    // to forget to test non-Latin locales on Windows, this could easily come
-    // back to bite us otherwise.
-    setUtf8LocaleCodec();
-
     qDebug () << "Started PIA Reporter Tool";
-    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     // On any platform except Mac, always use software rendering in the crash
     // reporter.  Software rendering always works; hardware rendering does not
     // work on all machines since we don't deploy ANGLE.
@@ -67,8 +61,9 @@ int main(int argc, char *argv[])
     // window displays garbage when dragged to a non-primary monitor, might also
     // have to do with different resolution between the Retina display and my
     // 1080p LGs though.
+    QQuickStyle::setStyle("Basic");
 #ifndef Q_OS_MAC
-    QQuickWindow::setSceneGraphBackend(QSGRendererInterface::Software);
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::Software);
 #endif
 
     QCommandLineParser parser;
@@ -93,7 +88,7 @@ int main(int argc, char *argv[])
 
     Path::initializePreApp();
 
-    QGuiApplication app(argc, argv);
+    QApplication app(argc, argv);
     Path::initializePostApp();
     parser.process(app);
 

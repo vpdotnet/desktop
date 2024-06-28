@@ -83,7 +83,7 @@ signals:
     // this would depend on the window's scale, because it could change the
     // screen-coordinate offset between the drag location and top-left corner.
     // The window scale could change during a drag.)
-    void dragUpdatePosition(QPointF dragPos, QPoint desiredScreenPos);
+    void dragUpdatePosition(QPointF dragPos, QPointF desiredScreenPos);
 
     // The drag has ended.
     void dragEnded();
@@ -101,7 +101,7 @@ private:
     QPointF _dragPos;
     // Initial position of the cursor when a drag started - in screen
     // coordinates.  Valid in Started and Active states.
-    QPoint _cursorInitialScreenPos;
+    QPointF _cursorInitialScreenPos;
 };
 
 #endif

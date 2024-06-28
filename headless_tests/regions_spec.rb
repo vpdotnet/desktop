@@ -43,7 +43,8 @@ describe "Connecting to all available regions", :servicecheck=>true do
             expect(connected).to be_truthy, "#{region} unable to connect to the internet"
 
             external_ip_query = Retriable.run(attempts: 3, delay: 1) { NetHelp.curl_for_ip }
-            expect(external_ip_query).to match(region_ip), "IP from VPN not matching query for IP"
+            # Either match specified IP or ipv6 IP. 
+            expect(external_ip_query).to match(region_ip).or(match(/(\w*:){7}\w*/)), "IP from VPN not matching query for IP"
 
             puts "#{region} connected at IP: #{region_ip}"
 

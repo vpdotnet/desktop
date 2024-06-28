@@ -167,7 +167,7 @@ Page {
             return
           }
           // Prompt the users to update to macOS 11 or newer
-          // if they want to use the split tunnel feature 
+          // if they want to use the split tunnel feature
           if (Qt.platform.os === 'osx' && !NativeHelpers.macosSplitTunnelSupported) {
             confirming = true
             currentValue = false
@@ -281,7 +281,7 @@ Page {
         icon: "add"
         enabled: splitTunnelEnabled
         onClicked: {
-          addIpDialog.setSubnets()
+          addIpDialog.showDialog()
         }
       }
     }
@@ -303,7 +303,7 @@ Page {
       color: Theme.settings.inputDescriptionColor
       text: uiTranslate("NetworkPage", "Apps may need to be restarted for changes to be applied.")
     }
-     
+
     SplitTunnelAppDialog {
       id: addApplicationDialog
     }

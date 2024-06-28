@@ -323,7 +323,7 @@ Dialog {
         }
       }
 
-      onClicked: {
+      onClicked: button => {
         if(exit.running)
           this.disabled=true
         var buttonModel = button.buttonModel

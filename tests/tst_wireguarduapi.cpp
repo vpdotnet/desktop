@@ -105,7 +105,7 @@ private slots:
     void testParsePeerEndpoint()
     {
         wg_peer peer{};
-        Uapi::parsePeerEndpoint(QLatin1String{"[8000::0090]:23456"}, peer.endpoint);
+        Uapi::parsePeerEndpoint(QLatin1String{"[8000::0090]:23456"}, peer);
         QCOMPARE(peer.endpoint.addr6.sin6_family, AF_INET6);
         QCOMPARE(peer.endpoint.addr6.sin6_port, htons(23456));
         in6_addr expected6{{{0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -113,21 +113,21 @@ private slots:
         QCOMPARE((QByteArray{reinterpret_cast<const char*>(expected6.s6_addr), 16}),
                  (QByteArray{reinterpret_cast<const char*>(peer.endpoint.addr6.sin6_addr.s6_addr), 16}));
 
-        Uapi::parsePeerEndpoint(QLatin1String{"101.102.201.202:12345"}, peer.endpoint);
+        Uapi::parsePeerEndpoint(QLatin1String{"101.102.201.202:12345"}, peer);
         QCOMPARE(peer.endpoint.addr4.sin_family, AF_INET);
         QCOMPARE(peer.endpoint.addr4.sin_port, htons(12345));
         QCOMPARE(peer.endpoint.addr4.sin_addr.s_addr, htonl(0x6566C9CAu));
 
-        QVERIFY_EXCEPTION_THROWN(Uapi::parsePeerEndpoint(QLatin1String{"123456"}, peer.endpoint), Error);
-        QVERIFY_EXCEPTION_THROWN(Uapi::parsePeerEndpoint(QLatin1String{"100.200.100.200"}, peer.endpoint), Error);
-        QVERIFY_EXCEPTION_THROWN(Uapi::parsePeerEndpoint(QLatin1String{"100.200.100.300:345"}, peer.endpoint), Error);
-        QVERIFY_EXCEPTION_THROWN(Uapi::parsePeerEndpoint(QLatin1String{"[123:123"}, peer.endpoint), Error);
-        QVERIFY_EXCEPTION_THROWN(Uapi::parsePeerEndpoint(QLatin1String{"[123]"}, peer.endpoint), Error);
-        QVERIFY_EXCEPTION_THROWN(Uapi::parsePeerEndpoint(QLatin1String{"[123]123"}, peer.endpoint), Error);
-        QVERIFY_EXCEPTION_THROWN(Uapi::parsePeerEndpoint(QLatin1String{"[123]:123"}, peer.endpoint), Error);
+        QVERIFY_EXCEPTION_THROWN(Uapi::parsePeerEndpoint(QLatin1String{"123456"}, peer), Error);
+        QVERIFY_EXCEPTION_THROWN(Uapi::parsePeerEndpoint(QLatin1String{"100.200.100.200"}, peer), Error);
+        QVERIFY_EXCEPTION_THROWN(Uapi::parsePeerEndpoint(QLatin1String{"100.200.100.300:345"}, peer), Error);
+        QVERIFY_EXCEPTION_THROWN(Uapi::parsePeerEndpoint(QLatin1String{"[123:123"}, peer), Error);
+        QVERIFY_EXCEPTION_THROWN(Uapi::parsePeerEndpoint(QLatin1String{"[123]"}, peer), Error);
+        QVERIFY_EXCEPTION_THROWN(Uapi::parsePeerEndpoint(QLatin1String{"[123]123"}, peer), Error);
+        QVERIFY_EXCEPTION_THROWN(Uapi::parsePeerEndpoint(QLatin1String{"[123]:123"}, peer), Error);
         // Address too long for internal buffer
-        QVERIFY_EXCEPTION_THROWN(Uapi::parsePeerEndpoint(QLatin1String{"[00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:000]:123"}, peer.endpoint), Error);
-        QVERIFY_EXCEPTION_THROWN(Uapi::parsePeerEndpoint(QLatin1String{"000000000000000000000000000000000100.200.100.200:123"}, peer.endpoint), Error);
+        QVERIFY_EXCEPTION_THROWN(Uapi::parsePeerEndpoint(QLatin1String{"[00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:000]:123"}, peer), Error);
+        QVERIFY_EXCEPTION_THROWN(Uapi::parsePeerEndpoint(QLatin1String{"000000000000000000000000000000000100.200.100.200:123"}, peer), Error);
         // Unchanged
         QCOMPARE(peer.endpoint.addr4.sin_family, AF_INET);
         QCOMPARE(peer.endpoint.addr4.sin_port, htons(12345));

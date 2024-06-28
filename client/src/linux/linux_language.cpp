@@ -41,7 +41,7 @@ void linuxLanguagePreAppInit()
     const auto &procEnv = QProcessEnvironment::systemEnvironment();
     const auto &languageEnv = procEnv.value(QStringLiteral("LANGUAGE"));
 
-    linuxLanguages = languageEnv.split(':', QString::SplitBehavior::SkipEmptyParts);
+    linuxLanguages = languageEnv.split(':', Qt::SkipEmptyParts);
 
     // Wipe out the LANGUAGE variable.  Qt otherwise detects this and applies
     // very subtle tweaks for some reason.

@@ -45,13 +45,13 @@ static BOOL WINAPI ctrlHandler(DWORD dwCtrlType)
     {
     case CTRL_C_EVENT:
     case CTRL_BREAK_EVENT:
-        QTextStream(stderr) << "Terminating..." << endl;
+        QTextStream(stderr) << "Terminating..." << Qt::endl;
         QMetaObject::invokeMethod(g_console, &WinConsole::stopDaemon);
         return TRUE;
     case CTRL_CLOSE_EVENT:
     case CTRL_LOGOFF_EVENT:
     case CTRL_SHUTDOWN_EVENT:
-        QTextStream(stderr) << "Terminating..." << endl;
+        QTextStream(stderr) << "Terminating..." << Qt::endl;
         QMetaObject::invokeMethod(g_console, &WinConsole::stopDaemon);
         // Preferably we ought ot wait for termination here, but no clean way to do it yet
         return FALSE;
@@ -164,7 +164,7 @@ int WinConsole::run()
     auto unrecognizedCommand = [&] {
         qCritical() << "Unrecognized command:" << args.mid(1);
         QTextStream(stdout)
-                << "Unrecognized command; type '" << QFileInfo(args.at(0)).baseName() << " help' for a list of available commands." << endl;
+                << "Unrecognized command; type '" << QFileInfo(args.at(0)).baseName() << " help' for a list of available commands." << Qt::endl;
         return 1;
     };
 
@@ -294,23 +294,23 @@ void WinConsole::stopDaemon()
 int WinConsole::showHelp()
 {
     QTextStream(stdout)
-            << PIA_PRODUCT_NAME << " Service v" << QString::fromStdString(Version::semanticVersion()) << endl
-            << endl
-            << "Usage:" << endl
-            << "  " BRAND_CODE "-service <command>" << endl
-            << endl
-            << "Available commands:" << endl
-            << "  install        Install service" << endl
-            << "  uninstall      Uninstall service" << endl
-            << "  start          Start service" << endl
-            << "  stop           Stop service" << endl
-            << "  run            Run interactively" << endl
-            << "  tap install    Install TAP adapter" << endl
-            << "  tap uninstall  Uninstall TAP adapter" << endl
-            << "  tap reinstall  Reinstall TAP adapter" << endl
-            << "  callout install Install WFP Callout driver" << endl
-            << "  callout uninstall Uninstall WFP Callout driver" << endl
-            << "  callout reinstall (Re)install WFP Callout driver" << endl
+            << PIA_PRODUCT_NAME << " Service v" << QString::fromStdString(Version::semanticVersion()) << Qt::endl
+            << Qt::endl
+            << "Usage:" << Qt::endl
+            << "  " BRAND_CODE "-service <command>" << Qt::endl
+            << Qt::endl
+            << "Available commands:" << Qt::endl
+            << "  install        Install service" << Qt::endl
+            << "  uninstall      Uninstall service" << Qt::endl
+            << "  start          Start service" << Qt::endl
+            << "  stop           Stop service" << Qt::endl
+            << "  run            Run interactively" << Qt::endl
+            << "  tap install    Install TAP adapter" << Qt::endl
+            << "  tap uninstall  Uninstall TAP adapter" << Qt::endl
+            << "  tap reinstall  Reinstall TAP adapter" << Qt::endl
+            << "  callout install Install WFP Callout driver" << Qt::endl
+            << "  callout uninstall Uninstall WFP Callout driver" << Qt::endl
+            << "  callout reinstall (Re)install WFP Callout driver" << Qt::endl
                ;
     return 0;
 }

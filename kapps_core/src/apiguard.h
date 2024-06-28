@@ -81,9 +81,9 @@ T defaultFailResult() { return {}; }
 //   }
 template<class ImplFuncT>
 auto guard(ImplFuncT impl,
-            typename std::result_of<ImplFuncT()>::type
-             failResult = defaultFailResult<typename std::result_of<ImplFuncT()>::type>())
-    -> typename std::result_of<ImplFuncT()>::type
+           std::invoke_result_t<ImplFuncT>
+            failResult = defaultFailResult<std::invoke_result_t<ImplFuncT>>())
+    -> std::invoke_result_t<ImplFuncT>
 {
     try
     {
@@ -98,7 +98,7 @@ auto guard(ImplFuncT impl,
 
 template<class ImplFuncT>
 auto guard(ImplFuncT impl)
-    -> typename std::enable_if<std::is_void<typename std::result_of<ImplFuncT()>::type>::value, void>::type
+    -> typename std::enable_if<std::is_void_v<std::invoke_result_t<ImplFuncT>>, void>::type
 {
     try
     {
@@ -127,9 +127,9 @@ auto guard(ImplFuncT impl)
 //   }
 template<class ThisParamT, class ImplFuncT>
 auto guard(ThisParamT thisParam, ImplFuncT impl,
-            typename std::result_of<ImplFuncT()>::type
-             failResult = defaultFailResult<typename std::result_of<ImplFuncT()>::type>())
-    -> typename std::result_of<ImplFuncT()>::type
+           std::invoke_result_t<ImplFuncT>
+            failResult = defaultFailResult<std::invoke_result_t<ImplFuncT>>())
+    -> std::invoke_result_t<ImplFuncT>
 {
     return guard([&thisParam, impl = std::move(impl)]
     {
@@ -140,7 +140,7 @@ auto guard(ThisParamT thisParam, ImplFuncT impl,
 
 template<class ThisParamT, class ImplFuncT>
 auto guard(ThisParamT thisParam, ImplFuncT impl)
-    -> typename std::enable_if<std::is_void<typename std::result_of<ImplFuncT()>::type>::value, void>::type
+    -> typename std::enable_if<std::is_void_v<std::invoke_result_t<ImplFuncT>>, void>::type
 {
     guard([&thisParam, impl = std::move(impl)]
     {

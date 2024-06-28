@@ -16,12 +16,11 @@
 // along with the Private Internet Access Desktop Client.  If not, see
 // <https://www.gnu.org/licenses/>.
 
-import QtQuick 2.0
 import QtQuick 2.9
 import QtQuick.Controls 2.3
 import QtQuick.Layouts 1.3
 import PIA.ReportHelper 1.0
-import QtQuick.Dialogs 1.3
+import Qt.labs.platform
 
 Item {
   height: fileListLayout.height
@@ -34,12 +33,12 @@ Item {
     FileDialog {
         id: fileDialog
         title: "Save zip file"
-        folder: shortcuts.home
-        selectExisting: false
+        fileMode: FileDialog.SaveFile
+        folder: StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
         defaultSuffix: "zip"
         onAccepted: {
           // The path the user selects
-          var path = fileDialog.fileUrl;
+          var path = fileDialog.file;
           if(makePayload(path)) {
             ReportHelper.showFileInSystemViewer(path);
           }

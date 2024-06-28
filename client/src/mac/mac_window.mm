@@ -22,7 +22,6 @@
 #include "mac_window.h"
 #import <AppKit/AppKit.h>
 #include <QWindow>
-#include <QtMac>
 #include <QSize>
 
 namespace

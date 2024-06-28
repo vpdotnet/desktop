@@ -43,6 +43,7 @@ Path Path::DaemonUpdateDir;
 Path Path::DaemonSettingsDir;
 Path Path::DaemonExecutable;
 Path Path::ClientExecutable;
+Path Path::CliExecutable;
 Path Path::DaemonLogFile;
 Path Path::ConfigLogFile;
 Path Path::UpdownLogFile;
@@ -103,12 +104,15 @@ Path Path::DebugFile;
 #if defined(Q_OS_WIN)
 # define PIA_DAEMON_FILENAME BRAND_CODE "-service.exe"
 # define PIA_CLIENT_FILENAME BRAND_CODE "-client.exe"
+# define PIA_CLI_FILENAME BRAND_CODE "ctl.exe"
 #elif defined(Q_OS_MACOS)
 # define PIA_DAEMON_FILENAME BRAND_CODE "-daemon"
 # define PIA_CLIENT_FILENAME PIA_PRODUCT_NAME
+# define PIA_CLI_FILENAME BRAND_CODE "ctl"
 #elif defined(Q_OS_LINUX)
 # define PIA_DAEMON_FILENAME BRAND_CODE "-daemon"
 # define PIA_CLIENT_FILENAME BRAND_CODE "-client"
+# define PIA_CLI_FILENAME BRAND_CODE "ctl"
 #endif
 
 #ifdef Q_OS_WIN
@@ -186,6 +190,7 @@ void Path::initializePostApp()
     DaemonSettingsDir = DaemonDataDir = InstallationDir / "data";
     DaemonExecutable = ExecutableDir / BRAND_CODE "-service.exe";
     ClientExecutable = ExecutableDir / BRAND_CODE "-client.exe";
+    CliExecutable = ExecutableDir / BRAND_CODE "ctl.exe";
 #elif defined(Q_OS_MACOS)
     InstallationDir = QStringLiteral("/Applications/" PIA_PRODUCT_NAME ".app");
     BaseDir = getBaseDir();
@@ -201,6 +206,7 @@ void Path::initializePostApp()
     DaemonSettingsDir = QStringLiteral("/Library/Preferences/" BRAND_IDENTIFIER);
     DaemonExecutable = ExecutableDir / BRAND_CODE "-daemon";
     ClientExecutable = ExecutableDir / PIA_PRODUCT_NAME;
+    CliExecutable = ExecutableDir / BRAND_CODE "ctl";
 #elif defined(Q_OS_LINUX)
     InstallationDir = QStringLiteral("/opt/" BRAND_CODE "vpn");
     BaseDir = getBaseDir();
@@ -212,6 +218,7 @@ void Path::initializePostApp()
     DaemonSettingsDir = InstallationDir / "etc";
     DaemonExecutable = ExecutableDir / BRAND_CODE "-daemon";
     ClientExecutable = ExecutableDir / BRAND_CODE "-client";
+    CliExecutable = ExecutableDir / BRAND_CODE "ctl";
 #endif
     DaemonUpdateDir = DaemonDataDir / "update";
 
@@ -309,8 +316,6 @@ void Path::initializePostApp()
     VpnOnlyFile = Path { DaemonSettingsDir / "cgroup/net_cls/" BRAND_CODE "vpnonly/cgroup.procs" };
     ParentVpnExclusionsFile = Path { DaemonSettingsDir / "cgroup/net_cls/cgroup.procs" };
 #endif
-
-    ClientExecutable = QCoreApplication::applicationFilePath();
 }
 
 Path Path::operator/(const QString& child) const &
@@ -538,6 +543,6 @@ Path& Path::up()
 
 std::ostream &operator<<(std::ostream &os, const Path &path)
 {
-    const QString &pathStr{path};
+    const QString &pathStr{path.str()};
     return os << pathStr;
 }

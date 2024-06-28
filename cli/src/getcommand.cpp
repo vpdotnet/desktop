@@ -82,9 +82,9 @@ namespace GetSetValue
         bool nestedRegion{false};
         for(const auto &group : state.groupedLocations())
         {
-            if(group["code"] == countryCode)
+            if(group[QStringLiteral("code")] == countryCode)
             {
-                nestedRegion = group["locations"].toArray().size() > 1;
+                nestedRegion = group[QStringLiteral("locations")].toArray().size() > 1;
                 break;
             }
         }
@@ -142,7 +142,7 @@ namespace GetSetValue
         for(const auto &knownLocation : state.availableLocations())
         {
             if(location == GetSetValue::getRegionCliName(knownLocation.toObject(), state))
-                return knownLocation["id"].toString();
+                return knownLocation[QStringLiteral("id")].toString();
         }
 
         qWarning() << "No match found for specified location:" << location;
@@ -504,7 +504,7 @@ int GetCommand::exec(const QStringList &params, QCoreApplication &app)
             const auto &groupedLocations = client.connection().state["groupedLocations"].toArray();
             for(const auto &country : groupedLocations)
             {
-                for(const auto &location : country["locations"].toArray())
+                for(const auto &location : country[QStringLiteral("locations")].toArray())
                 {
                     outln() << ValuePrinter::renderLocation(location.toObject(), client.connection().state);
                 }

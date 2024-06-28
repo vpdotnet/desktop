@@ -69,7 +69,8 @@ class AccessibleElement : public QObject, public QAccessibleObject
     Q_OBJECT
     // This allows qobject_cast<QAccessibleInterface>() to work on an
     // AccessibleImpl - it's mainly to silence a MOC warning
-    Q_INTERFACES(QAccessibleInterface)
+    // error: Undefined interface
+    // Q_INTERFACES(QAccessibleInterface)
 
 public:
     // Pass the QAccessibleObject's object in the ctor.  These do not parent to

@@ -254,13 +254,13 @@ void OpenVPNProcess::handleManagementLine(const QString& line)
         return;
     if (line.startsWith(QLatin1String(">STATE:")))
     {
-        auto params = line.midRef(7).split(',');
+        auto params = QStringView{line}.mid(7).split(',');
         if (params.size() < 2)
         {
-            qWarning() << "Unrecognized OpenVPN state:" << line.midRef(7);
+            qWarning() << "Unrecognized OpenVPN state:" << QStringView{line}.mid(7);
             return;
         }
-        QStringRef description, tunnelIP, remoteIP, remotePort, localIP, localPort, tunnelIPv6;
+        QStringView description, tunnelIP, remoteIP, remotePort, localIP, localPort, tunnelIPv6;
         switch (params.size())
         {
         default:
@@ -274,7 +274,7 @@ void OpenVPNProcess::handleManagementLine(const QString& line)
         case 2: case 1: case 0: break;
         }
 
-        auto assignUInt = [](uint& var, const QStringRef& str) { bool ok; uint value = str.toUInt(&ok); if (ok) var = value; };
+        auto assignUInt = [](uint& var, const QStringView& str) { bool ok; uint value = str.toUInt(&ok); if (ok) var = value; };
 
         if (!tunnelIP.isEmpty())
             _tunnelIP = tunnelIP.toString();
@@ -316,7 +316,7 @@ void OpenVPNProcess::handleManagementLine(const QString& line)
             setState(Exiting);
         }
         else
-            qWarning() << "Unrecognized OpenVPN state:" << line.midRef(7);
+            qWarning() << "Unrecognized OpenVPN state:" << QStringView{line}.mid(7);
     }
     else if (line.startsWith(QLatin1String(">HOLD:")))
         sendManagementCommand(QLatin1String("hold release"));

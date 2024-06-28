@@ -282,7 +282,7 @@ struct ConditionalFirewallFilter : BasicFirewallFilter<action, direction, ipVers
     template <typename... ConditionTypes>
     ConditionalFirewallFilter(uint8_t weight = 10, ConditionTypes&& ...inlineConditions)
         : _conditionIndex{0},
-        BasicFirewallFilter(weight)
+        BasicFirewallFilter<action, direction, ipVersion>(weight)
     {
         auto totalConditionCount{conditionCount + sizeof...(inlineConditions)};
         conditions.resize(totalConditionCount);
@@ -327,13 +327,13 @@ struct IPSubnetFilter<action, direction, FWP_IP_VERSION_V4> : ConditionalFirewal
 {
     FWP_V4_ADDR_AND_MASK address;
 
-    IPSubnetFilter(const core::Ipv4Address& addr, int prefix, uint8_t weight) : ConditionalFirewallFilter(weight)
+    IPSubnetFilter(const core::Ipv4Address& addr, int prefix, uint8_t weight) : ConditionalFirewallFilter<1, action, direction, FWP_IP_VERSION_V4>(weight)
     {
         address.addr = addr.address();
         address.mask = ~0UL << (32 - prefix);
-        setCondition<FWP_V4_ADDR_MASK>(FWPM_CONDITION_IP_REMOTE_ADDRESS, FWP_MATCH_EQUAL, &address);
+        this->setCondition<FWP_V4_ADDR_MASK>(FWPM_CONDITION_IP_REMOTE_ADDRESS, FWP_MATCH_EQUAL, &address);
     }
-    IPSubnetFilter(const std::string& subnet, uint8_t weight) : ConditionalFirewallFilter(weight)
+    IPSubnetFilter(const std::string& subnet, uint8_t weight) : ConditionalFirewallFilter<1, action, direction, FWP_IP_VERSION_V4>(weight)
     {
         // For consistency with prior QHostAddress implementation, treat
         // unparseable subnets as 0/32
@@ -349,7 +349,7 @@ struct IPSubnetFilter<action, direction, FWP_IP_VERSION_V4> : ConditionalFirewal
         }
         address.addr = subnetValue.address().address();
         address.mask = ~0UL << (32 - subnetValue.prefix());
-        setCondition<FWP_V4_ADDR_MASK>(FWPM_CONDITION_IP_REMOTE_ADDRESS, FWP_MATCH_EQUAL, &address);
+        this->setCondition<FWP_V4_ADDR_MASK>(FWPM_CONDITION_IP_REMOTE_ADDRESS, FWP_MATCH_EQUAL, &address);
     }
 };
 
@@ -358,15 +358,15 @@ struct IPSubnetFilter<action, direction, FWP_IP_VERSION_V6> : ConditionalFirewal
 {
     FWP_V6_ADDR_AND_MASK address;
 
-    IPSubnetFilter(const core::Ipv6Address& addr, int prefix, uint8_t weight) : ConditionalFirewallFilter(weight)
+    IPSubnetFilter(const core::Ipv6Address& addr, int prefix, uint8_t weight) : ConditionalFirewallFilter<1, action, direction, FWP_IP_VERSION_V6>(weight)
     {
         const auto &addrBytes{addr.address()};
         std::copy(std::begin(addrBytes), std::end(addrBytes),
             std::begin(address.addr));
         address.prefixLength = prefix;
-        setCondition<FWP_V6_ADDR_MASK>(FWPM_CONDITION_IP_REMOTE_ADDRESS, FWP_MATCH_EQUAL, &address);
+        this->setCondition<FWP_V6_ADDR_MASK>(FWPM_CONDITION_IP_REMOTE_ADDRESS, FWP_MATCH_EQUAL, &address);
     }
-    IPSubnetFilter(const std::string& subnet, uint8_t weight) : ConditionalFirewallFilter(weight)
+    IPSubnetFilter(const std::string& subnet, uint8_t weight) : ConditionalFirewallFilter<1, action, direction, FWP_IP_VERSION_V6>(weight)
     {
         // For consistency with prior QHostAddress implementation, treat
         // unparseable subnets as 0/128
@@ -384,7 +384,7 @@ struct IPSubnetFilter<action, direction, FWP_IP_VERSION_V6> : ConditionalFirewal
         std::copy(std::begin(addrBytes), std::end(addrBytes),
             std::begin(address.addr));
         address.prefixLength = subnetValue.prefix();
-        setCondition<FWP_V6_ADDR_MASK>(FWPM_CONDITION_IP_REMOTE_ADDRESS, FWP_MATCH_EQUAL, &address);
+        this->setCondition<FWP_V6_ADDR_MASK>(FWPM_CONDITION_IP_REMOTE_ADDRESS, FWP_MATCH_EQUAL, &address);
     }
 };
 
@@ -392,8 +392,8 @@ struct IPSubnetFilter<action, direction, FWP_IP_VERSION_V6> : ConditionalFirewal
 template<FWP_ACTION_TYPE action, FWP_DIRECTION direction, FWP_IP_VERSION ipVersion>
 struct IPAddressFilter : public IPSubnetFilter<action, direction, ipVersion>
 {
-    IPAddressFilter(const core::Ipv4Address& addr, uint8_t weight = 10) : IPSubnetFilter(addr, ipVersion == FWP_IP_VERSION_V6 ? 128 : 32, weight) {}
-    IPAddressFilter(const core::Ipv6Address& addr, uint8_t weight = 10) : IPSubnetFilter(addr, ipVersion == FWP_IP_VERSION_V6 ? 128 : 32, weight) {}
+    IPAddressFilter(const core::Ipv4Address& addr, uint8_t weight = 10) : IPSubnetFilter<action, direction, ipVersion>(addr, ipVersion == FWP_IP_VERSION_V6 ? 128 : 32, weight) {}
+    IPAddressFilter(const core::Ipv6Address& addr, uint8_t weight = 10) : IPSubnetFilter<action, direction, ipVersion>(addr, ipVersion == FWP_IP_VERSION_V6 ? 128 : 32, weight) {}
 
     // Unused
     //IPAddressFilter(const std::string& addr, uint8_t weight = 10) : IPSubnetFilter(QHostAddress(addr), ipVersion == FWP_IP_VERSION_V6 ? 128 : 32, weight) {}
@@ -406,13 +406,13 @@ template<FWP_ACTION_TYPE action, FWP_DIRECTION direction>
 struct LocalhostFilter<action, direction, FWP_IP_VERSION_V4>
     : public IPAddressFilter<action, direction, FWP_IP_VERSION_V4>
 {
-    LocalhostFilter(uint8_t weight = 10) : IPAddressFilter(core::Ipv4Address{127,0,0,1}, weight) {}
+    LocalhostFilter(uint8_t weight = 10) : IPAddressFilter<action, direction, FWP_IP_VERSION_V4>(core::Ipv4Address{127,0,0,1}, weight) {}
 };
 template<FWP_ACTION_TYPE action, FWP_DIRECTION direction>
 struct LocalhostFilter<action, direction, FWP_IP_VERSION_V6>
     : public IPAddressFilter<action, direction, FWP_IP_VERSION_V6>
 {
-    LocalhostFilter(uint8_t weight = 10) : IPAddressFilter(core::Ipv6Address{0,0,0,0,0,0,0,1}, weight) {}
+    LocalhostFilter(uint8_t weight = 10) : IPAddressFilter<action, direction, FWP_IP_VERSION_V6>(core::Ipv6Address{0,0,0,0,0,0,0,1}, weight) {}
 };
 
 // Filter to allow or block DHCP traffic
@@ -422,14 +422,14 @@ struct DHCPFilter<action, FWP_IP_VERSION_V4> : public ConditionalFirewallFilter<
 {
     FWP_V4_ADDR_AND_MASK address;
 
-    DHCPFilter(uint8_t weight = 10) : ConditionalFirewallFilter(weight)
+    DHCPFilter(uint8_t weight = 10) : ConditionalFirewallFilter<3, action, FWP_DIRECTION_OUTBOUND, FWP_IP_VERSION_V4>(weight)
     {
-        setCondition<FWP_UINT16>(FWPM_CONDITION_IP_LOCAL_PORT, FWP_MATCH_EQUAL, 68);
-        setCondition<FWP_UINT16>(FWPM_CONDITION_IP_REMOTE_PORT, FWP_MATCH_EQUAL, 67);
+        this->setCondition<FWP_UINT16>(FWPM_CONDITION_IP_LOCAL_PORT, FWP_MATCH_EQUAL, 68);
+        this->setCondition<FWP_UINT16>(FWPM_CONDITION_IP_REMOTE_PORT, FWP_MATCH_EQUAL, 67);
         // 255.255.255.255/32
         address.addr = 0xFFFFFFFFu;
         address.mask = 0xFFFFFFFFu;
-        setCondition<FWP_V4_ADDR_MASK>(FWPM_CONDITION_IP_REMOTE_ADDRESS, FWP_MATCH_EQUAL, &address);
+        this->setCondition<FWP_V4_ADDR_MASK>(FWPM_CONDITION_IP_REMOTE_ADDRESS, FWP_MATCH_EQUAL, &address);
     }
 };
 template<FWP_ACTION_TYPE action>
@@ -437,15 +437,15 @@ struct DHCPFilter<action, FWP_IP_VERSION_V6> : public ConditionalFirewallFilter<
 {
     FWP_V6_ADDR_AND_MASK address;
 
-    DHCPFilter(uint8_t weight = 10) : ConditionalFirewallFilter(weight)
+    DHCPFilter(uint8_t weight = 10) : ConditionalFirewallFilter<3, action, FWP_DIRECTION_OUTBOUND, FWP_IP_VERSION_V6>(weight)
     {
-        setCondition<FWP_UINT16>(FWPM_CONDITION_IP_LOCAL_PORT, FWP_MATCH_EQUAL, 546);
-        setCondition<FWP_UINT16>(FWPM_CONDITION_IP_REMOTE_PORT, FWP_MATCH_EQUAL, 547);
+        this->setCondition<FWP_UINT16>(FWPM_CONDITION_IP_LOCAL_PORT, FWP_MATCH_EQUAL, 546);
+        this->setCondition<FWP_UINT16>(FWPM_CONDITION_IP_REMOTE_PORT, FWP_MATCH_EQUAL, 547);
         // ff00::/8
         ZeroMemory(&address.addr, sizeof(address.addr));
         address.addr[0] = 0xFFu;
         address.prefixLength = 8;
-        setCondition<FWP_V6_ADDR_MASK>(FWPM_CONDITION_IP_REMOTE_ADDRESS, FWP_MATCH_EQUAL, &address);
+        this->setCondition<FWP_V6_ADDR_MASK>(FWPM_CONDITION_IP_REMOTE_ADDRESS, FWP_MATCH_EQUAL, &address);
     }
 };
 
@@ -453,9 +453,9 @@ struct DHCPFilter<action, FWP_IP_VERSION_V6> : public ConditionalFirewallFilter<
 template<FWP_ACTION_TYPE action, FWP_IP_VERSION ipVersion>
 struct DNSFilter : public ConditionalFirewallFilter<1, action, FWP_DIRECTION_OUTBOUND, ipVersion>
 {
-    DNSFilter(uint8_t weight = 10) : ConditionalFirewallFilter(weight)
+    DNSFilter(uint8_t weight = 10) : ConditionalFirewallFilter<1, action, FWP_DIRECTION_OUTBOUND, ipVersion>(weight)
     {
-        setCondition<FWP_UINT16>(FWPM_CONDITION_IP_REMOTE_PORT, FWP_MATCH_EQUAL, 53);
+        this->setCondition<FWP_UINT16>(FWPM_CONDITION_IP_REMOTE_PORT, FWP_MATCH_EQUAL, 53);
     }
 };
 
@@ -464,7 +464,7 @@ template<FWP_IP_VERSION ipVersion>
 struct CalloutDNSFilter : public DNSFilter<FWP_ACTION_CALLOUT_TERMINATING, ipVersion>
 {
     CalloutDNSFilter(const GUID &calloutKey, const GUID &layerKey, uint8_t weight = 10)
-        : DNSFilter{weight}
+        : DNSFilter<FWP_ACTION_CALLOUT_TERMINATING, ipVersion>{weight}
     {
         this->layerKey = layerKey;
         this->action.type = FWP_ACTION_CALLOUT_TERMINATING;
@@ -480,10 +480,10 @@ struct InterfaceFilter : public ConditionalFirewallFilter<1, action, direction, 
 {
     UINT64 interfaceLuid;
 
-    InterfaceFilter(UINT64 interfaceLuid, uint8_t weight = 10) : ConditionalFirewallFilter(weight)
+    InterfaceFilter(UINT64 interfaceLuid, uint8_t weight = 10) : ConditionalFirewallFilter<1, action, direction, ipVersion>(weight)
     {
         this->interfaceLuid = interfaceLuid;
-        setCondition<FWP_UINT64>(FWPM_CONDITION_IP_LOCAL_INTERFACE, FWP_MATCH_EQUAL, &this->interfaceLuid);
+        this->setCondition<FWP_UINT64>(FWPM_CONDITION_IP_LOCAL_INTERFACE, FWP_MATCH_EQUAL, &this->interfaceLuid);
     }
 };
 
@@ -497,10 +497,10 @@ struct ApplicationFilter : public ConditionalFirewallFilter<1, action, direction
     // Ensure caller passes in wide strings
     ApplicationFilter(const std::wstring& applicationPath, uint8_t weight = 10,
                       ConditionTypes&& ...inlineConditions)
-        : ConditionalFirewallFilter(weight, std::forward<ConditionTypes>(inlineConditions)...),
+        : ConditionalFirewallFilter<1, action, direction, ipVersion>(weight, std::forward<ConditionTypes>(inlineConditions)...),
           _appId{applicationPath}
     {
-        setCondition<FWP_BYTE_BLOB_TYPE>(FWPM_CONDITION_ALE_APP_ID, FWP_MATCH_EQUAL, _appId.data());
+        this->setCondition<FWP_BYTE_BLOB_TYPE>(FWPM_CONDITION_ALE_APP_ID, FWP_MATCH_EQUAL, _appId.data());
     }
 };
 
@@ -509,11 +509,11 @@ template<FWP_ACTION_TYPE action, FWP_DIRECTION direction, FWP_IP_VERSION ipVersi
 struct AppDNSFilter : public ConditionalFirewallFilter<2, action, direction, ipVersion>
 {
     template <typename...ConditionTypes>
-    AppDNSFilter(const AppIdKey &appId, uint8_t weight = 10, ConditionTypes&& ...inlineConditions) : ConditionalFirewallFilter(weight, std::forward<ConditionTypes>(inlineConditions)...)
+    AppDNSFilter(const AppIdKey &appId, uint8_t weight = 10, ConditionTypes&& ...inlineConditions) : ConditionalFirewallFilter<2, action, direction, ipVersion>(weight, std::forward<ConditionTypes>(inlineConditions)...)
     {
         assert(!appId.empty());
-        setCondition<FWP_UINT16>(FWPM_CONDITION_IP_REMOTE_PORT, FWP_MATCH_EQUAL, 53);
-        setCondition<FWP_BYTE_BLOB_TYPE>(FWPM_CONDITION_ALE_APP_ID, FWP_MATCH_EQUAL, appId.data());
+        this->setCondition<FWP_UINT16>(FWPM_CONDITION_IP_REMOTE_PORT, FWP_MATCH_EQUAL, 53);
+        this->setCondition<FWP_BYTE_BLOB_TYPE>(FWPM_CONDITION_ALE_APP_ID, FWP_MATCH_EQUAL, appId.data());
     }
 };
 
@@ -521,10 +521,10 @@ template<FWP_IP_VERSION ipVersion, FWP_ACTION_TYPE action=FWP_ACTION_PERMIT>
 struct AppIdFilter : public ConditionalFirewallFilter<1, action, FWP_DIRECTION_OUTBOUND, ipVersion>
 {
     // Create an AppIdFilter with a valid app ID (appId must not be empty)
-    AppIdFilter(const AppIdKey &appId, uint8_t weight = 10) : ConditionalFirewallFilter(weight)
+    AppIdFilter(const AppIdKey &appId, uint8_t weight = 10) : ConditionalFirewallFilter<1, action, FWP_DIRECTION_OUTBOUND, ipVersion>(weight)
     {
         assert(!appId.empty());
-        setCondition<FWP_BYTE_BLOB_TYPE>(FWPM_CONDITION_ALE_APP_ID, FWP_MATCH_EQUAL, appId.data());
+        this->setCondition<FWP_BYTE_BLOB_TYPE>(FWPM_CONDITION_ALE_APP_ID, FWP_MATCH_EQUAL, appId.data());
     }
 };
 
@@ -536,7 +536,7 @@ struct SplitFilter : public AppIdFilter<ipVersion>
     SplitFilter(const AppIdKey &appId, const GUID &calloutKey,
                 const GUID &layerKey, const GUID &provCtxt,
                 FWP_ACTION_TYPE action, uint8_t weight)
-        : AppIdFilter(appId, weight)
+        : AppIdFilter<ipVersion>(appId, weight)
     {
         this->layerKey = layerKey;
         this->action.type = action;

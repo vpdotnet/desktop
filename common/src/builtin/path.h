@@ -92,6 +92,12 @@ public:
     // Linux: <ExecutableDir>/vpn-client
     static Path ClientExecutable;
 
+    // Cli executable
+    // Windows: <ExecutableDir>/vpnctl.exe
+    // macOS: /usr/local/bin/vpnctl
+    // Linux: /usr/local/bin/vpnctl
+    static Path CliExecutable;
+
     // Daemon log file
     // All: <DaemonDataDir>/daemon.log
     static Path DaemonLogFile;

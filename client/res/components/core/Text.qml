@@ -58,7 +58,7 @@ QtQuick.Text {
   // to hide the real 'horizontalAlignment' property.  Bindings should refer to
   // 'horizontalAlignment' normally.
   property int ltrHorizontalAlignment: QtQuick.Text.AlignLeft
-  property alias horizontalAlignment: coreText.ltrHorizontalAlignment
+  // property alias horizontalAlignment: coreText.ltrHorizontalAlignment
 
   // The QML doc says that we should be able to create a "horizontalAlignment"
   // binding here and bind the real property of Text itself.  However, this

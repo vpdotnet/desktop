@@ -380,6 +380,9 @@ else ###########################################################################
         # check before starting the installer script, but we should still check
         # here in case the installer is run manually.
         if pgrep -q -f "^/Applications/Private Internet Access.app/" ; then
+            # Force removal of install helper, otherwise it would be skipped
+            # since the script just exits
+            removeInstallHelper
             fail "Please exit the existing $appName before installing this update."
         fi
 

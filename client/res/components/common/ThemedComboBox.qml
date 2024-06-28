@@ -20,7 +20,6 @@ import QtQuick 2.9
 import QtQuick.Controls 2.3
 import QtQuick.Layouts 1.3
 import QtQuick.Window 2.11
-import QtGraphicalEffects 1.0
 import "qrc:/javascript/util.js" as Util
 import "qrc:/javascript/keyutil.js" as KeyUtil
 import "../core"
@@ -147,7 +146,7 @@ Item {
     // Keys.on[Up|Down]Pressed(), because we want ComboBox to handle this when
     // the popup is open, and this event isn't generated if something is
     // attached to on[Up|Down]Pressed() (even if they do not accept the event)
-    Keys.onPressed: {
+    Keys.onPressed: event => {
       // Let the ComboBox handle the selection if the popup is open
       if(popup.visible)
         return
@@ -195,7 +194,7 @@ Item {
         inKeyPress = null
     }
 
-    onActivated: themedComboBox.activated(index)
+    onActivated: index => themedComboBox.activated(index)
 
     delegate: ItemDelegate {
       id: choiceDelegate
@@ -250,10 +249,6 @@ Item {
           color: (control.enabled && choiceDelegate.enabled) ? Theme.settings.inputDropdownTextColor : Theme.settings.inputDropdownTextDisabledColor
           font: control.font
           elide: Text.ElideRight
-          // Set this explicitly so "Arabic" correctly left-aligns when using an
-          // LTR language (and, in theory, so everything else right-aligns when
-          // using Arabic).
-          horizontalAlignment: Text.AlignLeft
           verticalAlignment: Text.AlignVCenter
           opacity: highlighted ? 1.0 : control.unhighlightedItemOpacity
 
@@ -320,7 +315,6 @@ Item {
         color: control.enabled ? Theme.settings.inputDropdownTextColor : Theme.settings.inputDropdownTextDisabledColor
         // As in the delegate, explicitly align left so all languages align the
         // same way.
-        horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
       }
@@ -341,6 +335,8 @@ Item {
     popup: Popup {
       id: popup
 
+      // Override base color (white) so the popup shows
+      palette.base: "transparent"
       // The selected index when the popup is opened determines the Y coordinate
       // of the popup (to align the selected item with the combo box itself).
       //

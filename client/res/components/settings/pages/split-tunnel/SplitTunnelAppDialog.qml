@@ -41,6 +41,30 @@ import "../"
 //
 OverlayDialog {
   id: addApplicationDialog
+  // Standard buttons like Dialog.Ok are not defined in this page. 
+  // It's not clear why, but we can just add custom buttons.
+  // This is the same as SplitTunnelIpDialog.qml
+  buttons: [{ text: uiTranslate("OverlayDialog", "OK", "dialog button"), role: DialogButtonBox.AcceptRole }, { text: uiTranslate("OverlayDialog", "Cancel", "dialog button"), role: DialogButtonBox.RejectRole }]
+  canAccept: browseAppSelectedIndex >= 0
+  title: uiTranslate("SplitTunnelAddAppRow", "Add Application")
+  contentWidth: 300
+  contentHeight: 300
+  onAccepted: {
+    var path = scannedApplications[browseAppSelectedIndex].path;
+    // On Windows, we have to read the link target in the user session, not
+    // in the service - see SplitTunnelRule::linkTarget
+    var linkTarget
+    if(Qt.platform.os === 'windows' && !path.startsWith("uwp:") && path.endsWith(".lnk")) {
+      linkTarget = SplitTunnelManager.readWinLinkTarget(path)
+      // Bail if we failed to read the link target (traced by
+      // SplitTunnelManager).  Should not normally happen since we check link
+      // targets before displaying links, but it could happen if the link was
+      // changed while the dialog was open.
+      if(!linkTarget)
+        return
+    }
+    addPathToSplitTunnelRules(path, linkTarget)
+  }
 
   function openDialog() {
     // Skip the app list for Linux since we don't scan apps on Linux currently.
@@ -169,28 +193,6 @@ OverlayDialog {
         addApplicationDialog.close();
       }
     }
-  }
-
-  buttons: [ Dialog.Ok, Dialog.Cancel ]
-  canAccept: browseAppSelectedIndex >= 0
-  title: uiTranslate("SplitTunnelAddAppRow", "Add Application")
-  contentWidth: 300
-  contentHeight: 300
-  onAccepted: {
-    var path = scannedApplications[browseAppSelectedIndex].path;
-    // On Windows, we have to read the link target in the user session, not
-    // in the service - see SplitTunnelRule::linkTarget
-    var linkTarget
-    if(Qt.platform.os === 'windows' && !path.startsWith("uwp:") && path.endsWith(".lnk")) {
-      linkTarget = SplitTunnelManager.readWinLinkTarget(path)
-      // Bail if we failed to read the link target (traced by
-      // SplitTunnelManager).  Should not normally happen since we check link
-      // targets before displaying links, but it could happen if the link was
-      // changed while the dialog was open.
-      if(!linkTarget)
-        return
-    }
-    addPathToSplitTunnelRules(path, linkTarget)
   }
 
   Item {

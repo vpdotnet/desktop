@@ -27,7 +27,6 @@
 #include <common/src/builtin/path.h>
 #include "brand.h"
 #include "../client.h"
-#include <QtWin>
 #include <QDirIterator>
 #include <QMutex>
 #include <array>
@@ -403,7 +402,7 @@ namespace
                                                  const QSize &requestedSize)
     {
         IconResource icon{path.c_str(), requestedSize};
-        return QtWin::fromHICON(icon.getHandle());
+        return QPixmap::fromImage(QImage::fromHICON(icon.getHandle()));
     }
 
     QPixmap WinAppIconProvider::loadIconFromModule(const std::wstring &path,
@@ -431,7 +430,7 @@ namespace
                 IconResource icon{module.getHandle(),
                                   iconIds.second.getResName(),
                                   requestedSize, path};
-                return QtWin::fromHICON(icon.getHandle());
+                return QPixmap::fromImage(QImage::fromHICON(icon.getHandle()));
             }
             catch(const Error &ex)
             {
@@ -445,7 +444,7 @@ namespace
         // done.
         IconResource icon{module.getHandle(), iconIds.first.getResName(),
                           requestedSize, path};
-        return QtWin::fromHICON(icon.getHandle());
+        return QPixmap::fromImage(QImage::fromHICON(icon.getHandle()));
     }
 
     QPixmap WinAppIconProvider::loadShell32Icon(int index, const QSize &requestedSize)
@@ -455,7 +454,7 @@ namespace
         auto iconIds = shell32.findIconRes(index, shell32Path);
         IconResource icon{shell32.getHandle(), iconIds.second.getResName(),
                           requestedSize, shell32Path};
-        return QtWin::fromHICON(icon.getHandle());
+        return QPixmap::fromImage(QImage::fromHICON(icon.getHandle()));
     }
 
     QPixmap WinAppIconProvider::loadDefaultIcon(const QSize &requestedSize)

@@ -16,7 +16,7 @@
 // along with the Private Internet Access Desktop Client.  If not, see
 // <https://www.gnu.org/licenses/>.
 
-import QtQuick 2.9
+import QtQuick 2.15
 import QtQuick.Controls 2.3
 import QtQuick.Layouts 1.3
 import QtQuick.Window 2.11
@@ -249,154 +249,11 @@ Page {
     }
   }
 
-  OverlayDialog {
+  Socks5ProxyDialog {
     id: customProxyDialog
-    buttons: [Dialog.Ok, Dialog.Cancel]
-    canAccept: proxyHostname.acceptableInput
-    contentWidth: 300
-    title: uiTranslate("ConnectionPage", "SOCKS5 Proxy")
-
-    function updateAndOpen() {
-      var currentCustomProxy = Daemon.settings.proxyCustom
-      proxyHostname.setting.currentValue = currentCustomProxy.host
-      if (currentCustomProxy.port > 0 && currentCustomProxy.port <= 65535)
-        proxyPort.setting.currentValue = currentCustomProxy.port.toString()
-      else
-        proxyPort.setting.currentValue = ""
-
-      proxyUsername.setting.currentValue = currentCustomProxy.username
-      proxyPassword.setting.currentValue = currentCustomProxy.password
-
-      open()
-    }
-
-    GridLayout {
-      width: parent.width
-      columns: 2
-      TextboxInput {
-        textBoxVerticalPadding: 4
-        id: proxyHostname
-        Layout.fillWidth: true
-        //: The IP address of the SOCKS proxy server to use when
-        //: connecting.  Labeled with "IP Address" to indicate that it
-        //: can't be a hostname.
-        label: uiTranslate("ConnectionPage", "Server IP Address")
-        setting: Setting {
-          sourceValue: ""
-        }
-        // Only IP addresses allowed.  This regex allows leading zeros in each
-        // part.
-        validator: RegExpValidator {
-          regExp: /(([0-1]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])\.){3}([0-1]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])/
-        }
-      }
-      TextboxInput {
-        textBoxVerticalPadding: 4
-        id: proxyPort
-        label: uiTranslate("ConnectionPage", "Port")
-        setting: Setting {
-          sourceValue: ""
-        }
-        validator: RegExpValidator {
-          regExp: /(?:[0-9]{,5})?/
-        }
-        placeholderText: uiTranslate("ConnectionPage", "Default")
-      }
-      TextboxInput {
-        textBoxVerticalPadding: 4
-        id: proxyUsername
-        Layout.fillWidth: true
-        Layout.columnSpan: 2
-        label: uiTranslate("ConnectionPage", "User (optional)")
-        setting: Setting {
-          sourceValue: ""
-        }
-      }
-      TextboxInput {
-        textBoxVerticalPadding: 4
-        id: proxyPassword
-        Layout.fillWidth: true
-        Layout.columnSpan: 2
-        label: uiTranslate("ConnectionPage", "Password (optional)")
-        masked: true
-        setting: Setting {
-          sourceValue: ""
-        }
-      }
-    }
-    onAccepted: {
-      Daemon.applySettings({
-                             "proxyType": "custom",
-                             "proxyCustom": {
-                               "host": proxyHostname.setting.currentValue,
-                               "port": Number(proxyPort.setting.currentValue),
-                               "username": proxyUsername.setting.currentValue,
-                               "password": proxyPassword.setting.currentValue
-                             }
-                           })
-      socksHeading.focusButton();
-    }
-    onRejected: {
-      socksHeading.focusButton();
-    }
   }
 
-  OverlayDialog {
+  ShadowsocksRegionDialog {
     id: shadowsocksRegionDialog
-    buttons: [Dialog.Ok, Dialog.Cancel]
-    canAccept: true
-    contentWidth: 350
-    title: "Shadowsocks" // Not translated
-    topPadding: 0
-    bottomPadding: 0
-    leftPadding: 0
-    rightPadding: 0
-
-    function updateAndOpen() {
-      shadowsocksRegionList.chosenLocation = Daemon.state.shadowsocksLocations.chosenLocation
-      shadowsocksRegionList.clearSearch()
-      shadowsocksRegionList.reevalSearchPlaceholder()
-      open()
-    }
-
-    RegionList {
-      id: shadowsocksRegionList
-      width: parent.width
-      implicitHeight: 450
-      regionFilter: function (serverLocation) {
-        // Show regions that have at least one shadowsocks server
-        return serverLocation.hasShadowsocks
-      }
-      // Don't use shadowsocksLocations directly since the chosen location
-      // isn't applied until the user clicks OK
-      property var chosenLocation
-      // assigned in updateAndOpen() or onRegionSelected()
-      serviceLocations: ({
-                           "bestLocation": Daemon.state.shadowsocksLocations.bestLocation,
-                           "chosenLocation": shadowsocksRegionList.chosenLocation
-                         })
-      portForwardEnabled: false
-      canFavorite: false
-      collapsedCountriesSettingName: "shadowsocksCollapsedCountries"
-      onRegionSelected: {
-        // Update chosenLocation - null if 'auto' or an unknown region was
-        // selected
-        shadowsocksRegionList.chosenLocation = Daemon.state.availableLocations[locationId]
-      }
-    }
-
-    onAccepted: {
-      var regionId = 'auto'
-      if (shadowsocksRegionList.chosenLocation)
-        regionId = shadowsocksRegionList.chosenLocation.id
-      Daemon.applySettings({
-                             "proxyType": "shadowsocks",
-                             "proxyShadowsocksLocation": regionId
-                           })
-      shadowsocksHeading.focusButton();
-    }
-    onRejected: {
-      shadowsocksHeading.focusButton();
-    }
   }
 }

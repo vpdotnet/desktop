@@ -12,13 +12,10 @@ class ClangLinux
     DriverPlatformArchOpts = {
         linux: {
             x86_64: ['-target', 'x86_64-linux-gnu'],
-            armhf: ['-target', 'arm-linux-gnueabihf'],
             arm64: ['-target', 'aarch64-linux-gnu']
         },
         android: {
-            x86: ['-target', "i686-linux-android#{AndroidApiVersion}"],
             x86_64: ['-target', "x86_64-linux-android#{AndroidApiVersion}"],
-            armhf: ['-target', "armv7a-linux-androideabi#{AndroidApiVersion}"],
             arm64: ['-target', "aarch64-linux-android#{AndroidApiVersion}"]
         }
     }

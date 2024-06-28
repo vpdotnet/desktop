@@ -16,7 +16,7 @@
 // along with the Private Internet Access Desktop Client.  If not, see
 // <https://www.gnu.org/licenses/>.
 
-import QtQuick 2.9
+import QtQuick 2.15
 import QtQuick.Controls 2.3
 import QtQuick.Layouts 1.3
 import "../../../javascript/app.js" as App
@@ -244,7 +244,7 @@ FocusScope {
             // Recent usernames must all be alphanumeric but some historical ones are email addresses
             // As a result of this, let's not validate the login input at all
             // but instead use the validator for trimming whitespace from user input (fixInput() allows us to do this)
-            regExp: /.*/
+            regularExpression: /.*/
             function fixInput(input) { return input.trim() }
           }
 
@@ -334,8 +334,8 @@ FocusScope {
             anchors.topMargin: 16
             placeholderText: uiTr("Email Address")
             onAccepted: requestEmailLogin()
-            validator: RegExpValidator {
-              regExp: /^\S+@\S+\.\S+$/
+            validator: RegularExpressionValidator {
+              regularExpression: /^\S+@\S+\.\S+$/
             }
           }
 

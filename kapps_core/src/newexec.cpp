@@ -161,10 +161,10 @@ int Executor::cmdImpl(const std::string &program, const StringVector &args,
     {
 #if defined(Q_OS_WIN)
         // This is not likely to be reliable on Windows, output is usually in
-        // the current system code page, which we have overridden with UTF-8
-        // (see setUtf8LocaleCodec()).  It might work for en-US but it is likely
-        // to break for other locales (in particular, interface names on Windows
-        // can contain non-ASCII characters).
+        // the current system code page, which we have overridden with UTF-8.
+        // It might work for en-US but it is likely to break for other locales
+        // (in particular, interface names on Windows can contain non-ASCII 
+        // characters).
         assert(false);
 #endif
         *pOut = out;

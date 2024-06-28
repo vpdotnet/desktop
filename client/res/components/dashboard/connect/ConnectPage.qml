@@ -203,7 +203,7 @@ FocusScope {
           // Whenever a child shows its focus cue, scroll to make sure it's visible.
           // Note that this is here on the page content instead of on ConnectPage
           // itself so it excludes the ExpandButton.
-          FocusCue.onChildCueRevealed: {
+          FocusCue.onChildCueRevealed: focusCue => {
             // If we're animating, don't scroll, it'd be jarring to jump out of
             // the animation or change it.  Tabbing while the animation is
             // occurring makes little sense anyway and this is a pretty

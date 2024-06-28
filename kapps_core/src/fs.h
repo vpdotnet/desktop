@@ -20,6 +20,7 @@
 #include <kapps_core/core.h>
 #include <string>
 #include <vector>
+#include <cstdint>
 
 namespace kapps { namespace core {
 

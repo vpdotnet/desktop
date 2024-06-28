@@ -23,7 +23,6 @@
 #include <kapps_core/src/mac/mac_constants.h>
 #include <common/src/builtin/path.h>
 #import <AppKit/AppKit.h>
-#include <QtMac>
 #include <QFileInfo>
 #include <QDirIterator>
 #include <unordered_set>
@@ -51,6 +50,59 @@ QString getMacAppName(const QString &path)
 
     QFileInfo fi(path);
     return fi.fileName().replace(QStringLiteral(".app"), QStringLiteral(""));
+}
+
+CGBitmapInfo CGBitmapInfoForQImage(const QImage &image)
+{
+    CGBitmapInfo bitmapInfo = kCGImageAlphaNone;
+
+    switch (image.format()) {
+        case QImage::Format_ARGB32:
+            bitmapInfo = kCGImageAlphaFirst | kCGBitmapByteOrder32Host;
+            break;
+        case QImage::Format_RGB32:
+            bitmapInfo = kCGImageAlphaNoneSkipFirst | kCGBitmapByteOrder32Host;
+            break;
+        case QImage::Format_RGBA8888_Premultiplied:
+            bitmapInfo = kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big;
+            break;
+        case QImage::Format_RGBA8888:
+            bitmapInfo = kCGImageAlphaLast | kCGBitmapByteOrder32Big;
+            break;
+        case QImage::Format_RGBX8888:
+            bitmapInfo = kCGImageAlphaNoneSkipLast | kCGBitmapByteOrder32Big;
+            break;
+        case QImage::Format_ARGB32_Premultiplied:
+            bitmapInfo = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host;
+            break;
+        default:
+            break;
+    }
+
+    return bitmapInfo;
+}
+
+QImage CGImageToQImage(CGImageRef cgImage)
+{
+    const size_t width = CGImageGetWidth(cgImage);
+    const size_t height = CGImageGetHeight(cgImage);
+
+    QImage image(width, height, QImage::Format_ARGB32_Premultiplied);
+    image.fill(Qt::transparent);
+
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
+    CGBitmapInfo bitmapInfo = CGBitmapInfoForQImage(image);
+
+    CGContextRef context = CGBitmapContextCreate((void *)image.bits(), image.width(), image.height(), 8,
+                                                 image.bytesPerLine(), colorSpace, bitmapInfo);
+
+    CGRect rect = CGRectMake(0, 0, width, height);
+    CGContextDrawImage(context, rect, cgImage);
+
+    CFRelease(colorSpace);
+    CFRelease(context);
+
+    return image;
 }
 
 QPixmap getIconForAppBundle(const QString &path, const QSize &size)
@@ -82,7 +134,8 @@ QPixmap getIconForAppBundle(const QString &path, const QSize &size)
 
     [NSGraphicsContext restoreGraphicsState];
 
-    QPixmap qpixmap = QtMac::fromCGImageRef([bmp CGImage]);
+    QImage qimage = CGImageToQImage([bmp CGImage]);
+    QPixmap qpixmap = QPixmap::fromImage(qimage);
 
     return qpixmap;
 }

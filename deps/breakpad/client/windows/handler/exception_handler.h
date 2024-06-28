@@ -1,5 +1,4 @@
-// Copyright (c) 2006, Google Inc.
-// All rights reserved.
+// Copyright 2006 Google LLC
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -11,7 +10,7 @@
 // copyright notice, this list of conditions and the following disclaimer
 // in the documentation and/or other materials provided with the
 // distribution.
-//     * Neither the name of Google Inc. nor the names of its
+//     * Neither the name of Google LLC nor the names of its
 // contributors may be used to endorse or promote products derived from
 // this software without specific prior written permission.
 //
@@ -218,7 +217,7 @@ class ExceptionHandler {
 
   // Get and set the minidump path.
   wstring dump_path() const { return dump_path_; }
-  void set_dump_path(const wstring &dump_path) {
+  void set_dump_path(const wstring& dump_path) {
     dump_path_ = dump_path;
     dump_path_c_ = dump_path_.c_str();
     UpdateNextID();  // Necessary to put dump_path_ in next_minidump_path_.
@@ -237,7 +236,7 @@ class ExceptionHandler {
 
   // Convenience form of WriteMinidump which does not require an
   // ExceptionHandler instance.
-  static bool WriteMinidump(const wstring &dump_path,
+  static bool WriteMinidump(const wstring& dump_path,
                             MinidumpCallback callback, void* callback_context,
                             MINIDUMP_TYPE dump_type = MiniDumpNormal);
 
@@ -513,8 +512,8 @@ class ExceptionHandler {
   static volatile LONG instance_count_;
 
   // disallow copy ctor and operator=
-  explicit ExceptionHandler(const ExceptionHandler &);
-  void operator=(const ExceptionHandler &);
+  explicit ExceptionHandler(const ExceptionHandler&);
+  void operator=(const ExceptionHandler&);
 };
 
 }  // namespace google_breakpad

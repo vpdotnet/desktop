@@ -192,7 +192,7 @@ DashboardPositioner {
   // Note that on some backends on Windows, cursor interactions pass through the
   // transparent part without a window mask, but this is necessary for it to
   // work on all backends.
-  readonly property rect clip: {
+  readonly property rect clipRect: {
     // Determine the clip height
     // - When alpha blending, use the max height during an animation, no need to
     //   update continuously.  This just leaves an invisible part of the window

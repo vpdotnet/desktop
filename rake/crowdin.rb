@@ -6,16 +6,16 @@ require "time"
 # Set the crowdin parameters in .buildenv
 #CROWDIN_API=
 
-projectId = ENV["CROWDIN_PROJECTID"] || '485053'
+projectId = ENV["CROWDIN_PROJECTID"] || '72'
 apiKey = ENV["CROWDIN_API"]
 
 # The File ID for the pia_desktop.ts file
 # Note that the only way to get is by calling the API
-# $ curl 'https://api.crowdin.com/api/v2/projects/$CROWDIN_PROJECTID/files' --header "Authorization: Bearer $CROWDIN_API_TOKEN"
+# $ curl 'https://kape.crowdin.com/api/v2/projects/$CROWDIN_PROJECTID/files' --header "Authorization: Bearer $CROWDIN_API_TOKEN"
 # The resulting JSON has an `id` field
 # You can use pipe the curl output to `jq '.data[0].data.id'` to get the id
 
-fileId = ENV["CROWDIN_FILEID"] || '741'
+fileId = ENV["CROWDIN_FILEID"] || '1186'
 
 @gitlab_token = ENV["CI_JOB_TOKEN"]
 @gitlab_mr_id = ENV["CI_MERGE_REQUEST_ID"]
@@ -36,7 +36,7 @@ task :tspush => [ :export ] do |t|
     sourceContent = File.read(sourceFile, encoding: "UTF-8")
 
     puts "Creating storage on crowdin"
-    url = URI("https://api.crowdin.com/api/v2/storages")
+    url = URI("https://kape.crowdin.com/api/v2/storages")
     https = Net::HTTP.new(url.host, url.port)
     https.use_ssl = true
     request = Net::HTTP::Post.new(url)
@@ -50,7 +50,7 @@ task :tspush => [ :export ] do |t|
     puts "Storage ID is #{storageId}"
 
     puts "Updating file on crowdin"
-    url = URI("https://api.crowdin.com/api/v2/projects/#{projectId}/files/#{fileId}")
+    url = URI("https://kape.crowdin.com/api/v2/projects/#{projectId}/files/#{fileId}")
     https = Net::HTTP.new(url.host, url.port)
     https.use_ssl = true
 
@@ -194,7 +194,7 @@ task :tsdiff => [ :export ] do |t|
     newContent = File.read(sourceFile, encoding: "UTF-8")
 
     puts "Fetching source info from crowdin"
-    url = URI("https://api.crowdin.com/api/v2/projects/#{projectId}/files/#{fileId}/download")
+    url = URI("https://kape.crowdin.com/api/v2/projects/#{projectId}/files/#{fileId}/download")
     https = Net::HTTP.new(url.host, url.port)
     https.use_ssl = true
     request = Net::HTTP::Get.new(url)

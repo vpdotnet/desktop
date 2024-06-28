@@ -18,6 +18,7 @@
 
 #pragma once
 #include <kapps_core/core.h>
+#include <utility>
 #include "winapi.h"
 
 // TODO - kapps::core namespace

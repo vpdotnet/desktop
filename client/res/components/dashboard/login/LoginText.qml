@@ -66,6 +66,7 @@ Item {
     anchors.bottom: parent.bottom
     palette.text: Theme.login.inputTextColor
     label: placeholderText
+    placeholderTextColor: Theme.settings.inputDescriptionColor
 
     background: Item{}
 

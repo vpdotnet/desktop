@@ -16,7 +16,7 @@
 // along with the Private Internet Access Desktop Client.  If not, see
 // <https://www.gnu.org/licenses/>.
 
-import QtQuick 2.9
+import QtQuick 2.15
 import QtQuick.Controls 2.3
 import QtQuick.Layouts 1.3
 import QtQuick.Window 2.11
@@ -232,9 +232,9 @@ Page {
                && (!customSecondaryDNS.visible
                    || customSecondaryDNS.acceptableInput)
     contentWidth: 400
-    RegExpValidator {
+    RegularExpressionValidator {
       id: ipValidator
-      regExp: /(?:(?:[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])(?:\.(?:[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])){3})?/
+      regularExpression: /(?:(?:[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])(?:\.(?:[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])){3})?/
     }
     ColumnLayout {
       width: parent.width
@@ -290,6 +290,10 @@ Page {
       open()
     }
     onAccepted: {
+      // Addressing a Qt 6.2.4 issue that happens only on macos.
+      // Refer to the same comment in the SplitTunnelAddIpDialog page for context
+      customPrimaryDNS.focus = false
+      customSecondaryDNS.focus = false
       if (customPrimaryDNS.visible) {
         var servers = []
         if (customPrimaryDNS.currentValue !== '')

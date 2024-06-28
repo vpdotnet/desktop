@@ -44,7 +44,6 @@ public:
     Q_INVOKABLE bool checkCrashesForBlacklist(const QStringList &paths);
     Q_PROPERTY(QString brandName READ brandName CONSTANT)
     Q_INVOKABLE QString getBrandParam(const QString &code);
-    Q_PROPERTY(QPalette palette READ getPalette CONSTANT)
 
     // Set a pointer to the "params" object in the UI.
     static void setUIParams (QObject *params) {
@@ -60,8 +59,6 @@ public:
     QString brandName () const {
         return QStringLiteral(BRAND_NAME);
     }
-
-    QPalette getPalette() const;
 
 private:
     QNetworkAccessManager _nm;
