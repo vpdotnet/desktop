@@ -12,8 +12,7 @@ class Build
     # Captures beta.1-RC1 into groups [beta.1, RC1]
     release_candidate_regex = /(.+)[-\/](.*)/
     # Retrieve the newest parent tag indicating the version.
-    latestTag = `git describe --tags --match='v*.*.*' --abbrev=0 --first-parent`.lines.find { |tag| tag.match(version_regex) }
-
+    latestTag = `git describe --tags --abbrev=0 --first-parent`.lines.find { |tag| tag.match(version_regex) }
     version_mmp, version_prerelease =
         if version_regex =~ ENV['PIA_OVERRIDE_VERSION'] || version_regex =~ latestTag
             version = [$1, $2, $3].map(&:to_i)
@@ -217,7 +216,7 @@ class Build
     # Note: we haven't worked on android and ios builds in over a year now,
     # so support will be lacking.
     PlatformSupportedArchitectures = {
-        windows: [:x86_64],
+        windows: [:x86_64, :arm64],
         macos: PlatformUniversalArchitectures[:macos] + [:universal],
         linux: [:x86_64, :arm64],
         android: [:x86_64, :arm64],

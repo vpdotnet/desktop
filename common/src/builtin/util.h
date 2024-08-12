@@ -123,7 +123,7 @@ public:
     static Return __VA_ARGS__ CONCAT(__VA_ARGS__,_thunk)(LeftArgs... left, ContextArgType ctx, RightArgs... right) { return fn(ctx)(left..., right...); } \
     operator CONCAT(__VA_ARGS__,Signature)() { return CONCAT(__VA_ARGS__,_thunk); }
 
-    ITERATE_CALLING_CONVENTIONS(IMPLEMENT_CALLING_CONVENTION)
+    IMPLEMENT_CALLING_CONVENTION();
 
 #   undef IMPLEMENT_CALLING_CONVENTION
 

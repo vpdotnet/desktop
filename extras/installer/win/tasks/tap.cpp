@@ -75,20 +75,27 @@ void InstallTapDriverTask::execute()
     _listener->setCaption(IDS_CAPTION_INSTALLINGADAPTER);
 
 retry_uninstall:
-    // If a different version of the TAP adapter is installed, uninstall it
-    // before installing the new one.
+    // Since 2.11, new installations use WinTUN by default for OpenVPN, we no
+    // longer install the TAP adapter by default.
+    // 
+    // If a prior version of the TAP adapter is installed (from release 1.7 or
+    // earlier), we'll still replace it.  If the current version is installed,
+    // there's nothing to do.
     //
     // Historically, there have been rare cases where the new driver could not
-    // update the old one, but a clean install works.  (Updating from 9.23.3 to
-    // 9.24.2 on Windows 10 1507 / LTSB 2015 had this issue.)
+    // update the old one, but a clean install works, so we uninstall first if
+    // an older driver is installed.  (Updating from 9.23.3 to 9.24.2 on
+    // Windows 10 1507 / LTSB 2015 had this issue.)
     DriverStatus uninstallStatus = uninstallTapDriver(true, true);
     switch(uninstallStatus)
     {
     case DriverUninstalled:
         _rollbackNeedsReinstall = true;
+        LOG("Uninstalled previous TAP adapter driver, continue to install new driver");
         break;
     case DriverNothingToUninstall:
-        break;
+        LOG("Did not uninstall TAP adapter - it wasn't installed or was already on the current version, no need to install new driver");
+        return;
     default:
     case DriverUninstallFailed:
         if (Retry == InstallerError::raise(Abort | Retry | Ignore, IDS_MB_ERRORUNINSTALLINGTAPDRIVER))

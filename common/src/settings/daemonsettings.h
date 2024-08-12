@@ -92,16 +92,27 @@ public:
     JsonField(uint, remotePortTCP, 0) // 0 == auto
     JsonField(int, mtu, -1) // 0 == unspecified, large; -1 == Path MTU detection
     JsonField(QString, cipher, QStringLiteral("AES-128-GCM"), { "AES-128-GCM", "AES-256-GCM" })
-    // On Windows, the method to use to configure the TAP adapter's IP addresses
-    // and DNS servers.
-    // - dhcp - use "ip-win32 dhcp", DNS servers applied as DHCP options
-    // - static - use "ip-win32 netsh", DNS servers applied using netsh
-    // No method works reliably on Windows.  The DHCP negotation can time out or
-    // be blocked, which results in the TAP adapter getting an automatic local
-    // address.  netsh is prone to spurious failures ("The parameter is
-    // incorrect"), and it depends on the DNS Client service to apply DNS
-    // servers, which some users disable.
-    JsonField(QString, windowsIpMethod, QStringLiteral("dhcp"), {"dhcp", "static"})
+    // On Windows, the driver and configuration method to use to configure the
+    // virtual network interface.  "wintun" is the default since 2.11.
+    //
+    // Historically, this only controlled the IP configuration method for the
+    // TAP adapter, but WinTUN was added as an alternative in 2.11 since we
+    // only have one configuration method for WinTUN.
+    //
+    // - wintun - use the WinTUN driver and OpenVPN's built-in static
+    //   configuration method.
+    // - dhcp - use the TAP driver and "ip-win32 dhcp", IP configuration and
+    //   DNS servers are applied using a phony DHCP negotiation with the TAP
+    //   driver acting as a DHCP server.
+    //   This method has historically been the most compatible for TAP, but it
+    //   is known to fail on some systems when the DHCP negotiation fails or
+    //   times out.
+    // - static - use the TAP driver and "ip-win32 netsh".  DNS servers are
+    //   applied using our updown script, which uses netsh.  This avoids DHCP
+    //   timeouts, but netsh is prone to spurious failures ("The parameter is
+    //   incorrect"), and it depends on a running DNS Client service, which
+    //   users sometimes disable.
+    JsonField(QString, windowsIpMethod, QStringLiteral("wintun"), {"wintun", "dhcp", "static"})
 
     // Proxy setting
     //  - "custom" - Use proxyCustom

@@ -85,6 +85,8 @@ void ReportHelper::sendPayload(const QByteArray &payloadContent, const QString &
 #elif defined(Q_OS_WIN)
     #if defined(Q_PROCESSOR_X86_64)
         platformPart.setBody("win-x64");
+    #elif defined(_M_ARM64)
+        platformPart.setBody("win-arm64");
     #else
         #error "Unsupported processor on windows"
     #endif // defined(Q_PROCESSOR_X86_64)

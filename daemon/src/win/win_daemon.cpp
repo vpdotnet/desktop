@@ -28,8 +28,8 @@
 #include "../networkmonitor.h"
 #include "win.h"
 #include "brand.h"
+#include <common/src/exec.h>
 #include "../../../extras/installer/win/tap_inl.h"
-#include "../../../extras/installer/win/tun_inl.h"
 #include "../../../extras/installer/win/util_inl.h" // getSystemTempPath()
 #include <QDir>
 
@@ -63,168 +63,6 @@ namespace
     GUID PIA_WFP_CALLOUT_CONNECT_AUTH_V4 = { 0xf6e93b65, 0x5cd0, 0x4b0d, { 0xa9, 0x4c, 0x13, 0xba, 0xfd, 0x92, 0xf4, 0x1c } };
     GUID PIA_WFP_CALLOUT_IPPACKET_INBOUND_V4 = { 0x6a564cd3, 0xd14e, 0x43dc, { 0x98, 0xde, 0xa4, 0x18, 0x14, 0x4d, 0x5d, 0xd2 } };
     GUID PIA_WFP_CALLOUT_IPPACKET_OUTBOUND_V4 = { 0xb06c0a5f, 0x2b58, 0x6753, { 0x85, 0x29, 0xad, 0x8f, 0x1c, 0x51, 0x5f, 0xf5 } };
-
-    // The shipped version of the WinTUN driver
-    const WinDriverVersion shippedWintunVersion{1, 0, 0, 0};
-
-    // Get a property of an installed MSI product - returns "" if the version
-    // can't be retrieved.
-    std::wstring getProductProperty(const wchar_t *pProductCode,
-                                    const wchar_t *pProperty)
-    {
-        DWORD valueLen{0};
-        unsigned queryResult = ::MsiGetProductInfoExW(pProductCode, nullptr,
-                                                      MSIINSTALLCONTEXT_MACHINE,
-                                                      pProperty, nullptr,
-                                                      &valueLen);
-        if(queryResult != ERROR_SUCCESS)
-        {
-            qWarning() << "Can't get length of" << QStringView{pProperty}
-                << "- result" << queryResult << "-" << QStringView{pProductCode};
-            return {};
-        }
-
-        std::wstring value;
-        // Add room for the null terminator
-        ++valueLen;
-        value.resize(valueLen);
-        queryResult = ::MsiGetProductInfoExW(pProductCode, nullptr,
-                                             MSIINSTALLCONTEXT_MACHINE,
-                                             pProperty, value.data(),
-                                             &valueLen);
-        if(queryResult != ERROR_SUCCESS)
-        {
-            qWarning() << "Can't get" << QStringView{pProperty} << "- result"
-                << queryResult << "-" << QStringView{pProductCode};
-            return {};
-        }
-        value.resize(valueLen);
-        return value;
-    }
-
-    // Parse a product version string.  Reads three version parts only, the
-    // fourth is set to 0.  Returns 0.0.0 if the version is not valid.
-    WinDriverVersion parseProductVersion(const std::wstring &value)
-    {
-        enum { PartCount = 3 };
-        WORD versionParts[PartCount];
-        int i=0;
-        const wchar_t *pNext = value.c_str();
-        while(i < PartCount && pNext && *pNext)
-        {
-            wchar_t *pPartEnd{nullptr};
-            unsigned long part = std::wcstoul(pNext, &pPartEnd, 10);
-            // Not valid if:
-            // - no characters consumed (not pointing to a digit)
-            // - version part exceeds 65535 (MSI limit)
-            // - not pointing to a '.' or '\0' following the part
-            if(pPartEnd == pNext || part > 65535 || !pPartEnd ||
-               (*pPartEnd != '.' && *pPartEnd != '\0'))
-            {
-                qWarning() << "Product version is not valid -" << QStringView{value};
-                return {};
-            }
-            versionParts[i] = static_cast<WORD>(part);
-            // If we hit the end of the string, we're done - tolerate versions
-            // with fewer than 3 parts
-            if(!*pPartEnd)
-                break;
-            // Otherwise, continue with the next part.  (pPartEnd+1) is valid
-            // because the string is null-terminated and it's currently pointing
-            // to a '.'.
-            pNext = pPartEnd+1;
-            ++i;
-        }
-        qInfo().nospace() << "Product version " << versionParts[0] << "."
-            << versionParts[1] << "." << versionParts[2] << "is installed ("
-            << QStringView{value} << ")";
-        return {versionParts[0], versionParts[1], versionParts[2], 0};
-    }
-
-    void installWinTun()
-    {
-        std::vector<std::wstring> installedProducts;
-        WinDriverVersion installedVersion;
-
-        installedProducts = findInstalledWintunProducts();
-
-        // If, somehow, more than one product with our upgrade code is installed,
-        // uninstall them all (assume they are newer than the shipped package).
-        // Shouldn't happen since the upgrade settings in the MSI should prevent
-        // this.
-        if(installedProducts.size() > 1)
-        {
-            qWarning() << "Found" << installedProducts.size()
-                << "installed products, expected 0-1";
-            installedVersion = WinDriverVersion{65535, 0, 0, 0};
-        }
-        else if(installedProducts.size() == 1)
-        {
-            auto versionStr = getProductProperty(installedProducts[0].c_str(),
-                                                 INSTALLPROPERTY_VERSIONSTRING);
-            installedVersion = parseProductVersion(versionStr);
-        }
-        // Otherwise, nothing is installed, leave installedVersion set to 0.
-
-        // Determine whether we need to uninstall the existing driver -
-        // uninstall if there is a package installed, and it is newer than the
-        // version we shipped.
-        //
-        // The MSI package is flagged to prevent downgrades, so users don't
-        // accidentally downgrade it if driver packages are sent out by support,
-        // etc.  However, if PIA itself is downgraded, we do want to downgrade
-        // the driver package.
-        if(installedVersion == WinDriverVersion{})
-        {
-            qInfo() << "WinTUN package is not installed, nothing to uninstall";
-        }
-        else if(installedVersion == shippedWintunVersion)
-        {
-            qInfo() << "Version" << QString::fromStdString(installedVersion.printable())
-                << "of WinTUN package is installed, do not need to install new version"
-                << QString::fromStdString(shippedWintunVersion.printable());
-            return;
-        }
-        else if(installedVersion < shippedWintunVersion)
-        {
-            qInfo() << "Version" << QString::fromStdString(installedVersion.printable())
-                << "of WinTUN package is installed, do not need to uninstall before installing version"
-                << QString::fromStdString(shippedWintunVersion.printable());
-        }
-        else
-        {
-            qInfo() << "Version" << QString::fromStdString(installedVersion.printable())
-                << "of WinTUN package is installed, uninstall before installing version"
-                << QString::fromStdString(shippedWintunVersion.printable());
-            auto itInstalledProduct = installedProducts.begin();
-            while(itInstalledProduct != installedProducts.end())
-            {
-                if(uninstallMsiProduct(itInstalledProduct->c_str()))
-                {
-                    qInfo() << "Uninstalled product" << QStringView{itInstalledProduct->c_str()};
-                    ++itInstalledProduct;
-                }
-                else
-                {
-                    qWarning() << "Failed to uninstall MSI product"
-                        << QStringView{itInstalledProduct->c_str()}
-                        << "- aborting WinTUN installation";
-                    return;
-                }
-            }
-        }
-
-        // Finally, install the new package
-        QString packagePath = QDir::toNativeSeparators(Path::BaseDir / "wintun" / BRAND_CODE "-wintun.msi");
-        if(installMsiPackage(qUtf16Printable(packagePath)))
-        {
-            qInfo() << "Installed WinTUN from package";
-        }
-        else
-        {
-            qWarning() << "WinTUN package installation failed";
-        }
-    }
 }
 
 WinUnbiasedDeadline::WinUnbiasedDeadline()
@@ -334,9 +172,9 @@ WinDaemon::WinDaemon(QObject* parent)
     QSslConfiguration::setDefaultConfiguration(newDefaultSslConfig);
 
     connect(&WinInterfaceMonitor::instance(), &WinInterfaceMonitor::interfacesChanged,
-            this, &WinDaemon::checkNetworkAdapter);
+            this, &WinDaemon::checkTapAdapter);
     // Check the initial state now
-    checkNetworkAdapter();
+    checkTapAdapter();
 
     // The network monitor never fails to load on Windows.
     Q_ASSERT(_pNetworkMonitor);
@@ -357,13 +195,6 @@ WinDaemon::WinDaemon(QObject* parent)
             });
     state().netExtensionState(qEnumToString(_wfpCalloutMonitor.lastState()));
     qInfo() << "Initial callout driver state:" << state().netExtensionState();
-
-    state().wireguardAvailable(isWintunSupported());
-    // There's no way to be notified when WinTUN is installed or uninstalled.
-    // pia-service.exe hints to us using the checkDriverState RPC if it performs
-    // a TUN installation, and WireguardServiceBackend hints to us to re-check
-    // in some cases.
-    checkWintunInstallation();
 
     connect(this, &Daemon::aboutToConnect, this, &WinDaemon::onAboutToConnect);
 
@@ -404,7 +235,7 @@ WinDaemon::~WinDaemon()
     qInfo() << "WinDaemon shutdown complete";
 }
 
-std::shared_ptr<NetworkAdapter> WinDaemon::getNetworkAdapter()
+std::shared_ptr<NetworkAdapter> WinDaemon::getTapAdapter()
 {
     // For robustness, when making a connection, we always re-query for the
     // network adapter, in case the change notifications aren't 100% reliable.
@@ -418,8 +249,7 @@ std::shared_ptr<NetworkAdapter> WinDaemon::getNetworkAdapter()
         // However, this doesn't mean it isn't installed, so only report it if
         // we're not in the post-resume grace period.
         state().tapAdapterMissing(remainingGracePeriod <= 0);
-        throw Error{HERE, Error::Code::NetworkAdapterNotFound,
-                    QStringLiteral("Unable to locate TAP adapter")};
+        return {};
     }
     // Note that we _don't_ reset the resume grace period if we _do_ find the
     // TAP adapter.  We usually end up checking a few times before the "resume"
@@ -430,19 +260,73 @@ std::shared_ptr<NetworkAdapter> WinDaemon::getNetworkAdapter()
     return adapters[0];
 }
 
-void WinDaemon::checkNetworkAdapter()
+std::shared_ptr<NetworkAdapter> WinDaemon::getTunAdapter()
+{
+    NET_LUID tunAdapterLuid{};
+
+    if(!_wintunAdapter)
+    {
+        _wintunAdapter = _wintun.openAdapter(WintunData::pOpenVPNName);
+        if(!_wintunAdapter)
+        {
+            qInfo() << "Failed to open adapter, will recreate it";
+            _wintunAdapter = _wintun.recreateAdapter(WintunData::pOpenVPNName);
+            if(!_wintunAdapter)
+            {
+                qError() << "Failed to create adapter" << WintunData::pOpenVPNName << "due to" << GetLastError();
+                return {};
+            }
+        }
+    }
+
+    qDebug() << "WinTun adapter loaded bool" << !(!_wintunAdapter);
+    qDebug() << "WinTun adapter loaded ptr get" << _wintunAdapter.get();
+    qDebug() << "WinTun adapter loaded get" << _wintunAdapter->get();
+
+    _wintun.getAdapterLuid(_wintunAdapter->get(), &tunAdapterLuid);
+    qDebug() << "Retrieved luid" << tunAdapterLuid.Value;
+    std::shared_ptr<NetworkAdapter> pTunAdapter;
+    if(tunAdapterLuid.Value)
+        pTunAdapter = WinInterfaceMonitor::getAdapterForLuid(tunAdapterLuid.Value);
+
+    if(!pTunAdapter)
+    {
+        qWarning() << "Did not find any OpenVPN WinTUN adapter for LUID"
+            << tunAdapterLuid.Value;
+    }
+    
+    return pTunAdapter;
+}
+
+std::shared_ptr<NetworkAdapter> WinDaemon::recreateTunAdapter()
+{
+    _wintunAdapter = _wintun.recreateAdapter(WintunData::pOpenVPNName);
+    if(!_wintunAdapter)
+    {
+        qWarning() << "Unable to create OpenVPN WinTUN adapter";
+        return {};
+    }
+
+    NET_LUID tunAdapterLuid{};
+    _wintun.getAdapterLuid(*_wintunAdapter, &tunAdapterLuid);
+    std::shared_ptr<NetworkAdapter> pTunAdapter;
+    if(tunAdapterLuid.Value)
+        pTunAdapter = WinInterfaceMonitor::getAdapterForLuid(tunAdapterLuid.Value);
+
+    if(!pTunAdapter)
+    {
+        qWarning() << "Created OpenVPN WinTUN adapter with LUID"
+            << tunAdapterLuid.Value << "but could not find network interface";
+    }
+
+    return pTunAdapter;
+}
+
+void WinDaemon::checkTapAdapter()
 {
     // To check the network adapter state, just call getNetworkAdapter() and let
-    // it update StateModel.  Ignore the result and any exception for a missing
-    // adapter.
-    try
-    {
-        getNetworkAdapter();
-    }
-    catch(const Error &)
-    {
-        // Ignored, indicates no adapter.
-    }
+    // it update DaemonState.  Ignore the result.
+    getTapAdapter();
 }
 
 void WinDaemon::onAboutToConnect()
@@ -537,7 +421,7 @@ LRESULT WinDaemon::proc(UINT uMsg, WPARAM wParam, LPARAM lParam)
             // case a connection attempt would occur between the suspend message
             // and the resume message.
             _resumeGracePeriod.setRemainingTime(std::chrono::minutes{1});
-            checkNetworkAdapter();  // Check now in case we were showing the error already
+            checkTapAdapter();  // Check now in case we were showing the error already
             qInfo() << "OS suspend/resume:" << wParam;
             break;
         default:
@@ -599,8 +483,68 @@ void WinDaemon::RPC_checkDriverState()
 {
     // Re-check the WFP callout state, this is only relevant on Win 10 1507
     _wfpCalloutMonitor.doManualCheck();
+}
 
-    checkWintunInstallation();
+namespace
+{
+    const std::string sectDelim{"\r\n>>>  ["};
+    const std::array<std::string, 3> setupapiLogPatterns
+    {
+        "wintun.inf",
+        "pia-wgservice.exe",
+        "tap-pia-0901.sys"
+    };
+}
+
+QByteArray filterSetupapiDevLog(const QByteArray &log)
+{
+    QByteArray filtered;
+    filtered.reserve(log.size());
+
+    // The log sections all look roughly like:
+    //
+    // >>>  [Device Install (Install Windows Update driver) - pci\ven_1002&dev_4385]
+    // >>>  Section start 2021/04/22 12:06:16.123
+    //      ...details...
+    // <<<  Section end 2021/04/22 12:06:52.004
+    // <<<  [Exit status: SUCCESS]
+    //
+    // In other words:
+    // - a line describing the action occurring in square brackets
+    // - start time (in local time)
+    // - details of the action (usually starts with indentation but can have a
+    //   leading '!' for warnings/errors)
+    // - end time
+    // - exit status
+    //
+    // So split up the log into sections starting with '\r\n>>>  [', check if each
+    // section is relevant, and include only relevant sections.  Note that
+    // 'log' was limited to the last 10K lines of setupapi.dev.log, since it
+    // might be huge.
+    auto itLogBegin = log.begin();
+    auto itLogEnd = log.end();
+    auto itSectStart = std::search(itLogBegin, itLogEnd, sectDelim.begin(),
+                                   sectDelim.end());
+    while(itSectStart != itLogEnd)
+    {
+        auto itNextSectStart = std::search(itSectStart+1, itLogEnd,
+                                           sectDelim.begin(), sectDelim.end());
+
+        // If any pattern matches this section, include it.
+        if(std::any_of(setupapiLogPatterns.begin(), setupapiLogPatterns.end(),
+            [&](const std::string &ptn)
+            {
+                return std::search(itSectStart, itNextSectStart,
+                                   ptn.begin(), ptn.end()) != itNextSectStart;
+            }))
+        {
+            filtered.append(itSectStart, static_cast<int>(itNextSectStart-itSectStart));
+        }
+
+        itSectStart = itNextSectStart;
+    }
+
+    return filtered;
 }
 
 void WinDaemon::writePlatformDiagnostics(DiagnosticsFile &file)
@@ -626,6 +570,20 @@ void WinDaemon::writePlatformDiagnostics(DiagnosticsFile &file)
     file.writeCommand("Graphics drivers", "wmic", QStringLiteral("path win32_VideoController get /format:list"));
     file.writeCommand("Network adapters", "wmic", QStringLiteral("path win32_NetworkAdapter get /format:list"));
     file.writeCommand("Network drivers", "wmic", QStringLiteral("path win32_PnPSignedDriver where 'DeviceClass=\"NET\"' get /format:list"));
+
+    // Collect relevant parts of setupapi.dev.log.  This is important for
+    // troubleshooting driver installation errors, such as:
+    // - TAP installation or configuration errors
+    // - WinTUN installation errors (note that WireGuard creates a WinTUN
+    //   device instance at connection time, so this can manifest as a
+    //   connection failure rather than an install issue).
+    //
+    // setupapi.dev.log can be huge and contains a lot that we don't really
+    // care about, so try to filter this down just to sections relevant to PIA
+    // drivers.
+    file.writeCommand("SetupAPI device log (PIA drivers)", "powershell.exe",
+        QStringLiteral(R"(/C Get-Content -Tail 10000 "$env:WINDIR\INF\setupapi.dev.log")"),
+        &filterSetupapiDevLog);
 
     // Raw WFP filter dump, important to identify app rules (and other rules
     // that may affect the same apps) for split tunnel on Windows
@@ -687,13 +645,45 @@ void WinDaemon::writePlatformDiagnostics(DiagnosticsFile &file)
         QString::fromStdWString(LR"(/C "type ")" + installLog + LR"("")"));
 }
 
-void WinDaemon::checkWintunInstallation()
+void WinDaemon::applyPlatformInstallFeatureFlags()
 {
-    const auto &installedProducts = findInstalledWintunProducts();
-    qInfo() << "WinTUN installed products:" << installedProducts.size();
-    for(const auto &product : installedProducts)
-        qInfo() << "-" << product;
-    _state.wintunMissing(installedProducts.empty());
+     // The default OpenVPN network adapter was changed to WinTUN in 2.11.
+    // If any significant issues occur in the field, we can publish this
+    // feature flag to revert to TAP by default.
+    if(_data.hasFlag(QStringLiteral("install_win_use_tap")))
+    {
+        qInfo() << "Applying install_win_use_tap feature flag, install and select TAP";
+        // We need to install the TAP driver now, as it's not part of the
+        // default installation in 2.11.  Note that we are currently in session
+        // 0, not a user session, so this is not able to prompt for approval.
+        // The TAP adapter for Windows 10+ is WHQL-signed, so approval
+        // shouldn't be needed.  If the install fails we'll stay on WinTUN,
+        // this is sufficient for a failsafe feature flag.
+        int installResult = Exec::cmd(Path::DaemonExecutable, {QStringLiteral("tap"), QStringLiteral("install")});
+        qInfo() << "TAP installation completed with result" << installResult;
+        switch(installResult)
+        {
+            case DriverStatus::DriverUpdated:
+            case DriverStatus::DriverUpdateNotNeeded:
+            case DriverStatus::DriverInstalled:
+            case DriverStatus::DriverUninstalled:
+                qInfo() << "TAP installation succeeded, select TAP now";
+                _settings.windowsIpMethod(QStringLiteral("dhcp"));
+                break;
+            case DriverStatus::DriverUpdatedReboot:
+            case DriverStatus::DriverInstalledReboot:
+            case DriverStatus::DriverUninstalledReboot:
+                // This is rare on modern Windows.  The client does have a
+                // "reboot needed" notification but we would need to add more
+                // state to indicate this state, it's not really worth it for
+                // such a rare corner case of a failsafe - just stay on WinTUN.
+                qInfo() << "TAP installation requires reboot, not selecting TAP now";
+                break;
+            default:
+                qWarning() << "TAP installation failed, not selecting TAP now";
+                break;
+        }
+    }
 }
 
 void WinDaemon::updateSplitTunnelRules()
@@ -802,42 +792,3 @@ public:
 private:
     std::size_t _mem;
 };
-
-void WinDaemon::wireguardServiceFailed()
-{
-    // If the connection failed after the WG service was started, check whether
-    // WinTUN is installed, it might be due to a lack of the driver.  We don't
-    // do this for other failures, there's no need to do it for every attempt if
-    // we can't reach the server at all to authenticate.
-    checkWintunInstallation();
-}
-
-void WinDaemon::wireguardConnectionSucceeded()
-{
-    // Only re-check WinTUN if we thought it was missing.  It is likely present
-    // now since the connection succeeded.  This avoids doing this
-    // potentially-expensive check in the normal case.
-    if(_state.wintunMissing())
-        checkWintunInstallation();
-}
-
-void WinDaemon::handlePendingWinTunInstall()
-{
-    // If PIA was recently installed, do WinTUN installation now.  The installer
-    // creates a file to flag this condition; this applies to upgrades,
-    // downgrades, and reinstalls.
-    //
-    // Installation of WinTUN is performed by the daemon itself, not the
-    // installer, because it can't be installed in Safe Mode (the msiservice
-    // service can't be started).
-    //
-    // We use an explicit flag instead of checking the last-used version so a
-    // reinstall will also cause WinTUN to be re-checked.
-    if(QFile::exists(Path::DaemonDataDir / ".need-wintun-install"))
-    {
-        qInfo() << "MSI install needed, install WinTUN now";
-        QFile::remove(Path::DaemonDataDir / ".need-wintun-install");
-        installWinTun();
-        checkWintunInstallation();
-    }
-}

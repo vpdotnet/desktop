@@ -63,7 +63,6 @@ QtObject {
   readonly property string updateVersion: NativeDaemon.state.updateVersion
   readonly property double dnsConfigFailed: NativeDaemon.state.dnsConfigFailed
   readonly property bool tapAdapterMissing: NativeDaemon.state.tapAdapterMissing
-  readonly property bool wintunMissing: NativeDaemon.state.wintunMissing
   readonly property string netExtensionState: NativeDaemon.state.netExtensionState
   readonly property bool connectionProblem: NativeDaemon.state.connectionProblem
   readonly property double dedicatedIpExpiring: NativeDaemon.state.dedicatedIpExpiring
@@ -82,7 +81,6 @@ QtObject {
   readonly property string tunnelDeviceName: NativeDaemon.state.tunnelDeviceName
   readonly property string tunnelDeviceLocalAddress: NativeDaemon.state.tunnelDeviceLocalAddress
   readonly property string tunnelDeviceRemoteAddress: NativeDaemon.state.tunnelDeviceRemoteAddress
-  readonly property bool wireguardAvailable: NativeDaemon.state.wireguardAvailable
   readonly property bool wireguardKernelSupport: NativeDaemon.state.wireguardKernelSupport
   readonly property bool existingDNSServers: NativeDaemon.state.existingDNSServers
   readonly property var automationLastTrigger: NativeDaemon.state.automationLastTrigger

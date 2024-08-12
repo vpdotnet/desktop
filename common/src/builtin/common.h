@@ -74,11 +74,6 @@
 # define ATTR_stdcall __stdcall
 # define ATTR_cdecl __cdecl
 #endif
-#if defined(Q_CC_MSVC) && !defined(Q_PROCESSOR_X86_64)
-# define ITERATE_CALLING_CONVENTIONS(X) X(ATTR_cdecl) X(ATTR_stdcall)
-#else
-# define ITERATE_CALLING_CONVENTIONS(X) X()
-#endif
 #ifndef __has_cpp_attribute
 # define __has_cpp_attribute(name) 0
 #endif

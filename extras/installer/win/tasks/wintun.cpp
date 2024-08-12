@@ -47,6 +47,8 @@ namespace
     const HKEY uninstallKeyRoot = HKEY_LOCAL_MACHINE;
     const wchar_t *uninstallKeyPath = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall";
 
+    std::wstring wintunProductName{L"" BRAND_WINTUN_PRODUCT_NAME};
+
     std::wstring getRegValue(HKEY key, const wchar_t *subkey,
                              const wchar_t *valueName, DWORD typeFlags)
     {
@@ -81,11 +83,14 @@ namespace
         std::wstring dispName = getRegValue(uninstallKey, entryName,
                                             L"DisplayName", RRF_RT_REG_SZ);
         LOG("Entry %ls -> disp name %ls (%u)", entryName, dispName.c_str(), dispName.size());
-        return dispName == L"" BRAND_WINTUN_PRODUCT_NAME;
+        return dispName == wintunProductName;
     }
 
     std::wstring findPIAWintunProduct(HKEY uninstallKey)
     {
+        if(wintunProductName.empty())
+            return {};  // This brand did not ship a legacy WinTUN MSI
+
         // It's possible to find the length of the longest subkey name with
         // RegQueryInfoKeyW(), but key names are limited to 255 chars anyway -
         // https://docs.microsoft.com/en-us/windows/win32/sysinfo/registry-element-size-limits
@@ -129,7 +134,7 @@ namespace
     }
 }
 
-void UninstallWintunTask::execute()
+void UninstallWintunMsiTask::execute()
 {
     if(getBootMode() != BootMode::Normal)
     {
@@ -137,10 +142,10 @@ void UninstallWintunTask::execute()
         // installed product version - we get some bogus version number in this
         // state.
         //
-        // Queue up an msiexec command to uninstall WinTUN the next time the
-        // system is booted normally.  If PIA is reinstalled before this
-        // happens, it'll delete this registry entry so it doesn't interfere
-        // with the new installation.
+        // Queue up an msiexec command to uninstall the legacy package WinTUN
+        // the next time the system is booted normally.  If an older version of
+        // PIA is reinstalled before this happens, it'll delete this registry
+        // entry so it doesn't interfere with the new installation.
         LOG("Queue WinTUN uninstall for next boot, can't uninstall in safe mode");
 
         // Find the product in the uninstall area of the registry.
@@ -225,7 +230,7 @@ void UninstallWintunTask::execute()
     LOG("Finished uninstalling products for WinTUN package");
 }
 
-void UninstallWintunTask::rollback()
+void UninstallWintunMsiTask::rollback()
 {
     LOG("Reinstalling WinTUN package for rollback");
     if(::installMsiPackage(getWintunMsiPath().c_str()))
@@ -234,27 +239,9 @@ void UninstallWintunTask::rollback()
         LOG("Rollback installation failed");
 }
 
-void InstallWintunTask::execute()
+void UninstallWintunTask::execute()
 {
-    if(::IsWindows8OrGreater())
-    {
-        if(!writeTextFile(g_daemonDataPath + L"\\.need-wintun-install", "", CREATE_ALWAYS))
-            LOG("Unable to flag WinTUN installation needed");
-        _rollbackRunOnceRestore = getRegValue(runKeyRoot, runOnceKeyPath,
-                                  piaUninstallValueName, RRF_RT_REG_SZ);
-        RegDeleteKeyValueW(runKeyRoot, runOnceKeyPath, piaUninstallValueName);
-    }
-    else
-        LOG("Skipping WinTUN installation - not supported on this OS version");
-}
-
-void InstallWintunTask::rollback()
-{
-    ::DeleteFileW((g_daemonDataPath + L"\\.need-wintun-install").c_str());
-    if(!_rollbackRunOnceRestore.empty())
-    {
-        RegSetKeyValueW(runKeyRoot, runOnceKeyPath, piaUninstallValueName,
-                        REG_SZ, _rollbackRunOnceRestore.data(),
-                        (_rollbackRunOnceRestore.size()+1)*sizeof(wchar_t));
-    }
+    LOG("Uninstalling WinTUN");
+    int result = runProgram(g_servicePath, { L"tun", L"uninstall" });
+    LOG("Uninstallation of WinTUN returned %d", result);
 }

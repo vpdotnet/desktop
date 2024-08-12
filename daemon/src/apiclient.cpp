@@ -94,6 +94,16 @@ Async<QJsonDocument> ApiClient::getRetry(ApiBase &apiBaseUris, QString resource,
             ->then(parseJsonBody);
 }
 
+Async<QJsonDocument> ApiClient::getTimedRetry(ApiBase &apiBaseUris, QString resource,
+                                              QByteArray auth)
+{
+    return requestRetry(QNetworkAccessManager::Operation::GetOperation,
+                        apiBaseUris, std::move(resource),
+                        ApiRetries::timed(std::chrono::seconds{3}, std::chrono::seconds{10}),
+                        {}, std::move(auth))
+            ->then(parseJsonBody);
+}
+
 Async<QJsonDocument> ApiClient::getIp(ApiBase &apiBaseUris, QString resource, QByteArray auth)
 {
     // Max of 1 attempt so no retries occur

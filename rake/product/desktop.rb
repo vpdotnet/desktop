@@ -106,6 +106,7 @@ module PiaDesktop
         daemon = Executable.new(daemonName, :executable)
             .source('daemon/src')
             .source('deps/embeddable-wg-library/src')
+            .source('deps/wintun/src')
             .source('daemon/src/model')
             .resource('daemon/res', ['ca/*.crt'])
             .use(commonlib.export)
@@ -185,7 +186,12 @@ module PiaDesktop
                 # On macOS, dylibs go to Contents/Frameworks/ and executables to Contents/MacOS/
                 # On Windows, :lib and :bin are the same.
                 dir = File.basename(f).include?(dynamicExt) ? :lib : :bin
-                stage.install(f, dir, "#{File.basename(f).gsub('pia', Build::Brand)}")
+                installName = File.basename(f)
+                # Don't brand pia-wintun.dll - it's a driver artifact, and drivers
+                # aren't supported for rebranding by the brand kit.  This name is
+                # hard-coded in pia-wgservice.exe.
+                installName = installName.gsub('pia', Build::Brand) if installName != 'pia-wintun.dll'
+                stage.install(f, dir, installName)
             end
         end
 

@@ -31,7 +31,7 @@
     "linuxFwmarkBase": 12817,
     "linuxCgroupBase": 1383,
     "wintunAmd64Product": "{F1519044-AC8A-4DD4-9FA9-CF53606CD33D}",
-    "wintunX86Product": "{564ECC49-BA2C-44E7-8BDB-F3F087A83CE0}",
+    "wintunArm64Product": "{28B87C9C-C551-44B8-BA18-9823E9F3E2CD}",
     "wintunProductName": "Private Internet Access WinTUN Driver",
     "wintunManufacturer": "Private Internet Access, Inc.",
     "wintunDescription": "WinTUN driver package for Private Internet Access"

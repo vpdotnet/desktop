@@ -28,7 +28,12 @@
 // but it's in product.h in the daemon.
 #include "product.h"
 
-#define TAP_LOG qInfo
+#define TAP_LOG(...) \
+do { \
+    char buffer[1024]; \
+    snprintf(buffer, sizeof(buffer), __VA_ARGS__); \
+    qInfo() << buffer; \
+} while(0)
 #include "../../../extras/installer/win/tap.inl"
 
 #define SERVICE_LOG qInfo

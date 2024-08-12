@@ -22,10 +22,12 @@
 #define FUNCTION_LOGGING_CATEGORY(cat) ((void)0)
 #endif
 
-#ifdef _WIN64
+#ifdef _M_X64
 #define INSTALL_NTARCH "ntamd64"
+#elif defined(_M_ARM64)
+#define INSTALL_NTARCH "ntarm64"
 #else
-#define INSTALL_NTARCH "ntx86"
+#error Unsupported architecture
 #endif
 
 #define WFP_CALLOUT_SVC_NAME    "PiaWfpCallout"
@@ -398,7 +400,7 @@ inline WinInf::WinInf(PCWSTR fileName)
     if(_hInf == INVALID_HANDLE_VALUE)
     {
         WinErrorEx error{::GetLastError()};
-        TAP_LOG("Unable to open callout INF (0x%X)", error.code());
+        TAP_LOG("Unable to open callout INF (0x%lX)", error.code());
         throw error;
     }
 }
@@ -420,7 +422,7 @@ static void traceFilePathsParam(UINT_PTR param)
     {
         auto source = utf16to8(pFilePaths->Source);
         auto target = utf16to8(pFilePaths->Target);
-        TAP_LOG("File path: %s -> %s (0x%X, 0x%X)", source.c_str(), target.c_str(),
+        TAP_LOG("File path: %s -> %s (0x%lX, 0x%lX)", source.c_str(), target.c_str(),
                 pFilePaths->Win32Error, pFilePaths->Flags);
     }
 }
@@ -467,7 +469,7 @@ static UINT CALLBACK CalloutInstallFileCallback(void *pVoidCtx, UINT notificatio
             pCtx->rebootRequired = true;
             return 0;   // Value ignored
         default:
-            TAP_LOG("Unexpected notification 0x%X (0x%X, 0x%X)", notification,
+            TAP_LOG("Unexpected notification 0x%X (0x%llX, 0x%llX)", notification,
                     param1, param2);
             return 0;
         // "Start" notifications - ignored
@@ -486,7 +488,7 @@ static UINT CALLBACK CalloutInstallFileCallback(void *pVoidCtx, UINT notificatio
             return FILEOP_DOIT;
         // Not implemented (returns FILEOP)
         case SPFILENOTIFY_FILEINCABINET:
-            TAP_LOG("Unimplemented notification 0x%X (0x%X, 0x%X)", notification,
+            TAP_LOG("Unimplemented notification 0x%X (0x%llX, 0x%llX)", notification,
                     param1, param2);
             return FILEOP_ABORT;
         // Not implemented (returns error)
@@ -495,7 +497,7 @@ static UINT CALLBACK CalloutInstallFileCallback(void *pVoidCtx, UINT notificatio
         case SPFILENOTIFY_QUEUESCAN:
         case SPFILENOTIFY_QUEUESCAN_EX:
         case SPFILENOTIFY_QUEUESCAN_SIGNERINFO:
-            TAP_LOG("Unimplemented notification 0x%X (0x%X, 0x%X)", notification,
+            TAP_LOG("Unimplemented notification 0x%X (0x%llX, 0x%llX)", notification,
                     param1, param2);
             return ERROR_CALL_NOT_IMPLEMENTED;
         // Start queue / subqueue - ignored
@@ -513,7 +515,7 @@ static UINT CALLBACK CalloutInstallFileCallback(void *pVoidCtx, UINT notificatio
 static void logLastError(const char *msg)
 {
     WinErrorEx error{::GetLastError()};
-    TAP_LOG("%s (0x%X): %s", msg, error.code(), error.message().c_str());
+    TAP_LOG("%s (0x%lX): %s", msg, error.code(), error.message().c_str());
 }
 
 ServiceStatus startCalloutDriver(int timeoutMs)
@@ -537,7 +539,7 @@ ServiceStatus startCalloutDriver(int timeoutMs)
         }
         else
         {
-            TAP_LOG("Can't open callout driver (0x%X): %s", openErr.code(),
+            TAP_LOG("Can't open callout driver (0x%lX): %s", openErr.code(),
                     openErr.message().c_str());
             return ServiceStatus::ServiceStartFailed;
         }
@@ -568,7 +570,7 @@ ServiceStatus stopCalloutDriver()
         }
         else
         {
-            TAP_LOG("Can't open callout driver (0x%X): %s", openErr.code(),
+            TAP_LOG("Can't open callout driver (0x%lX): %s", openErr.code(),
                     openErr.message().c_str());
             return ServiceStatus::ServiceStopFailed;
         }
@@ -581,7 +583,7 @@ ServiceStatus stopCalloutDriver()
 static void throwLastError(const char *msg)
 {
     WinErrorEx error{::GetLastError()};
-    TAP_LOG("%s (0x%X)", msg, error.code());
+    TAP_LOG("%s (0x%lX)", msg, error.code());
     throw error;
 }
 
@@ -648,7 +650,7 @@ DriverStatus installCalloutDriver(LPCWSTR inf, bool nonInteractive)
     }
     catch(WinErrorEx error)
     {
-        TAP_LOG("Callout installation failed (0x%X): %s", error.code(),
+        TAP_LOG("Callout installation failed (0x%lX): %s", error.code(),
                 error.message().c_str());
         return DriverInstallFailed;
     }
@@ -664,7 +666,7 @@ DriverStatus installCalloutDriver(LPCWSTR inf, bool nonInteractive)
 static void applyLastError(const char *msg, WinErrorEx &error)
 {
     WinErrorEx newError{::GetLastError()};
-    TAP_LOG("%s (0x%X)", msg, newError.code());
+    TAP_LOG("%s (0x%lX)", msg, newError.code());
     if(error.code() == ERROR_SUCCESS)
     {
         if(newError.code() != ERROR_SUCCESS)
@@ -785,7 +787,7 @@ DriverStatus uninstallCalloutDriver(LPCWSTR inf, bool nonInteractive)
             else
             {
                 WinErrorEx deleteError{::GetLastError()};
-                TAP_LOG("Driver file couldn't be deleted, queue for next boot (0x%X): %s",
+                TAP_LOG("Driver file couldn't be deleted, queue for next boot (0x%lX): %s",
                         deleteError.code(), deleteError.message().c_str());
                 if(!::MoveFileExW(driverInstalledPath.c_str(), nullptr,
                                     MOVEFILE_DELAY_UNTIL_REBOOT))
@@ -808,7 +810,7 @@ DriverStatus uninstallCalloutDriver(LPCWSTR inf, bool nonInteractive)
 
     if(error.code() != ERROR_SUCCESS)
     {
-        TAP_LOG("Callout uninstallation failed (0x%X): %s", error.code(),
+        TAP_LOG("Callout uninstallation failed (0x%lX): %s", error.code(),
                 error.message().c_str());
         return DriverUninstallFailed;
     }

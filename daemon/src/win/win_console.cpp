@@ -21,6 +21,7 @@
 
 #include "win_console.h"
 #include "win_service.h"
+#include "win_wintun.h"
 #include <common/src/builtin/path.h>
 #include "win.h"
 #include "version.h"
@@ -28,7 +29,6 @@
 #include "brand.h"
 #include <common/src/exec.h>
 #include "../../../extras/installer/win/tap_inl.h"
-#include "../../../extras/installer/win/tun_inl.h"
 
 #include <QCoreApplication>
 #include <QDirIterator>
@@ -70,11 +70,6 @@ static QString getWfpCalloutInfPath()
     return QDir::toNativeSeparators(Path::WfpCalloutDriverDir / (IsWindows10OrGreater() ? "win10" : "win7") / "PiaWfpCallout.inf");
 }
 
-static QString getWintunMsiPath()
-{
-    return QDir::toNativeSeparators(Path::BaseDir / "wintun" / BRAND_CODE "-wintun.msi");
-}
-
 WinConsole::WinConsole(QObject* parent)
     : QObject(parent)
     , _arguments(QCoreApplication::arguments())
@@ -98,39 +93,38 @@ int WinConsole::reinstallTapDriver()
     return ::installTapDriver(qUtf16Printable(getInfPath()), false, true, false);
 }
 
-int WinConsole::installWintunDriver()
-{
-    if(!isWintunSupported())
-    {
-        qWarning() << "WinTUN and WireGuard support requires Windows 8 or later.";
-        return DriverInstallFailed;
-    }
-
-    return ::installMsiPackage(qUtf16Printable(getWintunMsiPath())) ? DriverInstalled : DriverInstallFailed;
-}
-
 int WinConsole::uninstallWintunDriver()
 {
-    auto products = ::findInstalledWintunProducts();
-    qInfo() << "Found" << products.size() << "installed products";
-    int result = DriverUninstalled;
-    for(const auto &product : products)
+    WintunModule wintun;
+
+    bool rebootRequiredWireGuard{false}, rebootRequiredOpenVPN{false};
+    BOOL rebootRequiredUninstall{FALSE};
+
+    if(!wintun.deleteDriver())
     {
-        if(!::uninstallMsiProduct(product.c_str()))
-        {
-            qWarning() << "Uninstall failed for product" << product;
-            result = DriverUninstallFailed;
-        }
-        else
-            qInfo() << "Uninstalled product" << product;
+        qWarning() << "WintunDeleteDriver failed to delete WinTUN driver";
+        return DriverStatus::DriverUninstallFailed;
     }
-    return result;
+    if(rebootRequiredWireGuard || rebootRequiredOpenVPN || rebootRequiredUninstall)
+    {
+        qInfo() << "WinTUN uninstall requested a reboot";
+        return DriverStatus::DriverUninstalledReboot;
+    }
+    return DriverStatus::DriverUninstalled;
 }
 
-int WinConsole::reinstallWintunDriver()
+int WinConsole::createWintunAdapter()
 {
-    uninstallWintunDriver();
-    return installWintunDriver();
+    WintunModule wintun;
+
+    bool rebootRequired{false};
+    auto adapter = wintun.recreateAdapter(WintunData::pOpenVPNName);
+
+    if(!adapter)
+        return DriverStatus::DriverInstallFailed;
+    if(rebootRequired)
+        return DriverStatus::DriverInstalledReboot;
+    return DriverStatus::DriverInstalled;
 }
 
 int WinConsole::installCalloutDriver()
@@ -215,6 +209,15 @@ int WinConsole::run()
                 else
                     return unrecognizedCommand();
             }
+            else if (MATCH_ARG(1, "tun") && args.count() > 2)
+            {
+                if (MATCH_ARG(2, "uninstall"))
+                    return WinConsole::uninstallWintunDriver();
+                else if (MATCH_ARG(2, "create"))
+                    return WinConsole::createWintunAdapter();
+                else
+                    return unrecognizedCommand();
+            }
             else if (MATCH_ARG(1, "callout") && args.count() > 2)
             {
                 int result = 0;
@@ -224,22 +227,6 @@ int WinConsole::run()
                     result = WinConsole::uninstallCalloutDriver();
                 else if (MATCH_ARG(2, "reinstall"))
                     result = WinConsole::reinstallCalloutDriver();
-                else
-                    return unrecognizedCommand();
-
-                sendCheckDriverHint();
-                return result;
-            }
-            else if (MATCH_ARG(1, "tun") && args.count() > 2)
-            {
-                initMsiLib(qstringWBuf(Path::DaemonDataDir));
-                int result = 0;
-                if (MATCH_ARG(2, "install"))
-                    result = WinConsole::installWintunDriver();
-                else if (MATCH_ARG(2, "uninstall"))
-                    result = WinConsole::uninstallWintunDriver();
-                else if (MATCH_ARG(2, "reinstall"))
-                    result = WinConsole::reinstallWintunDriver();
                 else
                     return unrecognizedCommand();
 

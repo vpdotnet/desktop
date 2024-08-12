@@ -44,9 +44,6 @@ Page {
       case 'tap':
         reinstallTap.startReinstall()
         break
-      case 'wintun':
-        reinstallWinTun.startReinstall()
-        break
       case 'callout':
         reinstallWfpCallout.startReinstall()
         break
@@ -441,11 +438,7 @@ Page {
 
         reinstallStatus: NativeHelpers.reinstallTunStatus
         reinstallAction: function () {
-          if (Daemon.state.wireguardAvailable)
-            NativeHelpers.reinstallTun()
-          else
-            wSettings.alert(SettingsMessages.wgRequiresWindows8,
-                            "WireGuard", "info")
+          NativeHelper.reinstallTun()
         }
       }
 

@@ -91,7 +91,7 @@ PortForwardRequestModern::PortForwardRequestModern(ApiClient &apiClient,
                 {
                     QString resource = QStringLiteral("getSignature?token=") +
                         QString::fromLatin1(QUrl::toPercentEncoding(token));
-                    return _apiClient.getRetry(_pfApiBase, resource, {});
+                    return _apiClient.getTimedRetry(_pfApiBase, resource, {});
                 })
             ->then(this, &PortForwardRequestModern::handleGetSigResult)
             // Then, bind the port.  Fail if we couldn't get the token for any

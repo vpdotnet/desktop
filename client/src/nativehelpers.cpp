@@ -373,6 +373,17 @@ auto NativeHelpers::getPlatform() const -> Platform
 #endif
 }
 
+auto NativeHelpers::getArchitecture() const -> Architecture
+{
+#if defined(Q_PROCESSOR_X86_64)
+    return Architecture::X86_64;
+#elif defined(Q_PROCESSOR_ARM)
+    return Architecture::Arm64;
+#else
+    #error NativeHelpers::getArchitecture() not implemented for this platform
+#endif
+}
+
 QString NativeHelpers::getProductName() const
 {
     // Out-of-line because it depends on version.h; minimize build impact of
@@ -513,7 +524,9 @@ void NativeHelpers::reinstallTap()
 
 void NativeHelpers::reinstallTun()
 {
-    reinstallDriver(Driver::WinTun, L"tun reinstall");
+    // Repairing the WinTUN driver just uninstalls it.  The next connection
+    // with WireGuard will reinstall it (handled by pia-wintun.dll)
+    reinstallDriver(Driver::WinTun, L"tun uninstall");
 }
 
 void NativeHelpers::installWfpCallout()

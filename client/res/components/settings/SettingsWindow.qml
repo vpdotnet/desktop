@@ -305,9 +305,6 @@ SecondaryWindow {
     function onReinstallTapAdapter() {
       startDriverReinstall('tap')
     }
-    function onReinstallWintun() {
-      startDriverReinstall('wintun')
-    }
     function onReinstallSplitTunnel() {
       startDriverReinstall('callout')
     }

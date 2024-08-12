@@ -35,8 +35,10 @@ Filtering content: 100% (24/24), 17.13 MiB | 1.89 MiB/s, done.
 
 ### Prerequisites
 
-- On **Windows**:
-  - Supported architectures: x86_64
+- On **Windows** (x86_64, arm64):
+  - Using git from git bash instead of powershell is recommended, due to some knows bugs in Windows built-in openssh service in regards to git-lfs. 
+  - Use chocolatey from an admin powershell session [chocolatey.org/install](https://chocolatey.org/install) running:
+    - `choco install ruby 7Zip git git-lfs`
   - [Qt 6.2.4](https://www.qt.io/download)
     - Follow this process if you want to be able to fully debug into Qt code and QML:  
       - Download Qt from the official website: https://www.qt.io/download-open-source, scroll down and click "Download the Qt Online Installer"
@@ -49,29 +51,22 @@ Filtering content: 100% (24/24), 17.13 MiB | 1.89 MiB/s, done.
       - (optional) If you have multiple installations of Qt, set user environment variable `QTROOT` to `C:\Qt\6.2.4`
     - Otherwise, use aqtinstall if you just need to build the client:  
       - Run these commands in Powershell with admin priviledges
-      - Install choco: (skip this step if you already have a working choco. Run `choco` to find out)   
-        `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))`
       - `choco install python`
       - Close Powershell and open a new Admin instance
       - `pip install aqtinstall`
       - `mkdir C:\Qt-aqt`
-      - `cd C:\Qt-aqt`
-      - `aqt install-qt windows desktop 6.2.4 win64_msvc2019_64`
-      - (optional) If you have multiple installations of Qt, set user environment variable `QTROOT` to `C:\Qt-aqt\6.2.4`
-  - [Visual Studio Community 2019](https://my.visualstudio.com/Downloads?q=visual%20studio%202019&wt.mc_id=o~msft~vscom~older-downloads)
-     - Unfortunately now, you need to login in order to download the old installer
-     - Select "Desktop development with C++" and check these boxes:
-       - MSVC v142
-       - Windows 10 SDK
-       - Just-In-Time debugger
-     - Requires VS 16.7 or later
-     - The Windows SDK must be at least 10.0.17763.0
-     - Install the "Windows 8.1 SDK and UCRT SDK" to get the UCRT redistributable DLLs for 7/8/8.1
+      - `aqt install-qt -O "C:/Qt-aqt" windows desktop 6.2.4 win64_msvc2019_64`
+      - (optional for windows arm64) 
+        - `aqt install-qt -O "C:/Qt-aqt" windows desktop 6.2.4 win64_msvc2019_arm64`
+      - (optional) If you have multiple installations of Qt
+        - set user environment variable `QTROOT` to `C:\Qt-aqt\6.2.4`
+  - [Visual Studio 2022](https://visualstudio.microsoft.com/vs/)
+     - Can install with choco with `choco install visualstudio2022community`
+     - Once installed, open the `Visual Studio Installer` app.
+     - Click on "More" -> "Import configuration"
+     - Select the config file in `scripts-internal/pia-default.vsconfig`
+     - It will install everything you should need, but you can add more components as needed.
      - The VS installer doesn't include the Console Debugger (CDB), which is needed to debug in Qt Creator.  More info: [Setting Up Debugger](https://doc.qt.io/qtcreator/creator-debugger-engines.html)
-  - [Ruby](https://rubyinstaller.org/) - includes Rake
-  - [7-zip](https://www.7-zip.org/)
-  - [Git Bash](https://gitforwindows.org/)
-    - Cloning and performing git operations via git bash instead of powershell is recommended, due to some knows bugs in Windows built-in openssh service in regards to git-lfs. 
 - On **macOS**:
   - Qt 6.2.4
     - PIA's universal build of Qt is recommended: [desktop-dep-build releases](https://github.com/pia-foss/desktop-dep-build/releases)
@@ -80,12 +75,10 @@ Filtering content: 100% (24/24), 17.13 MiB | 1.89 MiB/s, done.
   - Big Sur or newer is required to build
   - Up-to-date version of Xcode
   - Ruby, can be installed using [Homebrew](https://brew.sh) with `brew install ruby`
-  - Install rake gem: `sudo gem install rake`
-  - (Only on Apple silicon macs) Before running rake, install the arm64 version of Nokogiri  
-    `sudo gem install nokogiri --platform=arm64-darwin -v 1.13.10`
+  - Install rake: `sudo gem install rake`
 - On **Linux**:
   - Supported distribution with clang 11 or newer
-  - Supported architectures: x86_64, armhf, arm64
+  - Supported architectures: x86_64, arm64
   - Qt 6.2.4 or later
     - PIA's build of Qt is recommended: [desktop-dep-build releases](https://github.com/pia-foss/desktop-dep-build/releases)
     - If you want Qt Creator, also install Qt from [qt.io](https://www.qt.io/download)
@@ -132,40 +125,6 @@ In order to enable all the logs, in PIA app *Settings* page go to Help and selec
 
 Linux: check that the symbolic links are correct using `ls -lah -R deps/built/linux/`.  
 If they are not, create them using `ln -sf libfile linkname`.
-
-### Qt Creator
-
-To open the project in Qt Creator, open CMakeLists.txt as a project.  This CMake script defines targets for Qt Creator and hooks them up to the appropriate rake tasks, which allows Qt Creator to build, run, and debug targets.
-Run `rake stage` before this operation, otherwise CMake will fail.
-
-Some specific configuration changes are useful in Qt Creator:
-
-#### File Locator
-
-The file locator (Ctrl+K / Cmd+K) can only locate files referenced by targets by default, so it won't be able to find build system files (.rb), scripts (.sh/.bat), etc.  To find any file in the project directory:
-
-1. Open Qt Creator's Preferences
-2. Go to Environment > Locator
-3. Next to "Files in All Project Directories", check the box for "Default"
-4. Select "Files in All Project Directoreis" and click "Edit..."
-5. Add the exclusion pattern "*/out/*" (to exclude build outputs)
-
-#### Default Target
-
-Qt Creator's default target is 'all', which is hooked up to rake's default - the staged installation only.  (The real 'all' target takes a long time since it builds all tests, installers, tools, etc.)
-
-To run or debug unit tests and other targets from Qt Creator, tell it to build the current executable's target instead:
-
-1. Go to the Projects page
-2. Select "Build" under current kit"
-3. Under "Build Steps", expand the CMake build step
-4. Select "Current executable" instead of "all":
-
-#### Kit and Qt version
-
-Qt Creator will still ask to select a kit, which includes a Qt version, compiler, etc.  Just select Qt 6.2.4 (on Windows, the MSVC 2019 64-bit target), so the code model will work.
-
-This has no effect on the build output - the Rake scripts find Qt and the compiler on their own, which allows them to be run with no prior setup.
 
 ### Build system
 
@@ -237,6 +196,8 @@ To test installation, you can generate a self-signed certificate and sign with t
 
 ## Core Libraries
 
+**Note:** building for android and ios is deprecated and unsupported at the time.
+
 Some core libraries can be built targeting Android and iOS for use in our mobile clients.
 
 ### Prerequisites
@@ -256,7 +217,9 @@ Some core libraries can be built targeting Android and iOS for use in our mobile
 
 ### Building
 
-Invoke `rake` with `PLATFORM=android` or `PLATFORM=ios` to target a mobile platform.  You can also set `ARCHITECTURE` to one of `arm64`, `armhf`, `x86_64`, or `x86` - the host architecture is the default.  (If you do this a lot, you can place overrides in your environment or .buildenv to use these by default.)
+Invoke `rake` with `PLATFORM=android` or `PLATFORM=ios` to target a mobile platform.
+You can also set `ARCHITECTURE` to one of `arm64`, `armhf`, `x86_64`, or `x86` - the host architecture is the default. 
+If you do this a lot, you can place overrides in your environment or .buildenv to use these by default.
 
 (Qt does not need to be installed for mobile targets.)
 
@@ -272,7 +235,7 @@ The same `rake`-based build system is used, but the available targets differ.
 | `artifacts` | Builds all artifacts and copies to `out/pia_debug_<platform>_<arch>/artifacts` (depends on most other targets) |
 | `all` | All targets. |
 
-### Headless testing
+### Automated testing
 
 In the `headless_tests` directory you will find a suite of tests written in ruby with the help of RSpec.
 They use `piactl` in the background to manipulate the state of the daemon and run diverse tests.
@@ -280,7 +243,7 @@ The advantage of testing in ruby is mainly simplicity, where doing things like c
 
 With these _almost_ end to end tests we hope to drastically reduce manual testing for releases to the point that we can release more frequently.  
 
-Use `bundle install` to ensure you get all the dependencies.  
+Use `bundle install` from the `headless_tests` directory to ensure you get all the dependencies.  
 Run the tests from within the `headless_tests` to pick up configuration in `.rspec` and `spec_helper`.
 Run all tests locally using `bundle exec rspec .`.
 

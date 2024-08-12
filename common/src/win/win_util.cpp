@@ -35,18 +35,35 @@ const wchar_t *qstringWBuf(const QString &value)
     return reinterpret_cast<const wchar_t*>(value.utf16());
 }
 
-ProcAddress::ProcAddress(const QString &module, const QByteArray &entrypoint)
-    : _moduleHandle{nullptr}, _procAddress{nullptr}
+WinModule::WinModule(const wchar_t *pModule)
+    : _moduleHandle{}
 {
-    _moduleHandle = ::LoadLibraryW(qstringWBuf(module));
-    if(_moduleHandle)
-        _procAddress = ::GetProcAddress(_moduleHandle, entrypoint.data());
+    if(pModule)
+    {
+        _moduleHandle = ::LoadLibraryW(pModule);
+        if(!_moduleHandle)
+            qError() << "Failed to load module" << pModule;
+    }
 }
 
-ProcAddress::~ProcAddress()
+WinModule::~WinModule()
 {
     if(_moduleHandle)
         ::FreeLibrary(_moduleHandle);
+}
+
+void *WinModule::getProcAddress(const char *pName) const
+{
+    if(pName && _moduleHandle)
+    {
+        auto address = ::GetProcAddress(_moduleHandle, pName);
+        if(!address)
+        {
+            qError() << "Loading function" << pName << "failed due to" << GetLastError();
+        }
+        return address;
+    }
+    return nullptr;
 }
 
 void broadcastMessage(const LPCWSTR &message)

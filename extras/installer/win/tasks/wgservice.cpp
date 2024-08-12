@@ -56,13 +56,6 @@ void UninstallWgServiceTask::rollback()
 
 void InstallWgServiceTask::execute()
 {
-    // Skip this task on Win 7.
-    if(!isWintunSupported())
-    {
-        LOG("Skipping WireGuard tasks, not supported on this OS");
-        return;
-    }
-
     LOG("Installing WireGuard service");
     _listener->setCaption(IDS_CAPTION_REGISTERINGSERVICE);
 

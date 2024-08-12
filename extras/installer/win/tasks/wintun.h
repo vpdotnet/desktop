@@ -20,30 +20,21 @@
 #define TASKS_WINTUN_H
 
 #include "../tasks.h"
-#include "../tap_inl.h"
 
-// These tasks install and uninstall the WinTUN driver package.
-//
-// The WinTUN driver itself is a shared component, so the WinTUN component is
-// shared with any other product that also ships it (the result is that the
-// newest version among products shipping the driver is used).
-//
-// The package shipped by PIA (or the current brand) is specific to that brand
-// and contains the shared WinTUN component.  Different brands install/uninstall
-// their own package separately, which in turn installs/updates the shared
-// WinTUN component.
-//
-// Because WinTUN is shared, rollbacks of the PIA package may not actually have
-// any effect on the installed WinTUN driver (if another product has installed a
-// newer driver).
-//
-// The installer does attempt to downgrade the PIA WinTUN package for a PIA
-// downgrade or aborted installation.  It's unlikely, but possible, that the
-// component in the package could change in the future, such as if WinTUN broke
-// API compatibility and transitioned to a "WinTUN 2" component, etc.
+// These tasks handle uninstallation of the WinTUN driver package - both the
+// legacy MSI package, and the current driver deployed by pia-wintun.dll.
+// 
+// In PIA 2.0-2.9, WinTUN was deployed as a shared component using an MSI.
+// Installation of 2.10+ uninstalls this MSI if it is present, since it is no
+// longer used.
+// 
+// PIA 2.10+ ships pia-wintun.dll, which includes the PIA-branded WinTUN driver
+// as a resource and deploys it automatically.  We don't need to do anything
+// during installation.  When uninstalling PIA, we call a WinTUN entry point
+// to remove the driver package.
 
-// Uninstall the WinTUN driver.  Only used in uninstaller.
-class UninstallWintunTask : public Task
+// Uninstall the legacy WinTUN MSI package.  Used when installing 2.10+.
+class UninstallWintunMsiTask : public Task
 {
 public:
     using Task::Task;
@@ -52,20 +43,15 @@ public:
     virtual double getEstimatedExecutionTime() const override { return 2.0; }
 };
 
-// "Install" the WinTUN driver.  Installation is actually deferred until the
-// daemon starts up, since MSI packages can't be installed in safe mode, and we
-// support installation during safe mode.  This task just creates a flag file
-// that tells the daemon to do the installation the next time it starts.
-class InstallWintunTask : public Task
-{
+// Uninstall the branded WinTUN driver using pia-wintun.dll.  Used when
+// uninstalling 2.10+.
+class UninstallWintunTask : public Task{
 public:
     using Task::Task;
     virtual void execute() override;
-    virtual void rollback() override;
+    // No rollback; pia-wintun.dll will install the driver when connecting as
+    // needed
     virtual double getEstimatedExecutionTime() const override { return 2.0; }
-
-private:
-    std::wstring _rollbackRunOnceRestore;
 };
 
 #endif

@@ -64,7 +64,6 @@ QtObject {
   }
 
   readonly property string requiresOpenVpnMessage: uiTr("This feature requires OpenVPN.")
-  readonly property string wgRequiresWindows8: uiTr("WireGuard requires Windows 8 or later.")
 
   // Labels for connection settings - used on Connection page and in Connection
   // tile

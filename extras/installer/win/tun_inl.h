@@ -35,6 +35,4 @@ bool uninstallMsiProduct(const wchar_t *pProductCode);
 // Install an MSI package from a .msi file.
 bool installMsiPackage(const wchar_t *pPackagePath);
 
-bool isWintunSupported();
-
 #endif

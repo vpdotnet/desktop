@@ -14,6 +14,13 @@ require 'forwardable'
 class PiaVersion
     extend Forwardable
 
+    # A few brandinfo.json values are optional, if not present in the JSON an
+    # empty string is used by default
+    def strOrEmpty(value)
+        return "" if value == nil
+        value
+    end
+
     def initialize
         variantSuffix = (Build::Variant == :release) ? "" : Build::Variant.to_s
         variantDot = (variantSuffix == '') ? '' : '.'
@@ -229,9 +236,9 @@ class PiaVersion
         brandh.defineLiteral('BRAND_LINUX_FWMARK_BASE', Build::BrandInfo['linuxFwmarkBase'].to_s)
         brandh.defineLiteral('BRAND_LINUX_CGROUP_BASE', Build::BrandInfo['linuxCgroupBase'].to_s)
         brandh.defineRawString('BRAND_PARAMS', JSON.generate(Build::BrandInfo))
+        brandh.defineString('BRAND_WINTUN_PRODUCT_NAME', strOrEmpty(Build::BrandInfo['wintunProductName']))
         brandh.defineString('BRAND_WINTUN_AMD64_PRODUCT', Build::BrandInfo['wintunAmd64Product'])
-        brandh.defineString('BRAND_WINTUN_X86_PRODUCT', Build::BrandInfo['wintunX86Product'])
-        brandh.defineString('BRAND_WINTUN_PRODUCT_NAME', Build::BrandInfo['wintunProductName'])
+        brandh.defineString('BRAND_WINTUN_ARM64_PRODUCT', Build::BrandInfo['wintunArm64Product'])
         updateApis = Build::BrandInfo['brandReleaseUpdateUris']
         # This was added to the brand kit, default to the old defaults
         if(updateApis == nil)

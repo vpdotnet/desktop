@@ -50,17 +50,11 @@ Page {
       readonly property string wireguardTipText: uiTranslate("ConnectionPage",
                                                    "Newer, more efficient protocol with the potential for increased performance.")
       info: {
-        if (Daemon.state.wireguardAvailable)
-          return "<strong>OpenVPN®:</strong> " + openvpnTipText
-              + "<br/><strong>WireGuard®:</strong> " + wireguardTipText
-        else
-          return SettingsMessages.wgRequiresWindows8
+        return "<strong>OpenVPN®:</strong> " + openvpnTipText
+             + "<br/><strong>WireGuard®:</strong> " + wireguardTipText
       }
       tipAccessibleText: {
-        if (Daemon.state.wireguardAvailable)
-          return "OpenVPN®: " + openvpnTipText + "\nWireGuard®: " + wireguardTipText
-        else
-          return SettingsMessages.wgRequiresWindows8
+        return "OpenVPN®: " + openvpnTipText + "\nWireGuard®: " + wireguardTipText
       }
 
       itemList: ["OpenVPN®", "WireGuard®"]

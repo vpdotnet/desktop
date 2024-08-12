@@ -92,6 +92,7 @@ module PiaUnitTest
             .useQt('Test')
             .source('daemon/src') # Daemon
             .source('daemon/src/model')
+            .source('deps/wintun/src')
             .resource('daemon/res', ['ca/*.crt'])
             .define('UNIT_TEST', :export) # Unit test
             .source('tests/src') # Unit test source

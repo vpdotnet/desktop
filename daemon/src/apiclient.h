@@ -75,6 +75,13 @@ public:
     Async<QJsonDocument> getRetry(ApiBase &apiBaseUris, QString resource,
                                   QByteArray auth = {});
 
+    // Get an API resource, such as the port forwarding token.
+    //
+    // Behaves the same as getRetry but uses timed retries instead of counted
+    // ones.
+    Async<QJsonDocument> getTimedRetry(ApiBase &apiBaseUris, QString resource,
+                                       QByteArray auth = {});
+
     // Do a GET request for a particular API resource that returns the user's
     // IP address.  (Doesn't allow API proxies.)
     Async<QJsonDocument> getIp(ApiBase &apiBaseUris, QString resource, QByteArray auth = {});

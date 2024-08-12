@@ -29,9 +29,12 @@
 #include <cctype>
 
 #if defined(Q_OS_WIN)
-    #if defined(_WIN64)
+    #if defined(_M_X64)
         static const QString libsslName = QStringLiteral("libssl-3-x64.dll");
         static const QString libcryptoName = QStringLiteral("libcrypto-3-x64.dll");
+    #elif defined(_M_ARM64)
+        static const QString libsslName = QStringLiteral("libssl-3-arm64.dll");
+        static const QString libcryptoName = QStringLiteral("libcrypto-3-arm64.dll");
     #else
         #error Unsupported OS/arch
     #endif

@@ -59,6 +59,13 @@ public:
     };
     Q_ENUM(Platform)
 
+    enum class Architecture
+    {
+        X86_64,
+        Arm64
+    };
+    Q_ENUM(Architecture)
+
 public:
     NativeHelpers();
 
@@ -66,6 +73,9 @@ public:
     // Find out what platform we're on for platform-specific QML logic.
     // Use sparingly!
     Q_PROPERTY(Platform platform READ getPlatform FINAL CONSTANT)
+
+    // Find out what architecture we're on for arch-specific QML logic.
+    Q_PROPERTY(Architecture architecture READ getArchitecture FINAL CONSTANT)
 
     // The product name from PIA_PRODUCT_NAME.
     // We do not translate the product name.
@@ -231,6 +241,7 @@ signals:
 
 private:
     Platform getPlatform() const;
+    Architecture getArchitecture() const;
     QString getProductName() const;
     bool isMacOSSplitTunnelSupported() const;
     bool getLogToFile();

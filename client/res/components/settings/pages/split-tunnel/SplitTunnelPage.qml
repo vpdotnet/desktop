@@ -62,6 +62,7 @@ Page {
       Layout.columnSpan: 2
       id: appExclusionCheckbox
       label: uiTranslate("NetworkPage", "Split Tunnel")
+      warning: (NativeHelpers.platform == NativeHelpers.Windows && NativeHelpers.architecture == NativeHelpers.Arm64) ? uiTr("Split Tunnel may act unpredictably with non-native ARM64 applications.") : ""
       // On Windows, if the driver isn't installed and the setting isn't
       // enabled, show the "needs install" description.
       readonly property bool needsInstall: {

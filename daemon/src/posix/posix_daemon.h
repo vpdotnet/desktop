@@ -48,15 +48,14 @@ public:
 
     static PosixDaemon* instance() { return static_cast<PosixDaemon*>(Daemon::instance()); }
 
-    virtual std::shared_ptr<NetworkAdapter> getNetworkAdapter() override;
-
 protected slots:
     void handleSignal(int sig) Q_DECL_NOEXCEPT;
 
 protected:
     virtual void applyFirewallRules(kapps::net::FirewallParams params) override;
     virtual void writePlatformDiagnostics(DiagnosticsFile &file) override;
-
+    // There are no platform installation-related feature flags for Mac/Linux
+    virtual void applyPlatformInstallFeatureFlags() override {}
 private:
 #if defined(Q_OS_LINUX)
     void updateExistingDNS();

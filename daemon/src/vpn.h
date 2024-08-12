@@ -362,8 +362,13 @@ public:
     const QString &vpnPassword() const {return _vpnPassword;}
     const QString &vpnToken() const {return _vpnToken;}
 
-    // Cryptographic settings for OpenVPN; only captured when method is OpenVPN
+    // Settings for OpenVPN; only captured when method is OpenVPN
     QString openvpnCipher() const {return _openvpnCipher;}
+    // Use WinTUN instead of TAP
+    bool openvpnUseWintun() const {return _openvpnUseWintun;}
+    // Use the static configuration method for TAP instead of the default DHCP
+    // method
+    bool openvpnUseStaticTapConfig() const {return _openvpnUseStaticTapConfig;}
     // Preferred protocol and port (collectively "transport") for OpenVPN.  Note
     // that the actual transport can differ if "Try Alternate Settings" is
     // enabled and this transport isn't reachable.
@@ -463,6 +468,7 @@ private:
     bool _vpnLocationAuto{false};
     QString _vpnUsername, _vpnPassword, _vpnToken;
     QString _openvpnCipher;
+    bool _openvpnUseWintun{false}, _openvpnUseStaticTapConfig{false};
     Protocol _openvpnProtocol{Protocol::UDP};
     quint16 _openvpnRemotePort{};
     bool _wireguardUseKernel{false};

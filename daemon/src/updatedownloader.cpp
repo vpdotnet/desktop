@@ -54,9 +54,8 @@ const QString UpdateChannel::platformName =
 #elif defined(Q_OS_WIN)
     #if defined(Q_PROCESSOR_X86_64)
         QStringLiteral("windows_x64");
-    #elif defined(Q_PROCESSOR_X86_32)
-        #error "32-bit windows is not supported.
-        QStringLiteral("windows_x86");
+    #elif defined(_M_ARM64)
+        QStringLiteral("windows_arm64");
     #else
         #error "Platform name not known for this Windows architecture"
     #endif

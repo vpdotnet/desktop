@@ -276,11 +276,6 @@ PosixDaemon::~PosixDaemon()
 #endif
 }
 
-std::shared_ptr<NetworkAdapter> PosixDaemon::getNetworkAdapter()
-{
-    return {};
-}
-
 void PosixDaemon::onAboutToConnect()
 {
 #if defined(Q_OS_MACOS)

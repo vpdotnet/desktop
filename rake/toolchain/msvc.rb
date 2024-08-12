@@ -38,10 +38,13 @@ class MsvcToolchain
         #
         # This dump will include the variables already in Rake's environment
         # too, but there's no harm in re-applying those.
-        if @architecture != :x86_64
+        if @architecture == :x86_64
+            vcArch = 'x64'
+        elsif @architecture == :arm64
+            vcArch = 'x64_arm64'
+        else
             raise "Unsupported arquitecture: #{@architecture}"
         end
-        vcArch = 'x64'
         vcEnvScript = File.absolute_path('rake/toolchain/msvc_env.bat')
         invokeVcEnvScript = "\"#{vcEnvScript}\" \"#{vcvars}\" #{vcArch}"
         vcEnv = `#{Util.cmd(invokeVcEnvScript)}`
@@ -389,7 +392,7 @@ class MsvcToolchain
             '/FO', objectFile, sourceFile
         ]
         params.flatten!
-       Util.shellRun winJoinArgs(params)
+        Util.shellRun winJoinArgs(params)
     end
 
     # Compile one source file to an object file.  All paths should be absolute
@@ -448,8 +451,8 @@ class MsvcToolchain
             '/Fe' + targetFile,
             '/link', # Link only
             LinkOpts[Build::Variant],
-            '/OSVERSION:6.01',
-            "/SUBSYSTEM:#{subsys},6.01",
+            '/OSVERSION:10.00',
+            "/SUBSYSTEM:#{subsys},10.00",
             '/INCREMENTAL:NO',
             '/MANIFEST:EMBED', # Embed app manifest in image
             "/MANIFESTINPUT:#{File.absolute_path('common/res/manifest.xml')}",

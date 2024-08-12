@@ -215,6 +215,7 @@ auto WinInterfaceMonitor::getAdapterForLuid(quint64 luid)
 {
     auto adapters = getAllNetworkAdapters([luid](const IP_ADAPTER_ADDRESSES &addresses)
     {
+        qInfo() << "Checking adapter" << addresses.Luid.Value << "against" << luid;
         return addresses.Luid.Value == luid;
     });
     // LUID should be unique - there shouldn't be more than one such adapter.

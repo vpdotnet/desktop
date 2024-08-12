@@ -249,6 +249,7 @@ Daemon::Daemon(QObject* parent)
     : QObject(parent)
     , _started(false)
     , _stopping(false)
+    , _checkInstallFeatureFlags{false}
     , _server(nullptr)
     , _methodRegistry(new LocalMethodRegistry(this))
     , _rpc(new RemoteNotificationInterface(this))
@@ -305,7 +306,7 @@ Daemon::Daemon(QObject* parent)
     });
 
     // Load settings if they exist
-    readProperties(_data, Path::DaemonSettingsDir, "data.json");
+    bool dataFileRead = readProperties(_data, Path::DaemonSettingsDir, "data.json");
     // Load account.json.  If it doesn't exist, write it out now so we can set
     // its permissions.
     if(!readProperties(_account, Path::DaemonSettingsDir, "account.json"))
@@ -666,6 +667,16 @@ Daemon::Daemon(QObject* parent)
                                              Update{_data.betaChannelVersionUri(), _data.betaChannelVersion(),
                                                     _data.betaChannelOsRequired()},
                                              _data.flags());
+
+    if(!dataFileRead)
+    {
+        // New installation, check feature flags relating to install the first
+        // time feature flags are loaded.  There's no need to check the current
+        // feature flags stored in UpdateDownloader, because we know there are
+        // no cached data yet for a new installation.
+        qInfo() << "First launch after installation, will check install feature flags when loaded";
+        _checkInstallFeatureFlags = true;
+    }
 
     connect(&_settings, &DaemonSettings::automationRulesChanged, this,
             [this]()
@@ -3513,6 +3524,16 @@ void Daemon::onUpdateRefreshed(const Update &availableUpdate,
     // example, that there might be a supported GA update available, and also a
     // beta update that has dropped support for this OS version.
     _state.osUnsupported(!availableUpdate.isValid() && osFailedRequirement);
+    
+    // If this is the first time feature flags have been loaded for a new
+    // installation, apply default-setting feature flags now.
+    if(_checkInstallFeatureFlags)
+    {
+        qInfo() << "Feature flags have been loaded for the first time following installation";
+        _checkInstallFeatureFlags = false;
+        // Currently the only default-setting feature flag is Windows-specific
+        applyPlatformInstallFeatureFlags();
+    }
 }
 
 void Daemon::onUpdateDownloadProgress(const QString &version, int progress)
@@ -3704,6 +3725,14 @@ Error Daemon::connectVPN(ServiceQuality::ConnectionSource source)
     // Cannot connect when not logged in
     if(!_account.loggedIn())
         return {HERE, Error::Code::DaemonRPCNotLoggedIn};
+
+    // If we haven't yet applied post-install feature flags, it's too late now.
+    // This could happen if the API is unreachable.
+    if(_checkInstallFeatureFlags)
+    {
+        qInfo() << "Install feature flags were not loaded, proceeding with defaults";
+        _checkInstallFeatureFlags = false;
+    }
 
     // Check if any VPN errors are present, if so prevent the connection
     // and return an error.

@@ -31,13 +31,12 @@ NotificationStatus {
     clicked: function() {reinstallAdapter()}
   }]
 
-  // The connection method where this adapter is relevant, set to the expected
-  // value of Daemon.settings.method.  The notification is not shown when the
-  // expected method is not selected.
-  property string method
-  // Bind this to NativeHelpers.reinstall[Tap|Tun]Status
+  // Whether this adapter is needed for the currently selected connection
+  // method.  (The driver status is ignored otherwise.)
+  property bool isNeeded
+  // Bind this to NativeHelpers.reinstallTapStatus
   property string reinstallStatus
-  // Bind this to Daemon.state.[tunAdapter|wintun]Missing
+  // Bind this to Daemon.state.tapAdapterMissing
   property bool driverMissing
   // Bind this to a functor that handles reinstalling the driver by signaling
   // the Help page
@@ -58,7 +57,7 @@ NotificationStatus {
 
   // When the reinstallation status is 'reboot', show the reboot notification
   // instead.
-  active: Daemon.settings.method == adapterMissing.method &&
+  active: adapterMissing.isNeeded &&
           lastNonworkingMissing && reinstallStatus !== 'reboot'
 
   Component.onCompleted: adapterMissing.updateMissingState()

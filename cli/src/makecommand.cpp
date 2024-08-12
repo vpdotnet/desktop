@@ -67,11 +67,8 @@ const CommandMap unstableCommands
     // Windows only - used to hint to the daemon to re-check driver installation
     // states that do not provide change notifications.
     //
-    // WinTUN is checked this way, there does not appear to be any way to be
-    // notified when an MSI package or driver is installed.
-    //
     // The WFP callout is checked this way on Win 10 1507, because using SCM
-    // notifications on this build of Windows for a driver service cause SCM to
+    // notifications on this build of Windows for a driver service causes SCM to
     // crash on shutdown.
     {"checkdriver", std::make_shared<TrivialRpcCommand>("checkDriverState", checkDriverDescription)},
 #endif

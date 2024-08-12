@@ -513,19 +513,6 @@ auto WireguardServiceBackend::createInterface(wg_device &wgDev,
             Q_ASSERT(wgServiceState()); // Postcondition of openWgServiceState()
             return wgServiceState()->startService();
         })
-        // If starting the service failed, hint to the daemon to re-check
-        // whether WinTUN is installed (this is how it fails if WinTUN is
-        // missing, it goes directly from StartPending to StopPending).
-        ->except([](const Error &err) -> Async<std::shared_ptr<NetworkAdapter>>
-        {
-            // Starting the service succeeded, but finding the
-            // network adapter failed.  Hint to the daemon to
-            // check the WinTUN state.
-            auto pDaemon = g_daemon;
-            if(pDaemon)
-                pDaemon->wireguardServiceFailed();
-            throw err;
-        })
         ->next([](const Error &err) -> Async<std::shared_ptr<NetworkAdapter>>
         {
             // Remove the config file, prevent the user from accidentally
@@ -551,16 +538,6 @@ auto WireguardServiceBackend::createInterface(wg_device &wgDev,
             // avoid SCM deadlocks.
             qInfo() << "WireGuard started, find the WinTUN interface";
             return Async<WinTunInterfaceTask>::create();
-        })
-        ->then([](const std::shared_ptr<NetworkAdapter> &pAdapter)
-        {
-            // The connection succeeded and we found the WinTUN interface.
-            // Hint to the daemon that it should re-check the WinTUN state if it
-            // thought WinTUN was not installed.
-            auto pDaemon = g_daemon;
-            if(pDaemon)
-                pDaemon->wireguardConnectionSucceeded();
-            return pAdapter;
         });
 }
 

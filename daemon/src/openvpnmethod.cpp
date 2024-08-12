@@ -28,7 +28,7 @@
 #include <QRegularExpression>
 
 #if defined(Q_OS_WIN)
-    #include "win/win_daemon.h"
+    #include "win/win_daemon.h" // For WinDaemon::getTapAdapter() / WinDaemon::getTunAdapter()
     #include "win/win_interfacemonitor.h"
     #include <common/src/win/win_util.h>
 #endif
@@ -162,17 +162,46 @@ void OpenVPNMethod::run(const ConnectionConfig &connectingConfig,
         arguments += QStringLiteral("--verb");
         arguments += QStringLiteral("4");
 
-        _networkAdapter = g_daemon->getNetworkAdapter();
 #if defined(Q_OS_WIN)
         // Postcondition of WinDaemon::getNetworkAdapter()
-        Q_ASSERT(_networkAdapter);
-        Q_ASSERT(!_networkAdapter->devNode().isEmpty());
+        if(_connectingConfig.openvpnUseWintun())
+        {
+            _networkAdapter = g_daemon->getTunAdapter();
+            // If the WinTUN adapter wasn't found, we can create it (or try to
+            // recreate it).  This is created on first use, unlike TAP which we
+            // create during install
+            if(!_networkAdapter)
+            {
+                qInfo() << "Didn't find existing WinTUN adapter for OpenVPN, create it now";
+                _networkAdapter = g_daemon->recreateTunAdapter();
+                // If that also fails, we'll detect it below and bail
+            }
+            arguments += QStringLiteral("--windows-driver");
+            arguments += QStringLiteral("wintun");
+        }
+        else
+        {
+            _networkAdapter = g_daemon->getTapAdapter();
+        }
+
+        // Failure to find a suitable virtual network adapter is fatal on
+        // Windows.
+        if(!_networkAdapter)
+        {
+            throw Error{HERE, Error::Code::NetworkAdapterNotFound,
+                        QStringLiteral("Unable to find network adapter")};
+        }
+        // Check the dev node too; if this was somehow empty, it could cause
+        // OpenVPN to attempt to fall back to any TAP adapter on the system
+        if(_networkAdapter->devNode().isEmpty())
+        {
+            throw Error{HERE, Error::Code::NetworkAdapterNotFound,
+                        QStringLiteral("Returned network adapter had no device node")};
+        }
+
         arguments += QStringLiteral("--dev-node");
         arguments += _networkAdapter->devNode();
 #else
-        // Postcondition of PosixDaemon::getNetworkAdapter() (if it did start
-        // returning a network adapter, it's ignored here)
-        Q_ASSERT(!_networkAdapter);
     #if defined(Q_OS_MAC)
         arguments += QStringLiteral("--dev-node");
         arguments += QStringLiteral("utun");
@@ -228,7 +257,7 @@ void OpenVPNMethod::run(const ConnectionConfig &connectingConfig,
 
         // Pass the configuration method on Windows
         updownCmd += " --method ";
-        updownCmd += escapeArg(g_settings.windowsIpMethod());
+        updownCmd += _connectingConfig.openvpnUseStaticTapConfig() ? "static" : "dhcp";
 
         // Pass the IPC pipe/socket path to receive tunnel configuration
         updownCmd += " --ipc ";
@@ -253,7 +282,7 @@ void OpenVPNMethod::run(const ConnectionConfig &connectingConfig,
         qInfo() << "updownCmd is: " << updownCmd;
 
 #ifdef Q_OS_WIN
-        if(g_settings.windowsIpMethod() == QStringLiteral("static"))
+        if(_connectingConfig.openvpnUseStaticTapConfig())
         {
             // Static configuration on Windows - use OpenVPN's netsh method,
             // updown script will apply DNS with netsh

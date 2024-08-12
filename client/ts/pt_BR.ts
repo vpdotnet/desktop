@@ -4495,8 +4495,8 @@
     </message>
     <message>
       <location filename="../../../extras/installer/win/strings.rc" line="115"/>
-      <source>Private Internet Access requires Windows 8 or later.</source>
-      <translation>Para executar o Private Internet Access é necessário o Windows 8 ou posterior.</translation>
+      <source>Private Internet Access requires Windows 10 or later.</source>
+      <translation>Para executar o Private Internet Access é necessário o Windows 10 ou posterior.</translation>
     </message>
     <message>
       <location filename="../../../extras/installer/win/strings.rc" line="117"/>

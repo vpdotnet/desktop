@@ -217,8 +217,6 @@ public:
     DaemonSettings& settings() { return _settings; }
     StateModel& state() { return _state; }
 
-    virtual std::shared_ptr<NetworkAdapter> getNetworkAdapter() = 0;
-
     // Get the _state.original* fields as an OriginalNetworkScan
     OriginalNetworkScan originalNetwork() const;
 
@@ -356,6 +354,10 @@ protected:
 
     // Write platform-specific diagnostics to implement RPC_writeDiagnostics()
     virtual void writePlatformDiagnostics(DiagnosticsFile &file) = 0;
+
+    // Apply platform-specific post-install feature flags (invoked after the
+    // feature flags have been loaded for the first time)
+    virtual void applyPlatformInstallFeatureFlags() = 0;
 
     // Overview of common diagnostic information
     QString diagnosticsOverview() const;
@@ -514,6 +516,14 @@ private:
     void disconnectVPN(ServiceQuality::ConnectionSource source);
 protected:
     bool _started, _stopping;
+
+    // Some setting defaults for new installations can be changed by feature
+    // flags (currently, the default OpenVPN driver on Windows, which we are
+    // switching to WinTUN but have a fallback to TAP in case there are issues
+    // in the field).  Daemon will apply install feature flags the first time
+    // feature flags are loaded during the first run of the daemon, and only if
+    // no connection attempts have occurred yet.
+    bool _checkInstallFeatureFlags;
 
     IPCServer* _server;
     QHash<IPCConnection*, ClientConnection*> _clients;

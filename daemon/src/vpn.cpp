@@ -650,6 +650,11 @@ ConnectionConfig::ConnectionConfig(DaemonSettings &settings, StateModel &state,
     if(_method == Method::OpenVPN)
     {
         _openvpnCipher = settings.cipher();
+        if(settings.windowsIpMethod() == QStringLiteral("wintun"))
+            _openvpnUseWintun = true; // WinTUN; IP method does not apply
+        else if(settings.windowsIpMethod() == QStringLiteral("static"))
+            _openvpnUseStaticTapConfig = true; // TAP with static method
+        // Otherwise, the default is TAP with the DHCP configuration method
         if(settings.protocol() == QStringLiteral("tcp"))
             _openvpnProtocol = Protocol::TCP;
 
@@ -792,6 +797,8 @@ bool ConnectionConfig::hasChanged(const ConnectionConfig &other) const
         vpnPassword() != other.vpnPassword() ||
         vpnToken() != other.vpnToken() ||
         openvpnCipher() != other.openvpnCipher() ||
+        openvpnUseWintun() != other.openvpnUseWintun() ||
+        openvpnUseStaticTapConfig() != other.openvpnUseStaticTapConfig() ||
         openvpnProtocol() != other.openvpnProtocol() ||
         openvpnRemotePort() != other.openvpnRemotePort() ||
         wireguardUseKernel() != other.wireguardUseKernel() ||

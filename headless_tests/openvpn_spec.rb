@@ -61,4 +61,17 @@ describe "OpenVPN options" do
             end
         end
     end
+
+    if SystemUtil.windows?
+        describe "OpenVPN windows tunnel driver", :openVPNOnly do
+            tunnel_drivers = ["static", "dhcp", "wintun"]
+            tunnel_drivers.each do |tunnel_driver|
+                it "#{tunnel_driver} can connect" do
+                    PiaCtl.set_unstable("windowsIpMethod", tunnel_driver)
+                    pia_connected = connect_and_check
+                    expect(pia_connected).to be_truthy, "PIA Failed to connect"
+                end
+            end
+        end
+    end
 end

@@ -30,6 +30,7 @@ import "../../../common"
 import "../../../common/regions"
 import "../../../theme"
 import PIA.BrandHelper 1.0
+import PIA.NativeHelpers 1.0
 
 // Translation note - various elements on this page deliberately do not
 // translate:
@@ -147,25 +148,75 @@ Item {
     }
 
     DropdownInput {
-      label: uiTranslate("ConnectionPage", "Configuration Method")
+      label: {
+        if(reinstallTap.executing) {
+          //: Label for the Virtual Network Driver setting when it cannot be
+          //: changed due to an ongoing installation.
+          return uiTr("Virtual Network Driver (Installing...)")
+        }
+        return uiTr("Virtual Network Driver")
+      }
       visible: Qt.platform.os === 'windows'
-      setting: DaemonSetting { name: "windowsIpMethod" }
+      enabled: !reinstallTap.executing
+      setting: DaemonSetting {
+        name: "windowsIpMethod"
+        function isTap(value) { return value === "dhcp" || value === "static" }
+        onCurrentValueChanged: {
+          if(isTap(currentValue) && !isTap(sourceValue) &&
+            Daemon.state.tapAdapterMissing) {
+            // We're switching to TAP, and the driver isn't installed yet.
+            // Trigger a TAP install.
+            reinstallTap.startReinstall()
+          }
+        }
+      }
       model: [
-        //: "DHCP" refers to Dynamic Host Configuration Protocol, a network
-        //: configuration technology.  This probably is not translated for
-        //: most languages.
-        { name: uiTranslate("ConnectionPage", "DHCP"), value: "dhcp" },
-        //: "Static" is an alternative to DHCP - instead of using dynamic
-        //: configuration on the network adapter, it is configured with
-        //: static addresses.
-        { name: uiTranslate("ConnectionPage", "Static"), value: "static" }
+        // 'WinTUN' is the driver name and is not translated
+        { name: "WinTUN", value: "wintun" },
+        //: "TAP" is the name of the OpenVPN virtual network adapter driver
+        //: and should not be translated.  "DHCP" refers to Dynamic Host
+        //: Configuration Protocol, a network configuration technology.
+        //: This probably is not translated for most languages.
+        { name: uiTranslate("ConnectionPage", "TAP (DHCP)"), value: "dhcp" },
+        //: "TAP" is the name of the OpenVPN virtual network adapter driver
+        //: and should not be translated. "Static" is an alternative to DHCP
+        //: - instead of using dynamic configuration on the network adapter,
+        //: it is configured with static addresses.
+        { name: uiTranslate("ConnectionPage", "TAP (Static)"), value: "static" }
       ]
-      //: Description of the configuration method choices for Windows.
-      //: This should suggest that the only reason to change this setting
-      //: is if you have trouble connecting.
-      info: uiTranslate("ConnectionPage", "Determines how addresses are configured on the TAP adapter.  If you have trouble connecting, a different method may be more reliable.")
-    }
+      info: [
+          uiTranslate("ConnectionPage", "Determines which virtual network driver is used and how it is configured."),
+          //: WinTUN is the name of the driver and should not be translated.
+          uiTranslate("ConnectionPage", "WinTUN: Modern driver, offers the best speeds (try this first)"),
+          //: TAP is the name of the driver and should not be translated.
+          //: "DHCP" refers to Dynamic Host Configuration Protocol, a network
+          //: configuration technology.  This probably is not translated for
+          //: most languages.
+          uiTranslate("ConnectionPage", "TAP (DHCP): Older driver, use if WinTUN isn't working"),
+          //: "TAP" is the name of the OpenVPN virtual network adapter driver
+          //: and should not be translated. "Static" is an alternative to DHCP
+          //: - instead of using dynamic configuration on the network adapter,
+          //: it is configured with static addresses.
+          uiTranslate("ConnectionPage", "TAP (Static): Older driver, use if TAP (DHCP) isn't working")
+      ].join("\n\u2022\xA0\xA0")
 
+      // This ReinstallLink is used to handle TAP installation when switching
+      // to TAP - it triggers the installation and shows dialogs indicating
+      // success/failure/reboot/etc.
+      //
+      // It is never actually shown; the reinstall state is added to the
+      // dropdown's label.
+      ReinstallLink {
+        id: reinstallTap
+        visible: false
+      
+        linkText: ""
+        executingText: ""
+
+        reinstallStatus: NativeHelpers.reinstallTapStatus
+        reinstallAction: function(){NativeHelpers.reinstallTap()}
+      }
+    }
 
     // Spacer between drop downs and check boxes.  With columnSpan: 2, this also
     // forces the next check box to start a new line (the items in the prior

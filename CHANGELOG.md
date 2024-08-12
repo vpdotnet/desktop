@@ -1,11 +1,16 @@
 # Changelog
+### v3.6.1
+* Windows: Experimental arm64 support
+* Windows: Updated to Wintun driver 0.14.1. 
+* Windows: Wintun is now the default for OpenVPN connections, improving bandwith
+
 ### v3.6.0
 * MacOS: Ensured the split tunnel extension is not loaded on older MacOS versions to prevent potential compatibility issues
 * MacOS: Removed unnecessary periodic split tunnel checks when split tunnel is disabled
 * All: Added checkbox to optionally disable latency checks in the General tab
 * All: Updated to Qt6: This upgrade enhances security and performance. Note that Qt6 has higher system requirements
 * All: Updated to OpenSSL 3: To ensure the latest security standards are met
-* All: Updated to OpenVPN 2.6: For improved security and compatibility
+* All: Updated to OpenVPN 2.6.10: For improved security and compatibility
 * All: Removed support for 32-bit platforms, including armhf and x86. This change aligns with Qt6's requirements to ensure we maintain a secure and robust application
 * Windows: Removed support for Windows Vista, 7, and 8.1. This deprecation is necessary to support the new security features provided by Qt6 and OpenSSL 3
 * Linux: minimum required distributions are now: Debian 10, Ubuntu 20.04, Red Hat 8.4, openSUSE 15.4 or SUSE Linux Enterprise Server 15 SP4

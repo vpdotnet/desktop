@@ -18,7 +18,9 @@
 
 #include <cstdbool>
 #include <string.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <sys/syslog.h>
 #include <unistd.h>
 #include <errno.h>
 #include <xpc/xpc.h>
@@ -61,9 +63,6 @@ struct AllowedProcessChecker
     }
 };
 
-static const std::vector<AllowedProcessChecker> allowedProcesses{
-    {"/private/var/","/Private Internet Access Installer.app/Contents/MacOS/Private Internet Access"},
-    {"/Applications/", "/Private Internet Access.app/Contents/MacOS/Private Internet Access"}};
 namespace xpc
 {
     int connectionCount = 0;
@@ -120,6 +119,28 @@ namespace xpc
         }
 
         syslog(LOG_NOTICE, "Completed successfully");
+        return true;
+    }
+
+    bool executeWithOutput(const std::string& commandWithArgs, std::string& output)
+    {
+        FILE *fp;
+        char buffer[1024];
+
+        /* Open the command for reading. */
+        fp = popen(commandWithArgs.c_str(), "r");
+        if (fp == NULL) {
+            printf("Failed to run command\n" );
+            return false;
+        }
+        // Read the output a line at a time and append it to output
+        while (fgets(buffer, sizeof(buffer), fp) != NULL)
+        {
+            output += buffer;
+        }
+        pclose(fp);
+
+        // Success
         return true;
     }
 
@@ -519,7 +540,45 @@ namespace xpc
         }
     }
 
-    bool processIsAllowed(const xpc_connection_t& connection, const std::vector<AllowedProcessChecker>& allowedProcesses)
+    bool isPathSafe(const char* filePath)
+    {
+        for(size_t i = 0; i < strlen(filePath); i++)
+        {
+            if(filePath[i] == ';' || filePath[i] == '"' ||
+               filePath[i] == '|' || filePath[i] == '&')
+                return false;
+        }
+        return true;
+    }
+
+    bool verifyFileSignature(const char* filePath)
+    {
+        char quotedPath[1024] = {};
+        strncpy(quotedPath, filePath, sizeof(quotedPath));
+        char codesign[] = "/usr/bin/codesign";
+        char arg1[] = "--verify";
+        char * argv[] = {codesign, arg1, quotedPath, nullptr};
+        syslog(LOG_NOTICE, "Verify command: %s %s %s", argv[0], argv[1], argv[2]);
+        return execute(argv, nullptr);
+    }
+
+    bool checkFileSignature(const char* filePath)
+    {
+        std::string command = std::string() + "/usr/bin/codesign -d --verbose=4 '" + filePath + "' 2>&1";
+        std::string commandOutput;
+        syslog(LOG_NOTICE, "Running %s", command.c_str());
+        bool runSuccessfully = executeWithOutput(command, commandOutput);
+        syslog(LOG_NOTICE, "%s", commandOutput.c_str());
+
+        // Check that the identifier in codesign's output matches BRAND_IDENTIFIER
+        const std::string identifier = "Identifier=" BRAND_IDENTIFIER;
+        bool foundMatch = commandOutput.find(identifier) != std::string::npos;
+
+        syslog(LOG_NOTICE, "Looking for %s in output, got %d", identifier.c_str(), foundMatch ? 1:0);
+        return runSuccessfully && commandOutput.find(identifier) != std::string::npos;
+    }
+
+    bool processIsAllowed(const xpc_connection_t& connection)
     {
         pid_t pid = xpc_connection_get_pid(connection);
 
@@ -532,16 +591,26 @@ namespace xpc
         }
         syslog(LOG_NOTICE, "A process is trying to connect to the launcher. pid: %d, path: %s", pid, pidPath);
 
-        // Check that the process is allowed to connect to PIA installer
-        auto isAllowedProcess = [&](const auto& allowedProcess) { return allowedProcess.check(pidPath); };
-        if(std::any_of(allowedProcesses.begin(), allowedProcesses.end(), isAllowedProcess))
+        if(!isPathSafe(pidPath))
         {
-            syslog(LOG_NOTICE, "Process %s has been validated", pidPath);
-            return true;
+            syslog(LOG_ERR, "The process is in an unsafe path and will not be accepted");
+            return false;
         }
 
-        syslog(LOG_ERR, "Process %s has not been validated", pidPath);
-        return false;
+        if(!verifyFileSignature(pidPath))
+        {
+            syslog(LOG_ERR, "The process trying to connect is not properly signed");
+            return false;
+        }
+
+        if(!checkFileSignature(pidPath))
+        {
+            syslog(LOG_ERR, "The process trying to connect is not signed by an accepted distributor");
+            return false;
+        }
+
+        syslog(LOG_NOTICE, "Process verified successfully");
+        return true;
     }
 
     void connectionHandler(xpc_object_t event)
@@ -562,12 +631,16 @@ namespace xpc
             // can connect to the installer.
             // In order to validate that, we check the process path.
             // All PIA related processes reside in root owned folders
-            if(!processIsAllowed(connection, allowedProcesses))
+            if (!processIsAllowed(connection))
             {
                 syslog(LOG_ERR, "Unrecognized process tried to connect to the installer");
-                // no op. We don't bother doing anything with the connection
-                // since we don't recognize the peer in the first place.
-                return;
+                // We could simply ignore the connection, but that would leave
+                // us in a dead-locked state if the process was actually valid
+                // but failed to validate, e.g. the user broke the client
+                // binary signature and therefore validation fails.
+                // If there was indeed a bad actor, it's also not crazy to stop
+                // the process with an error
+                exit(1);
             }
 #else
             syslog(LOG_NOTICE, "PIA Debug mode active - allowing any process to connect to installer");

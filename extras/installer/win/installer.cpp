@@ -570,8 +570,8 @@ DWORD Installer::workerThreadMain()
 
     #ifdef INSTALLER
         // Check the minimum required Windows version
-        if (!IsWindows8OrGreater())
-            InstallerError::abort(IDS_MB_REQUIRESWIN8);
+        if (!IsWindows10OrGreater())
+            InstallerError::abort(IDS_MB_REQUIRESWIN10);
     #endif
 
     #ifndef _WIN64
@@ -657,7 +657,7 @@ DWORD Installer::workerThreadMain()
         // Uninstall the callout driver
         tasks.addNew<UninstallCalloutDriverTask>();
 
-        // Uninstall the wireguard service
+        // Uninstall the WireGuard service
         tasks.addNew<UninstallWgServiceTask>();
 
         // Uninstall the WinTUN driver
@@ -706,8 +706,9 @@ DWORD Installer::workerThreadMain()
         // Install TAP driver
         tasks.addNew<InstallTapDriverTask>();
 
-        // Install WinTUN driver
-        tasks.addNew<InstallWintunTask>();
+        /// If a WinTUN MSI package was installed by a prior version of PIA,
+        // remove it.  (WinTUN is now deployed automatically by pia-wintun.dll)
+        tasks.addNew<UninstallWintunMsiTask>();
 
         // Update callout driver if installed
         tasks.addNew<UpdateCalloutDriverTask>();

@@ -178,7 +178,7 @@ class Qt
         # * Linux uses the host arch, cross builds work fine.  (Linux deployment
         #   is provided by product/linux.rb, Qt does not provide a deployment
         #   tool.)
-        hostArches = Build::selectDesktop([Build::TargetArchitecture],
+        hostArches = Build::selectDesktop([Util.hostArchitecture, Build::TargetArchitecture],
             [:universal, Util.hostArchitecture], [Util.hostArchitecture])
         # Similarly, target prefers universal for macos, but can use the target
         # arch for a non-universal build.  Windows and Linux just use the target

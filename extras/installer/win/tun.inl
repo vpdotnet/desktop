@@ -35,10 +35,12 @@ namespace
     }
 
     std::wstring g_wintunProduct = asciiUppercase(L""
-#ifdef _WIN64
+#ifdef _M_X64
             BRAND_WINTUN_AMD64_PRODUCT
+#elif defined(_M_ARM64)
+            BRAND_WINTUN_ARM64_PRODUCT
 #else
-            BRAND_WINTUN_X86_PRODUCT
+#error Unsupported architecture
 #endif
         );
 }
@@ -163,26 +165,6 @@ bool installMsiPackage(const wchar_t *pPackagePath)
 
     TUN_LOG("WinTUN install of %ls failed - %u", pPackagePath, installResult);
     return false;
-}
-
-bool isWintunSupported()
-{
-    // We don't support installing WinTUN or using WireGuard on Windows 7.  It
-    // could be made to work, but the complexity outweighs the benefit to
-    // supporting 7, and usage of 7 is going down now that it is out of support.
-    //
-    // The WinTUN package we're distributing is only signed with SHA-256, which
-    // means that it requires 7 SP1 with KB3033929 or a later update.  It's
-    // possible to detect whether the user has this update (though it's not
-    // pretty), but diagnosing issues surrounding this detection and the update
-    // are complex - there's no straightforward way for a user to check if they
-    // have SHA-2 driver support.  (Note that this is distinct from SHA-2 user
-    // mode application support, which was added separately.)
-    //
-    // There are also IPC problems communicating with the WireGuard service on
-    // Windows 7 that currently have not been addressed, these are probably
-    // fixable but the issue has not been identified yet.
-    return ::IsWindows8OrGreater();
 }
 
 #endif

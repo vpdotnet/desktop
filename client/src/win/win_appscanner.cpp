@@ -334,16 +334,121 @@ namespace
         }
     }
 
+    enum Architecture
+    {
+        UnknownArch,
+        x86,
+        x64,
+        arm,
+        arm64
+    };
+
+    static Architecture getSystemArch() {
+        SYSTEM_INFO systemInfo;
+        GetNativeSystemInfo(&systemInfo);
+
+        switch (systemInfo.wProcessorArchitecture) {
+            case PROCESSOR_ARCHITECTURE_AMD64:
+                return Architecture::x64;
+                break;
+            case PROCESSOR_ARCHITECTURE_ARM64:
+                return Architecture::arm64;
+                break;
+            case PROCESSOR_ARCHITECTURE_INTEL:
+                return Architecture::x86;
+                break;
+            case PROCESSOR_ARCHITECTURE_ARM:
+                return Architecture::arm;
+                break;
+            default:
+                return Architecture::UnknownArch;
+        }
+    }
+
+    static bool executableIsCompatible(Architecture system, Architecture executable)
+    {
+        if(system == Architecture::UnknownArch || executable == Architecture::UnknownArch) return false;
+
+        switch(system)
+        {
+            case Architecture::x86:
+                return executable == Architecture::x86;
+            case Architecture::x64:
+                return executable == Architecture::x86 || executable == Architecture::x64;
+            case Architecture::arm:
+                return executable == Architecture::arm;
+            case Architecture::arm64:
+                return executable == Architecture::arm || executable == Architecture::arm64;
+        }
+        return false;
+    }
+
+    // Reads the header of the executable to retrieve which arch it is built for.
+    static Architecture checkExecutableArch(const LPCWSTR path) {
+        struct HandleHelper
+        {
+            ~HandleHelper()
+            {
+                CloseHandle(file);
+            }
+            HANDLE file;
+        };
+        HandleHelper handle{CreateFile(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL)};
+        if (handle.file == INVALID_HANDLE_VALUE) {
+            return Architecture::UnknownArch;
+        }
+
+        DWORD bytesRead;
+        IMAGE_DOS_HEADER dosHeader;
+        if (!ReadFile(handle.file, &dosHeader, sizeof(dosHeader), &bytesRead, NULL) || bytesRead != sizeof(dosHeader)) {
+            return Architecture::UnknownArch;
+        }
+
+        if (dosHeader.e_magic != IMAGE_DOS_SIGNATURE) {
+            return Architecture::UnknownArch;
+        }
+
+        SetFilePointer(handle.file, dosHeader.e_lfanew, NULL, FILE_BEGIN);
+
+        IMAGE_NT_HEADERS ntHeaders;
+        if (!ReadFile(handle.file, &ntHeaders, sizeof(ntHeaders), &bytesRead, NULL) || bytesRead != sizeof(ntHeaders)) {
+            return Architecture::UnknownArch;
+        }
+
+        if (ntHeaders.Signature != IMAGE_NT_SIGNATURE) {
+            return Architecture::UnknownArch;
+        }
+
+        Architecture arch = Architecture::UnknownArch;
+        switch(ntHeaders.FileHeader.Machine)
+        {
+            case IMAGE_FILE_MACHINE_I386:
+                arch = Architecture::x86;
+                break;
+            case IMAGE_FILE_MACHINE_AMD64:
+                arch = Architecture::x64;
+                break;
+            case IMAGE_FILE_MACHINE_ARM:
+                arch = Architecture::arm;
+                break;
+            case IMAGE_FILE_MACHINE_ARM64:
+                arch = Architecture::arm64;
+                break;
+        }
+        return arch;
+    }
+
     QJsonArray LinkScanner::buildAppsArray() const
     {
         QJsonArray appsArray;
+        const Architecture systemArch = getSystemArch();
         for(const auto &app : _apps)
         {
             // SHGetLocalizedName() is very picky about slashes apparently
             // (returns E_INVALIDARG if we give it a path with slashes instead
             // of backslashes).  ::PathRelativePathToW() also fails.
             QString linkPath = QDir::toNativeSeparators(app.second._link.filePath());
-
+            QString realPath = QFileInfo{linkPath}.symLinkTarget();
             QString displayName{getLinkDisplayName(app.second._link, linkPath)};
             // Windows apps are frequently cluttered with shortcuts to "help",
             // "uninstall", etc. that don't make much sense if they're sorted
@@ -352,8 +457,13 @@ namespace
             // together in the list.
             // In the future, we might display these folder names in some way.
             QStringList folders{getFolderNames(app.second._basePath, linkPath)};
-            appsArray.append(SystemApplication{linkPath, std::move(displayName),
-                                               std::move(folders)}.toJsonObject());
+            const auto arch = checkExecutableArch(qstringWBuf(realPath));
+            if (executableIsCompatible(systemArch, arch))
+            {
+                appsArray.append(SystemApplication{linkPath, std::move(displayName),
+                                 std::move(folders)}.toJsonObject());
+            }
+
         }
         return appsArray;
     }

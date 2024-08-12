@@ -65,11 +65,6 @@ static void serviceMain(int argc, wchar_t** argv)
         {
             reportStatus(SERVICE_RUNNING);
 
-            // Do this after reporting the service as "running", it may wait for
-            // the MSI service to start, and we don't want to wait on that while
-            // SCM thinks we're still initializing
-            service.handlePendingWinTunInstall();
-
             QCoreApplication::exec();
         });
         QObject::connect(&service, &Daemon::stopped, [] { QCoreApplication::quit(); });
@@ -213,13 +208,8 @@ int WinService::installService()
     // repair an installation, but usually it's recommended to just re-run the
     // installer.)
     auto daemonStatus = ::installDaemonService(qUtf16Printable(QCoreApplication::applicationFilePath()));
-    ServiceStatus wireguardStatus{ServiceStatus::ServiceInstalled};
-    // Install the WireGuard service only if supported
-    if(isWintunSupported())
-    {
-        wireguardStatus = ::installWireguardService(qUtf16Printable(Path::WireguardServiceExecutable),
-                                                    qUtf16Printable(Path::DaemonDataDir));
-    }
+    auto wireguardStatus = ::installWireguardService(qUtf16Printable(Path::WireguardServiceExecutable),
+                                                     qUtf16Printable(Path::DaemonDataDir));
     return std::max(getSvcStatusExitCode(daemonStatus), getSvcStatusExitCode(wireguardStatus));
 }
 

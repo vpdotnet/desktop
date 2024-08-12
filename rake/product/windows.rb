@@ -61,18 +61,19 @@ module PiaWindows
             crtDir = File.join(crtDir, 'debug_nonredist')
         end
 
-        # VC143 is only experimentally supported for VS2022.
-        for vcVer in ["VC142", "VC143"]
+        crtFound = false
+        for vcVer in ["VC143", "VC142"]
             vcCrtDir = File.join(crtDir, arch,
                 Build::debug? ? 'Microsoft.'+vcVer+'.DebugCRT' : 'Microsoft.'+vcVer+'.CRT')
             if File.exist?(vcCrtDir)
                 crtDir = vcCrtDir
+                crtFound = true
                 break
             end
             puts "Couldn't find " + vcVer
         end
 
-        if !File.exist?(crtDir)
+        if !File.exist?(crtDir) or !crtFound
             raise "error: cannot find CRT. Install MSVC v142+"
         end
 
@@ -109,6 +110,32 @@ module PiaWindows
         ]
         args += binaryFilePaths
         Util.shellRun *args
+
+        if Build::TargetArchitecture == :arm64
+            # Arm deployment doesn't really work, so we will manually go through
+            # all Qt dlls and change them for their arm64 counterpart.
+            targetRoot = Executable::Qt.targetQtRoot
+
+            # Create a hashmap to store all DLL paths available in the targetQt
+            dllMap = {}
+
+            # Populate the hashmap with DLL filenames and their full paths
+            Dir.glob(File.join(targetRoot, '**/*.dll')).each do |file|
+                dllMap[File.basename(file)] = file
+            end
+
+            # Find all .dll files in the current directory and its subdirectories
+            Dir.glob(File.join(Build::BuildDir, '**/*.dll')).each do |stagedDllPath|
+                dllName = File.basename(stagedDllPath)
+                if dllMap.key?(dllName)
+                    # Replace the original DLL with the one from the target directory
+                    FileUtils.cp(dllMap[dllName], stagedDllPath)
+                    puts "Replaced: #{stagedDllPath} with #{dllMap[dllName]}"
+                else
+                    puts "No corresponding file found for: #{stagedDllPath}"
+                end
+            end
+        end
     end
 
     # Invoke signtool on Windows - signs one time
@@ -222,9 +249,6 @@ module PiaWindows
             # Install to win7/* or win10/*
             winVerDir = File.basename(File.dirname(f))
             stage.install(f, "tap/#{winVerDir}/")
-        end
-        FileList["brands/#{Build::Brand}/wintun/#{Build::TargetArchitecture}/*.msi"].each do |f|
-            stage.install(f, 'wintun/')
         end
         FileList["deps/wfp_callout/win/#{Build::TargetArchitecture}/win*/*"].each do |f|
             winVerDir = File.basename(File.dirname(f))

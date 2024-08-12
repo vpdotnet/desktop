@@ -28,6 +28,7 @@
 #include <kapps_net/src/win/win_appmonitor.h>
 #include "win_interfacemonitor.h"
 #include "win_dnscachecontrol.h"
+#include "win_wintun.h"
 #include <common/src/win/win_messagewnd.h>
 #include "servicemonitor.h"
 #include "win_servicestate.h"
@@ -66,12 +67,14 @@ public:
 
     static WinDaemon* instance() { return static_cast<WinDaemon*>(Daemon::instance()); }
 
-    virtual std::shared_ptr<NetworkAdapter> getNetworkAdapter() override;
+    std::shared_ptr<NetworkAdapter> getTapAdapter();
+    std::shared_ptr<NetworkAdapter> getTunAdapter();
+    std::shared_ptr<NetworkAdapter> recreateTunAdapter();
 
 private:
     // Check if the adapter is present, and update Daemon's corresponding state
     // (Daemon::adapterValid()).
-    void checkNetworkAdapter();
+    void checkTapAdapter();
     void onAboutToConnect();
 
     virtual LRESULT proc(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
@@ -85,28 +88,10 @@ protected:
     virtual QJsonValue RPC_inspectUwpApps(const QJsonArray &familyIds) override;
     virtual void RPC_checkDriverState() override;
     virtual void writePlatformDiagnostics(DiagnosticsFile &file) override;
-
-private:
-    // Check whether WinTUN is currently installed.  There's no way to be
-    // notified of this, so WireguardServiceBackend hints to us to check it in
-    // some circumstances.
-    void checkWintunInstallation();
+    virtual void applyPlatformInstallFeatureFlags() override;
 
     // Update split tunnel rules in WinAppMonitor
     void updateSplitTunnelRules();
-
-public:
-    // WireguardServiceBackend calls these methods to hint to us to consider
-    // re-checking the WinTUN installation state.
-
-    // Indicates that a WG connection failed after having started the service
-    // (not that it failed during the authentication stage, we only check
-    // WinTUN when the service fails to start).
-    void wireguardServiceFailed();
-    // Indicates that a WG connection succeeded.
-    void wireguardConnectionSucceeded();
-
-    void handlePendingWinTunInstall();
 
 protected:
     nullable_t<kapps::net::Firewall> _pFirewall;
@@ -121,6 +106,8 @@ protected:
     ServiceMonitor _wfpCalloutMonitor;
     std::unique_ptr<WinServiceState> _pMsiServiceState;
     kapps::net::WinAppMonitor _appMonitor;
+    WintunModule _wintun;
+    std::shared_ptr<WintunAdapter> _wintunAdapter = nullptr;
 };
 
 #undef g_daemon

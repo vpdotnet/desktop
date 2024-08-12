@@ -28,6 +28,41 @@
 // On Windows, get a wchar_t pointer from a QString.
 COMMON_EXPORT const wchar_t *qstringWBuf(const QString &value);
 
+// WinModule loads a module dynamically with LoadLibrary().  Entry points can
+// then be loaded with WinModule::getProcAddress().
+class COMMON_EXPORT WinModule
+{
+public:
+    WinModule() : _moduleHandle{} {}
+    WinModule(const wchar_t *pModule);
+    WinModule(WinModule &&other) : WinModule{} {*this = std::move(other);}
+    ~WinModule();
+
+    WinModule  &operator=(WinModule  &&other)
+    {
+        std::swap(_moduleHandle, other._moduleHandle);
+        return *this;
+    }
+
+private:
+    WinModule (const WinModule  &) = delete;
+    WinModule  &operator=(const WinModule  &) = delete;
+
+public:
+    HMODULE get() const {return _moduleHandle;}
+    explicit operator bool() const {return _moduleHandle;}
+
+    void *getProcAddress(const char *pName) const;
+    template<class FuncPtr>
+    FuncPtr getProcAddress(const char *pName) const
+    {
+        return reinterpret_cast<FuncPtr>(getProcAddress(pName));
+    }
+
+private:
+    HMODULE _moduleHandle;
+};
+
 // ProcAddress wraps up an HMODULE and a function pointer retrieved with
 // ::GetProcAddress().  Like ::GetProcAddress(), it can be used to call an API
 // conditionally if it is found in a module, such as APIs added in recent
@@ -35,27 +70,17 @@ COMMON_EXPORT const wchar_t *qstringWBuf(const QString &value);
 class COMMON_EXPORT ProcAddress
 {
 public:
-    ProcAddress() : _moduleHandle{}, _procAddress{} {}
-    ProcAddress(const QString &module, const QByteArray &entrypoint);
-    ProcAddress(ProcAddress &&other) : ProcAddress{} {*this = std::move(other);}
-    ~ProcAddress();
-
-    ProcAddress &operator=(ProcAddress &&other)
-    {
-        std::swap(_moduleHandle, other._moduleHandle);
-        std::swap(_procAddress, other._procAddress);
-        return *this;
-    }
-
-private:
-    ProcAddress(const ProcAddress &) = delete;
-    ProcAddress &operator=(const ProcAddress &) = delete;
+    ProcAddress() : _module{}, _procAddress{} {}
+    ProcAddress(const QString &module, const QByteArray &entrypoint)
+        : _module{qstringWBuf(module)},
+          _procAddress{_module.getProcAddress(entrypoint.data())}
+    {}
 
 public:
     void *get() const {return _procAddress;}
 
 private:
-    HMODULE _moduleHandle;
+    WinModule _module;
     void *_procAddress;
 };
 

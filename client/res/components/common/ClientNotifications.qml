@@ -167,7 +167,8 @@ Item {
     //: generally localized.
     tipText: uiTr("The TAP adapter for the VPN tunnel is not installed.  You can reinstall it from Settings.")
 
-    method: "openvpn"
+    isNeeded: Daemon.settings.method === "openvpn" &&
+              Daemon.settings.windowsIpMethod !== "wintun"
     reinstallStatus: NativeHelpers.reinstallTapStatus
     driverMissing: Daemon.state.tapAdapterMissing
     reinstallAdapter: function() {reinstallTapAdapter()}
@@ -181,22 +182,9 @@ Item {
     tipText: uiTr("The system must be restarted before you can connect.")
     severity: severities.error
     dismissible: false
-    active: Daemon.settings.method === "openvpn" && NativeHelpers.reinstallTapStatus === 'reboot'
-  }
-
-  // The WinTUN adapter is missing (Windows only)
-  //
-  // Similar to the TAP adapter error, but for WinTUN, which is used for WireGuard.
-  DriverNotificationStatus {
-    id: wintunMissing
-    title: errorHeaderTitle
-    //: "WinTUN" is name of the virtual network adapter and is not localized.
-    tipText: uiTr("The WinTUN adapter for the VPN tunnel is not installed.  You can reinstall it from Settings.")
-
-    method: "wireguard"
-    reinstallStatus: NativeHelpers.reinstallTunStatus
-    driverMissing: Daemon.state.wintunMissing
-    reinstallAdapter: function() {reinstallWintun()}
+    active: Daemon.settings.method === "openvpn" &&
+            Daemon.settings.windowsIpMethod !== "wintun" &&
+            NativeHelpers.reinstallTapStatus === 'reboot'
   }
 
   // Warn if the split tunnel feature is enabled, but the driver is missing.
@@ -650,7 +638,6 @@ Item {
     // functionality
     tapAdapterMissing,
     installationRestart,
-    wintunMissing,
     splitTunnelUninstalled,
     splitTunnelReboot,
     vpnMissingIptables,
@@ -721,8 +708,6 @@ Item {
   signal showChangelog()
   // Show help page & trigger TAP reinstall (for the TAP adapter notification)
   signal reinstallTapAdapter()
-  // Show help page & trigger WinTUN reinstall
-  signal reinstallWintun()
   // Show help page & trigger split tunnel filter reinstall
   signal reinstallSplitTunnel()
   // Emitted when a notification needs to show an alert on the Settings Help
