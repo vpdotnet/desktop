@@ -1,8 +1,12 @@
 # Changelog
 ### v3.6.1
 * Windows: Experimental arm64 support
-* Windows: Updated to Wintun driver 0.14.1. 
-* Windows: Wintun is now the default for OpenVPN connections, improving bandwith
+* Windows: Updated to Wintun driver 0.14.1
+* Windows: Wintun is now the default for OpenVPN connections. This should improve the bandwith
+* Windows: Only PIA clients can now send RPC calls to disconnect or logout the user from the VPN
+* MacOS: Unprivileged users can no longer prevent the PIA client from installing
+* All: Fixed a potential bug that could cause the client to crash when opening deep links
+* All: Killswitch will now stay on after subscription expiry
 
 ### v3.6.0
 * MacOS: Ensured the split tunnel extension is not loaded on older MacOS versions to prevent potential compatibility issues
