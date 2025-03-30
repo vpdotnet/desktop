@@ -29,16 +29,22 @@
 #include <QJsonDocument>
 #include <QJsonArray>
 
+// Hash: f37e8dca5b60bb235284be2d4e54cb29813cb566569886c48c55336096362873
 const QByteArray Environment::defaultRegionsListPublicKey = QByteArrayLiteral(
     "-----BEGIN PUBLIC KEY-----\n"
-    "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzLYHwX5Ug/oUObZ5eH5P\n"
-    "rEwmfj4E/YEfSKLgFSsyRGGsVmmjiXBmSbX2s3xbj/ofuvYtkMkP/VPFHy9E/8ox\n"
-    "Y+cRjPzydxz46LPY7jpEw1NHZjOyTeUero5e1nkLhiQqO/cMVYmUnuVcuFfZyZvc\n"
-    "8Apx5fBrIp2oWpF/G9tpUZfUUJaaHiXDtuYP8o8VhYtyjuUu3h7rkQFoMxvuoOFH\n"
-    "6nkc0VQmBsHvCfq4T9v8gyiBtQRy543leapTBMT34mxVIQ4ReGLPVit/6sNLoGLb\n"
-    "gSnGe9Bk/a5V/5vlqeemWF0hgoRtUxMtU1hFbe7e8tSq1j+mu0SHMyKHiHd+OsmU\n"
-    "IQIDAQAB\n"
-    "-----END PUBLIC KEY-----"
+    "MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAxSqleT52eqaEfBcgInai\n"
+    "J1y6p82WsnATs2pEMkw2m0COOP6/2DFrAZMtEHbbxdHsS2Rax6yqw7awFY+VAI9X\n"
+    "k6m52Rhr6l1mVFRXCu9vPU2T3qmgQyMFQ2TdK1ybMTDrKE/v3d53VCLIZEtQLi0u\n"
+    "/IiFFN7QqyQ7CJB3Pod6kHdbLa9Tw6LIWw5W0Lg1R7VKi7t+kEWirHDnhiJ8y3vO\n"
+    "cXdts1NiBsqlt66A/Y/pBkM1MCE8eQKkKDGxBeXCarkvtAvaTXl6o1hmivQh9UXo\n"
+    "L+aT0S9gNbB645fiEIfHGHrfMeUVeyUJTBt/BVErpETj0WbolM1whzw6CTT8q5zU\n"
+    "IefYNjpLdPo6ggl8OCcdy/2YBh/2vSQNOpeOJh6nw+K8t3CkkWbhbZv/KHkFP+mX\n"
+    "X9zhwqvNP9ZbwEunOlk3f4IgdCuydmgRkwHvwK4eEJW2dRvoC0RMd9LOJ2KHC4OT\n"
+    "gKyjNmubfEaFehGP04Oh9SJyvJPWNtzFg9pEQGnBtQOs3M/La4ePbRxHvoc14Mke\n"
+    "DvJb51JF7zSPw8aC4FpzmPfLCjlVNQh5QUe8NALVr4nHC5kgqD04Gm9mOW3moOUJ\n"
+    "Zd4P4lKaVpGDDGCcDQzLVtK6WK/jtAOsugf1RsBOrIidb6UVa16q32oiHmN1tXqS\n"
+    "G0/YY/gsigdiXvtD5nRn7uECAwEAAQ==\n"
+    "-----END PUBLIC KEY-----\n"
 );
 
 Environment::Environment(const StateModel &state)
@@ -243,13 +249,11 @@ void Environment::loadApiBases()
     // Load each API base
     loadApiBase(overridePresent, apiOverride, _pApiv1, QStringLiteral("apiv1"),
                 QStringLiteral("API v1"), {
-                    QStringLiteral("https://api.privateinternetaccess.com/api/client"),
-                    QStringLiteral("https://api.piaproxy.net/api/client")
+                    QStringLiteral("https://vp.net/_rest/Network/VPN:apiV1?resource="),
                 });
     loadDynamicApiBase(overridePresent, apiOverride, _pApiv2, QStringLiteral("apiv2"),
                 QStringLiteral("API v2"), QStringLiteral("/apiv2/"), {
-                    QStringLiteral("https://apiv2.privateinternetaccess.com/api/client/v2/"),
-                    QStringLiteral("https://apiv2.piaproxy.net/api/client/v2/")
+                    QStringLiteral("https://vp.net/_rest/Network/VPN:apiV2?resource="),
                 });
 
     loadDynamicApiBase(overridePresent, apiOverride, _pModernRegionsListApi,
@@ -260,7 +264,7 @@ void Environment::loadApiBases()
 
     loadApiBase(overridePresent, apiOverride, _pIpAddrApi, QStringLiteral("ip_api"),
                 QStringLiteral("IP API"), {
-                    QStringLiteral("https://api.privateinternetaccess.com/")
+                    QStringLiteral("https://vp.net/_rest/Network/VPN:ip?resource=")
                 });
     loadApiBase(overridePresent, apiOverride, _pIpProxyApi, QStringLiteral("ip_proxy_api"),
                 QStringLiteral("IP proxy API"), {
