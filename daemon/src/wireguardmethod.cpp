@@ -28,7 +28,7 @@
 #include <common/src/openssl.h>
 #include <common/src/builtin/path.h>
 #include "pathmtu.h"
-#include "crypto_helpers.h"
+#include <common/src/crypto_helpers.h>
 #include <QTimer>
 #include <QRandomGenerator>
 #include <cstring>
