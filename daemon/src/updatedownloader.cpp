@@ -274,10 +274,10 @@ but that's acceptable.
 */
 
 UpdateDownloader::UpdateDownloader()
-    : _daemonVersion{99999, 99999, 99999}
+    : _downloadTimedOut{false}
+    , _daemonVersion{99999, 99999, 99999}
     , _running{false}
     , _enableBeta{false}
-    , _downloadTimedOut{false}
 {
     // If the daemon's version can't be parsed, we log an error and proceed with
     // the default version above that will never offer an upgrade.  This might

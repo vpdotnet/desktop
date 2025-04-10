@@ -16,7 +16,31 @@
 // along with the Private Internet Access Desktop Client.  If not, see
 // <https://www.gnu.org/licenses/>.
 
-// This header is included for backward compatibility.
-// The actual implementation is now in common/src/crypto_helpers.h
+#include "common.h"
+#line HEADER_FILE("crypto_helpers.h")
 
-#include <common/src/crypto_helpers.h>
+#ifndef CRYPTO_HELPERS_H
+#define CRYPTO_HELPERS_H
+
+#include <cstddef>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+// X25519 key exchange function
+COMMON_EXPORT bool curve25519(unsigned char *out, const unsigned char *private_key, const unsigned char *public_key);
+
+// ChaCha20-Poly1305 AEAD decryption
+COMMON_EXPORT bool decrypt_chacha20poly1305(
+    unsigned char *plaintext, size_t plaintext_len,
+    const unsigned char *ciphertext, size_t ciphertext_len,
+    const unsigned char *nonce, size_t nonce_len,
+    const unsigned char *aad, size_t aad_len,
+    const unsigned char *key, size_t key_len);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // CRYPTO_HELPERS_H
