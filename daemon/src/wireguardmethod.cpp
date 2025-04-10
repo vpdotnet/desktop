@@ -28,6 +28,7 @@
 #include <common/src/openssl.h>
 #include <common/src/builtin/path.h>
 #include "pathmtu.h"
+#include "crypto_helpers.h"
 #include <QTimer>
 #include <QRandomGenerator>
 #include <cstring>
@@ -56,6 +57,9 @@ namespace
     const uint16_t keepaliveIntervalSec = 25;
 
     const std::chrono::seconds statsInterval{5};
+    
+    // Size of X25519 keys (32 bytes)
+    constexpr size_t Curve25519KeySize = 32;
 
     // Creating the interface must complete within this timeout
 #ifndef Q_OS_WINDOWS
@@ -154,11 +158,17 @@ private:
     // Delete the PIA Wireguard interface, if it exists
     void deleteInterface();
 
+    // Decrypt an IP that was encrypted using X25519 key exchange and ChaCha20-Poly1305
+    QString decryptIP(const QByteArray &encryptedData, const wg_key &privateKey, const wg_key &serverPubkey);
+
     void handleAuthResult(const WireguardKeypair &clientKeypair,
                           const QJsonDocument &result);
     AuthResult parseAuthResult(const QJsonDocument &result);
     void createInterface(const WireguardKeypair &clientKeypair,
                          const AuthResult &authResult);
+                         
+    // Store client private key for decryption
+    wg_key _clientPrivateKey;
 
     // Calculate the maximum MTU that we could have to the specified VPN server,
     // according to the physical interface MTU and protocol overhead.  (We never
@@ -273,6 +283,9 @@ WireguardMethod::WireguardMethod(QObject *pParent, const OriginalNetworkScan &ne
 #endif
       _routesUp{false}, _noRxIntervals{0}, _lastReceivedBytes{0}
 {
+    // Initialize _clientPrivateKey to zeros
+    std::memset(_clientPrivateKey, 0, sizeof(_clientPrivateKey));
+    
     _firstHandshakeTimer.setInterval(msec(firstHandshakeInterval));
     connect(&_firstHandshakeTimer, &QTimer::timeout, this,
         &WireguardMethod::checkFirstHandshake);
@@ -366,6 +379,11 @@ void WireguardMethod::deleteInterface()
 void WireguardMethod::handleAuthResult(const WireguardKeypair &clientKeypair,
                                        const QJsonDocument &result)
 {
+    // Store client private key for potential IP decryption
+    std::copy(std::begin(clientKeypair.privateKey()),
+              std::end(clientKeypair.privateKey()),
+              std::begin(_clientPrivateKey));
+              
     auto authResult = parseAuthResult(result);
 
     auto serverPubkeyTrace = wgKeyToB64(authResult._serverPubkey);
@@ -379,7 +397,76 @@ void WireguardMethod::handleAuthResult(const WireguardKeypair &clientKeypair,
     createInterface(clientKeypair, authResult);
 }
 
-auto WireguardMethod::parseAuthResult(const QJsonDocument &result)
+// Decrypts an IP that was encrypted for our private key using the server's public key
+QString WireguardMethod::decryptIP(const QByteArray &encryptedData, const wg_key &privateKey, const wg_key &serverPubkey)
+{
+    static const int NonceSize = 12; // ChaCha20-Poly1305 nonce size
+
+    // Check if we have enough data for a complete nonce
+    if(encryptedData.size() < NonceSize)
+    {
+        qWarning() << "Encrypted data too short for nonce";
+        throw Error{HERE, Error::Code::WireguardAddKeyFailed};
+    }
+
+    // Extract nonce and ciphertext
+    QByteArray nonce = encryptedData.left(NonceSize);
+    QByteArray ciphertext = encryptedData.mid(NonceSize);
+
+    // Create shared secret using ECDH: client private key * server public key
+    unsigned char sharedSecret[Curve25519KeySize];
+    if(!curve25519(sharedSecret, (const unsigned char*)privateKey, (const unsigned char*)serverPubkey))
+    {
+        qWarning() << "Failed to create shared secret via curve25519";
+        throw Error{HERE, Error::Code::WireguardAddKeyFailed};
+    }
+
+    // Decrypt using ChaCha20-Poly1305
+    QByteArray decrypted;
+    decrypted.resize(ciphertext.size() - 16); // 16 bytes is Poly1305 tag size
+    
+    // Use OpenSSL's ChaCha20-Poly1305 decryption
+    if(!decrypt_chacha20poly1305(
+        (unsigned char*)decrypted.data(), 
+        decrypted.size(),
+        (const unsigned char*)ciphertext.data(), 
+        ciphertext.size(),
+        (const unsigned char*)nonce.data(), 
+        NonceSize,
+        nullptr, 0, // No additional data
+        sharedSecret, 
+        Curve25519KeySize))
+    {
+        qWarning() << "Failed to decrypt data with ChaCha20-Poly1305";
+        throw Error{HERE, Error::Code::WireguardAddKeyFailed};
+    }
+
+    // Parse the decrypted message to extract the IP
+    QString message = QString::fromUtf8(decrypted);
+    
+    // Extract the IP between the delimiters
+    int startIndex = message.indexOf("###.");
+    if(startIndex == -1)
+    {
+        qWarning() << "Invalid message format in decrypted data";
+        throw Error{HERE, Error::Code::WireguardAddKeyFailed};
+    }
+    startIndex += 4; // Skip the "###." marker
+
+    int endIndex = message.indexOf(".###", startIndex);
+    if(endIndex == -1)
+    {
+        qWarning() << "Invalid message format in decrypted data";
+        throw Error{HERE, Error::Code::WireguardAddKeyFailed};
+    }
+
+    QString ip = message.mid(startIndex, endIndex - startIndex);
+    qInfo() << "Successfully decrypted IP address from encrypted data";
+    
+    return ip;
+}
+
+WireguardMethod::parseAuthResult(const QJsonDocument &result)
     -> AuthResult
 {
     const auto &resultStatus = result[QStringLiteral("status")].toString();
@@ -390,7 +477,6 @@ auto WireguardMethod::parseAuthResult(const QJsonDocument &result)
         throw Error{HERE, Error::Code::WireguardAddKeyFailed};
     }
 
-    const auto &peerIpStr = result[QStringLiteral("peer_ip")].toString();
     const auto &serverPubkeyStr = result[QStringLiteral("server_key")].toString();
     const auto &serverIpStr = result[QStringLiteral("server_ip")].toString();
     const auto &serverPortVal = result[QStringLiteral("server_port")];
@@ -426,17 +512,7 @@ auto WireguardMethod::parseAuthResult(const QJsonDocument &result)
     authResult._serverPort = static_cast<quint16>(serverPort);
     authResult._serverVirtualIp = std::move(serverVip);
 
-    authResult._peerIpNet = QHostAddress::parseSubnet(peerIpStr);
-    if(authResult._peerIpNet.first.isNull() ||
-        authResult._peerIpNet.first.protocol() != QAbstractSocket::NetworkLayerProtocol::IPv4Protocol ||
-        authResult._peerIpNet.second <= 0 || authResult._peerIpNet.second > 32)
-    {
-        qWarning() << "Invalid peer IP:" << peerIpStr << "->"
-            << authResult._peerIpNet.first << "/"
-            << authResult._peerIpNet.second;
-        throw Error{HERE, Error::Code::WireguardAddKeyFailed};
-    }
-
+    // Copy server public key
     QByteArray serverPubkey = QByteArray::fromBase64(serverPubkeyStr.toLatin1());
     if(serverPubkey.size() != sizeof(authResult._serverPubkey))
     {
@@ -444,8 +520,49 @@ auto WireguardMethod::parseAuthResult(const QJsonDocument &result)
             << "):" << serverPubkeyStr;
         throw Error{HERE, Error::Code::WireguardAddKeyFailed};
     }
-
     std::copy(serverPubkey.begin(), serverPubkey.end(), std::begin(authResult._serverPubkey));
+
+    // Check for peer_ip or encrypted_ip in the response
+    const auto &peerIpStr = result[QStringLiteral("peer_ip")].toString();
+    const auto &encryptedIpStr = result[QStringLiteral("encrypted_ip")].toString();
+    
+    QString ipStr;
+    
+    if(!encryptedIpStr.isEmpty())
+    {
+        // If we have encrypted_ip, decrypt it
+        qInfo() << "Found encrypted IP data, attempting to decrypt";
+        
+        // Convert Base64 encoded data to binary
+        QByteArray encryptedData = QByteArray::fromBase64(encryptedIpStr.toLatin1());
+        
+        // We need the private key from WireguardKeypair to decrypt
+        // The client private key should be passed from handleAuthResult
+        ipStr = decryptIP(encryptedData, _clientPrivateKey, authResult._serverPubkey);
+    }
+    else if(!peerIpStr.isEmpty())
+    {
+        // Fallback to the original peer_ip if provided
+        ipStr = peerIpStr;
+    }
+    else
+    {
+        // Neither peer_ip nor encrypted_ip was provided
+        qWarning() << "Server response missing both peer_ip and encrypted_ip";
+        throw Error{HERE, Error::Code::WireguardAddKeyFailed};
+    }
+
+    // Parse the IP/subnet
+    authResult._peerIpNet = QHostAddress::parseSubnet(ipStr);
+    if(authResult._peerIpNet.first.isNull() ||
+        authResult._peerIpNet.first.protocol() != QAbstractSocket::NetworkLayerProtocol::IPv4Protocol ||
+        authResult._peerIpNet.second <= 0 || authResult._peerIpNet.second > 32)
+    {
+        qWarning() << "Invalid peer IP:" << ipStr << "->"
+            << authResult._peerIpNet.first << "/"
+            << authResult._peerIpNet.second;
+        throw Error{HERE, Error::Code::WireguardAddKeyFailed};
+    }
 
     return authResult;
 }
