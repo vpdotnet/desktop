@@ -58,8 +58,7 @@ namespace
 
     const std::chrono::seconds statsInterval{5};
     
-    // Size of X25519 keys (32 bytes)
-    constexpr size_t Curve25519KeySize = 32;
+    // We now use Curve25519KeySize from common/src/openssl.h
 
     // Creating the interface must complete within this timeout
 #ifndef Q_OS_WINDOWS
@@ -466,7 +465,7 @@ QString WireguardMethod::decryptIP(const QByteArray &encryptedData, const wg_key
     return ip;
 }
 
-WireguardMethod::parseAuthResult(const QJsonDocument &result)
+auto WireguardMethod::parseAuthResult(const QJsonDocument &result)
     -> AuthResult
 {
     const auto &resultStatus = result[QStringLiteral("status")].toString();
