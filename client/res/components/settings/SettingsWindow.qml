@@ -84,7 +84,7 @@ SecondaryWindow {
     'protocol': QT_TR_NOOP("Protocols", 'setting-title'),
     'network': QT_TR_NOOP("Network", 'setting-title'),
     'privacy': QT_TR_NOOP("Privacy", 'setting-title'),
-    //'dedicated-ip': QT_TR_NOOP("Dedicated IP", 'setting-title'),
+    'dedicated-ip': QT_TR_NOOP("Dedicated IP", 'setting-title'),
     'automation': QT_TR_NOOP("Automation", 'setting-title'),
     'split-tunnel': QT_TR_NOOP("Split Tunnel", 'setting-title'),
     'multihop': QT_TR_NOOP("Multi-Hop", 'setting-title'),
