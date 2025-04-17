@@ -5,7 +5,7 @@
     "brandHasClassicTray": true,
     "brandReleaseChannelGA": "release",
     "brandReleaseChannelBeta": "beta",
-    "brandReleaseUpdateUris": ["https://vp.net/clients/desktop"],
+    "brandReleaseUpdateUris": ["https://vp.net/_rest/Network/VPN:client?mode=desktop&resource="],
     "changelogUri": "https://vp.net/pages/changelog",
     "forgotPasswordLink": "https://vp.net/login?action=forgot_password",
     "manageAccountLink": "https://vp.net/dashboard",
