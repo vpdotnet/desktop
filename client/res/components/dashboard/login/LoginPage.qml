@@ -179,7 +179,7 @@ FocusScope {
           console.log('Email login request succeeded. Check your email for the login token.');
           lastEmail = emailInput.text
           emailError = errors.none
-          mode = modes.token_input
+          mode = modes.token
         }
       });
     }
