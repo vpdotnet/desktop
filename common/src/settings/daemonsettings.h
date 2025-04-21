@@ -71,7 +71,7 @@ public:
     // Whether to include geo-only locations.
     JsonField(bool, includeGeoOnly, true)
     // The method used to connect to the VPN
-    JsonField(QString, method, QStringLiteral("openvpn"), { "openvpn", "wireguard" })
+    JsonField(QString, method, QStringLiteral("wireguard"), { "openvpn", "wireguard" })
     JsonField(QString, protocol, QStringLiteral("udp"), { "udp", "tcp" })
     JsonField(QString, killswitch, QStringLiteral("auto"), { "on", "off", "auto" })
     // Whether to use the VPN as the default route.  This is a split tunnel

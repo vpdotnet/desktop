@@ -811,7 +811,17 @@ void Daemon::RPC_applySettings(const QJsonObject &settings, bool reconnectIfNeed
     bool wasActive = isActive();
     bool wasAutomationEnabled = _settings.automationEnabled();
 
-    bool success = _settings.assign(settings);
+    // Make a copy of the settings to ensure we're using WireGuard
+    QJsonObject modifiedSettings = settings;
+    
+    // If attempting to set method to "openvpn", enforce WireGuard
+    if (modifiedSettings.contains(QStringLiteral("method")) && 
+        modifiedSettings.value(QStringLiteral("method")).toString() == QStringLiteral("openvpn")) {
+        qInfo() << "OpenVPN is disabled. Forcing WireGuard protocol.";
+        modifiedSettings.insert(QStringLiteral("method"), QStringLiteral("wireguard"));
+    }
+    
+    bool success = _settings.assign(modifiedSettings);
 
     if(isActive() && !wasActive) {
         qInfo () << "Going active after settings changed";

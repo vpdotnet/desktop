@@ -544,18 +544,13 @@ ConnectionConfig::ConnectionConfig(DaemonSettings &settings, StateModel &state,
         _pVpnLocation.reset(new Location{*state.vpnLocations().nextLocation()});
     _vpnLocationAuto = !state.vpnLocations().chosenLocation();
 
+    // Always default to WireGuard, regardless of the settings value
+    _method = Method::Wireguard;
+    
+    // Log if there was an attempt to use OpenVPN
     const auto &methodValue = settings.method();
-    if(methodValue == QStringLiteral("openvpn"))
-        _method = Method::OpenVPN;
-    else if(methodValue == QStringLiteral("wireguard"))
-        _method = Method::Wireguard;
-    // Any other value is treated as "openvpn"; the setting values are validated
-    // by the daemon so invalid values should not occur.
-    else
-    {
-        _method = Method::OpenVPN;
-        qWarning() << "Unexpected method setting" << methodValue
-            << "- using OpenVPN";
+    if(methodValue == QStringLiteral("openvpn")) {
+        qInfo() << "OpenVPN requested but disabled. Using WireGuard instead.";
     }
 
     // Get the credentials that will be used to authenticate
@@ -590,13 +585,13 @@ ConnectionConfig::ConnectionConfig(DaemonSettings &settings, StateModel &state,
         _vpnPassword = account.openvpnPassword();
         _vpnToken = account.token();
 
-        // WireGuard auth requires a token.  If we haven't been able to obtain a
-        // token, use OpenVPN.
+        // WireGuard auth requires a token. If token is unavailable,
+        // we can't connect since we're not allowing OpenVPN.
         if(_method == Method::Wireguard && _vpnToken.isEmpty())
         {
-            qInfo() << "Using OpenVPN instead of WireGuard for this connection, auth token is not available";
-            _method = Method::OpenVPN;
-            _methodForcedByAuth = true;
+            qWarning() << "Cannot connect: WireGuard requires an auth token, which is not available";
+            // We keep the method as WireGuard, but canConnect() will fail
+            _methodForcedByAuth = false;
         }
     }
 
@@ -733,9 +728,10 @@ bool ConnectionConfig::canConnect() const
     // If we weren't able to get any credentials, we can't connect.
     // This shouldn't happen, but if something goes wrong with DIP regions, it
     // might occur.
-    if(vpnUsername().isEmpty() && vpnToken().isEmpty())
+    // For WireGuard, we need token
+    if(vpnToken().isEmpty())
     {
-        qWarning() << "No VPN credentials found, cannot connect";
+        qWarning() << "No VPN token found for WireGuard, cannot connect";
         return false;
     }
 

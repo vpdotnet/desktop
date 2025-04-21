@@ -65,11 +65,24 @@ Page {
         case 'wireguard':
           return 1
         default:
-          return 0
+          return 1 // Default to WireGuard
         }
       }
+      
+      // Specify which items are enabled
+      function isItemEnabled(index) {
+        return index === 1; // Only enable WireGuard (index 1)
+      }
+      
+      // Add a property to show disabled state
+      property string openvpnDisabledText: uiTranslate("ConnectionPage", 
+                                          "OpenVPN is currently disabled. WireGuard is the only available protocol.")
 
       onUpdated: function (index) {
+        if (index === 0) {
+          // Show a tooltip or notification that OpenVPN is disabled
+          return;
+        }
         var key = ['openvpn', 'wireguard'][index]
         Daemon.applySettings({
                                "method": key
