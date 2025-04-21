@@ -78,10 +78,10 @@ FocusScope {
     'email': 1,
     'token': 2,
   }
-  property int mode: 0
+  property int mode: 1
 
   function resetLoginPage (newMode) {
-    newMode = newMode || modes.login;
+    newMode = newMode || modes.email;
     shownError = errors.none
     emailError = errors.none
     tokenError = errors.none
@@ -107,49 +107,6 @@ FocusScope {
           console.warn('Email token request failed:', error);
         } else {
           emailError = errors['email_sent']
-        }
-      });
-    }
-  }
-
-  function login() {
-    // The user can press Enter even if the credentials haven't been entered;
-    // log in only if the credentials are set.
-    if(hasValidInput && !loginInProgress) {
-      loginInProgress = true
-      shownError = errors.none
-      retryAfterTime = 0
-      currentTime = 0
-
-      // We trim off any errant newlines from password (usually introduced by copy/paste)
-      Daemon.login(loginInput.text, passwordInput.text.replace(/\n+$/, ''), function(error) {
-        if (error) {
-          // Failure - creds were not valid (or we couldn't communicate
-          // with the daemon, etc.)
-          loginInProgress = false
-          switch(error.code) {
-          case NativeError.ApiUnauthorizedError:
-            shownError = errors.auth
-            break
-          case NativeError.ApiRateLimitedError:
-            if(error.retryAfterTime > 0) {
-              currentTime = Date.now()
-              retryAfterTime = error.retryAfterTime
-            }
-            shownError = errors.rate
-            break
-          case NativeError.ApiPaymentRequiredError:
-            // Api error Payment Required (http status 402)
-            // is used to indicate an account subscription has expired
-            shownError = errors.expired
-            // Change the displayed page to the upgrade page
-            stateStack.showUpgradePage()
-            break
-          default:
-            shownError = errors.api
-            break
-          }
-          console.warn('Login failed:', error);
         }
       });
     }
@@ -209,89 +166,6 @@ FocusScope {
         anchors.left: parent.left
         width: parent.width
         height: usernameModeContent.height
-        Item {
-          id: usernameModeContent
-          width: parent.width
-          height: lb.y + lb.height
-          visible: mode === modes.login
-          Text {
-            color: Theme.login.errorTextColor
-            horizontalAlignment: Text.AlignHCenter
-            text: {
-              switch(shownError) {
-              case errors.auth:
-                return uiTr("Invalid login")
-              case errors.rate:
-                return uiTr("Too many login attempts.") + "\n" + Messages.tryAgainMessage(Math.ceil((retryAfterTime - currentTime) / 1000))
-              case errors.api:
-                return uiTr("Can't reach the server")
-              case errors.expired:
-                return uiTr("Your subscription has expired")
-              default:
-                return ""
-              }
-            }
-            anchors.bottom: loginInput.top
-            anchors.bottomMargin: -6
-            anchors.horizontalCenter: parent.horizontalCenter
-            font.pixelSize: Theme.login.errorTextPx
-            visible: shownError !== errors.none
-          }
-
-          FlexValidator {
-            id: loginValidator
-
-            // Recent usernames must all be alphanumeric but some historical ones are email addresses
-            // As a result of this, let's not validate the login input at all
-            // but instead use the validator for trimming whitespace from user input (fixInput() allows us to do this)
-            regularExpression: /.*/
-            function fixInput(input) { return input.trim() }
-          }
-
-          LoginText {
-            id: loginInput
-            errorState: shownError !== errors.none
-            anchors.horizontalCenter: parent.horizontalCenter
-            width: 260
-            anchors.top: parent.top
-            anchors.topMargin: 16
-            placeholderText: uiTr("Username")
-            validator: loginValidator
-            onAccepted: login()
-            errorTipText: {
-              if(loginInput.text.startsWith('x')) {
-                //: Shown if the user attempts to login with the wrong account type.
-                //: 'p' refers to the letter prefix on the username; the p should be
-                //: kept in Latin script.  (Example user names are "p0123456",
-                //: "p5858587").
-                return uiTr("Use your normal username beginning with 'p'.")
-              }
-              return ""
-            }
-          }
-
-          LoginText {
-            id: passwordInput
-            errorState: shownError !== errors.none
-            width: 260
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.top: loginInput.bottom
-            anchors.topMargin: 8
-            placeholderText: uiTr("Password")
-            onAccepted: login()
-            masked: true
-          }
-
-          LoginButton {
-            id: lb
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.top: passwordInput.bottom
-            anchors.topMargin: 20
-            loginEnabled: hasValidInput
-            loginWorking: loginInProgress
-            onTriggered: login()
-          }
-        }
 
         //
         // "Email Login" page
@@ -436,7 +310,7 @@ FocusScope {
           id: loginMode
           x: 0
           y: 0
-          visible: emailLoginFeatureEnabled
+          visible: false, // emailLoginFeatureEnabled
           text: {
             if(mode === modes.login)
               return uiTr("Log in with Email")
@@ -453,14 +327,6 @@ FocusScope {
             else if(mode === modes.token)
               resetLoginPage(modes.login)
           }
-        }
-
-        TextLink {
-          id: forgotPassword
-          x: 0
-          y: loginMode.visible ? (loginMode.y + loginMode.height + linkContainer.stackedGap) : 0
-          text: uiTr("Forgot Password")
-          link: BrandHelper.getBrandParam("forgotPasswordLink")
         }
 
         TextLink {
@@ -573,8 +439,8 @@ FocusScope {
               break
             }
           } else {
-            // reset the mode to login mode
-            mode = modes.login
+            // reset the mode to email mode
+            mode = modes.email
             tokenError = errors.none;
           }
         })
