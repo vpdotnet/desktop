@@ -457,50 +457,7 @@ Item {
     active: (Daemon.account.loggedIn && Daemon.account.expireAlert && !Daemon.account.recurring && Daemon.account.renewURL) && BrandHelper.brandCode === 'pia'
   }
 
-  TimestampNotificationStatus {
-    id: dedicatedIpExpiring
-    message: {
-      let days = Daemon.state.dedicatedIpDaysRemaining
-      if(days >= 2) {
-        //: Message displayed when a purchased dedicated IP will expire soon.
-        //: %1 is at least 2; there are specific messages for 1 day or 0 days
-        //: remaining.
-        return uiTr("Your dedicated IP will expire in %1 days.").arg(days)
-      }
-      else if(days === 1) {
-        //: Message displayed when a purchased dedicated IP will expire in 1 day.
-        //: (Specifically, in 12-36 hours, since the time remaining is rounded
-        //: to the nearest day.)
-        return uiTr("Your dedicated IP will expire in 1 day.")
-      }
-      else {
-        //: Message displayed when a purchased dedicated IP will expire in less
-        //: than 12 hours.
-        return uiTr("Your dedicated IP will expire today.")
-      }
-    }
-    severity: severities.info
-    links: [{
-      text: uiTr("Get a new one"),
-      clicked: function() { Qt.openUrlExternally("https://www.privateinternetaccess.com/pages/client-control-panel/dedicated-ip") }
-    }]
-    dismissible: false
-    timestampValue: Daemon.state.dedicatedIpExpiring
-  }
-
-  // Although the "Dedicated IP Changed" notification is expressed as a
-  // timestamp and can be dismissed, this dismiss action in this case sends an
-  // RPC to the daemon since the state behind the notification is persisted.
-  NotificationStatus {
-    id: dedicatedIpChanged
-    message: uiTr("Your dedicated IP was updated.")
-    severity: severities.info
-    dismissible: true
-    active: Daemon.state.dedicatedIpChanged > 0
-    function dismiss() {
-      Daemon.dismissDedicatedIpChange()
-    }
-  }
+  // Dedicated IP notifications have been removed
 
   NotificationStatus {
     id: accountTokenNotAvailable
@@ -656,8 +613,7 @@ Item {
     alternateTransport,
     vpnSessionExpired,
     accountExpiring,
-    dedicatedIpExpiring,
-    dedicatedIpChanged,
+    // dedicatedIpExpiring and dedicatedIpChanged removed
     accountTokenNotAvailable,
     changelogAvailable,
     invalidClientExit,

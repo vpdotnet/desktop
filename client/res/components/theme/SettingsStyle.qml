@@ -50,7 +50,7 @@ QtObject {
             'protocol',
             'network',
             'privacy',
-            'dedicated-ip',
+            // removed dedicated-ip
             'automation',
             'split-tunnel',
             'multihop',

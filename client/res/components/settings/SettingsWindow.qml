@@ -53,10 +53,7 @@ SecondaryWindow {
   contentLogicalWidth: 200
   contentLogicalHeight: 200
 
-  // The "dedicated IP" page currently is shown based on a feature toggle, or
-  // if any dedicated IPs have already been added.
-  readonly property bool showDedicatedIp: Daemon.data.flags.includes("dedicated_ip") ||
-    Daemon.state.dedicatedIpLocations.length > 0
+  // Dedicated IP feature has been removed
 
   // Limit InfoTips' texts to this width (both because the settings window is
   // pretty wide, and so it's consistent for both horizontal and vertical
@@ -110,10 +107,7 @@ SecondaryWindow {
         name: 'privacy',
         component: "privacy/PrivacyPage.qml"
       },
-      {
-        name: 'dedicated-ip',
-        component: "dedicated-ip/DedicatedIpPage.qml"
-      },
+      // Removed dedicated-ip page
       {
         name: 'automation',
         component: "automation/AutomationPage.qml"
