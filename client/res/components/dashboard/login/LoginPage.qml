@@ -374,7 +374,8 @@ FocusScope {
             id: backToEmailLink
             text: uiTr("Back to email form")
             anchors.horizontalCenter: parent.horizontalCenter
-            font.pixelSize: 12
+            // The TextLink component doesn't have a direct font property
+            // We can only use its built-in styling
             onClicked: {
               resetLoginPage(modes.email)
             }
