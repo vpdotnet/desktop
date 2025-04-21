@@ -48,7 +48,7 @@ FocusScope {
   property bool emailRequestInProgress: false
   readonly property int pageHeight: 400
   readonly property int maxPageHeight: pageHeight
-  readonly property bool emailLoginFeatureEnabled: Daemon.data.flags.includes("email_login")
+  readonly property bool emailLoginFeatureEnabled: true // Always enabled as this is the only login method now
 
   property real retryAfterTime: 0
 
@@ -95,11 +95,6 @@ FocusScope {
       emailError = errors.none
 
       console.log('Requesting email login for:', emailInput.text);
-      
-      // Check if the email_login flag is enabled
-      if (!Daemon.data.flags.includes("email_login")) {
-        console.warn('Email login feature flag is not enabled! Available flags:', JSON.stringify(Daemon.data.flags));
-      }
       
       Daemon.emailLogin(emailInput.text, function(error) {
         emailRequestInProgress = false
