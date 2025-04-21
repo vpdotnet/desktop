@@ -43,7 +43,7 @@ FocusScope {
   property int shownError: errors.none
   property int emailError: errors.none
   property int tokenError: errors.none
-  property bool hasValidInput: loginInput.text.length > 0 && passwordInput.text.length > 0
+  property bool hasValidInput: emailInput.text.length > 0 && emailInput.acceptableInput
   property bool loginInProgress: false
   property bool emailRequestInProgress: false
   readonly property int pageHeight: 400
@@ -68,17 +68,15 @@ FocusScope {
 
 
 
-  // The login page can be in one of multiple distinct modes:
+  // The login page can be in one of two modes:
   //
-  // - login: For a regular email/password login.
   // - email: Form to allow user to request email login link
   // - token: A spinner which is displayed while the token validation is being performed
   readonly property var modes: {
-    'login': 0,
-    'email': 1,
-    'token': 2,
+    'email': 0,
+    'token': 1,
   }
-  property int mode: 1
+  property int mode: 0 // Default to email mode
 
   function resetLoginPage (newMode) {
     newMode = newMode || modes.email;
@@ -138,19 +136,18 @@ FocusScope {
       Item {
         id: mapContainer
         width: parent.width
-        height: loginContent.y
+        height: Math.min(parent.height * 0.4, 150) // Take up to 40% of height or max 150px
+        anchors.top: parent.top
 
         LocationMap {
           id: mapImage
           anchors.horizontalCenter: parent.horizontalCenter
-          // Size to 130px tall as long as the minimum margin is available (14 px)
+          anchors.centerIn: parent
           height: Math.min(parent.height - 14, 130)
           width: {
             console.info("map size: " + 2*height + "x" + height)
             return 2*height
           }
-          // Distribute the margin mostly on the top - 36:10 top/bottom
-          y: (parent.height - height) * 36 / 46
           mapOpacity: Theme.login.mapOpacity
           markerInnerRadius: 3.5
           markerOuterRadius: 6.5
@@ -161,20 +158,31 @@ FocusScope {
 
       Item {
         id: loginContent
-        anchors.bottom: linkContainer.top
-        anchors.bottomMargin: 20
-        anchors.left: parent.left
+        anchors.centerIn: parent
         width: parent.width
-        height: usernameModeContent.height
+        height: childrenRect.height
+        anchors.verticalCenterOffset: 20 // Move slightly downward from exact center
 
         //
         // "Email Login" page
         //
-        Item {
+        Column {
+          id: emailLoginItem
           visible: mode === modes.email
-          anchors.fill: parent
+          width: parent.width
+          spacing: 20
+          anchors.centerIn: parent
 
           Text {
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: uiTr("Enter your email to log in")
+            color: Theme.dashboard.textColor
+            font.pixelSize: 16
+            font.weight: Font.Medium
+          }
+
+          Text {
+            id: emailErrorText
             color: {
               switch(emailError) {
               case errors.email_sent:
@@ -193,8 +201,8 @@ FocusScope {
                 return ""
               }
             }
-            anchors.top: parent.top
-            anchors.horizontalCenter: parent.horizontalCenter
+            width: parent.width
+            horizontalAlignment: Text.AlignHCenter
             font.pixelSize: Theme.login.errorTextPx
             visible: emailError !== errors.none
           }
@@ -204,8 +212,6 @@ FocusScope {
             errorState: emailError !== errors.none && emailError !== errors.email_sent
             anchors.horizontalCenter: parent.horizontalCenter
             width: 260
-            anchors.top: parent.top
-            anchors.topMargin: 16
             placeholderText: uiTr("Email Address")
             onAccepted: requestEmailLogin()
             validator: RegularExpressionValidator {
@@ -217,7 +223,6 @@ FocusScope {
             id: sendEmailButton
             buttonText: uiTr("SEND EMAIL")
             anchors.horizontalCenter: parent.horizontalCenter
-            anchors.bottom: parent.bottom
             loginEnabled: emailInput.text.length > 0 && emailInput.acceptableInput
             loginWorking: emailRequestInProgress
             onTriggered: requestEmailLogin()
@@ -225,9 +230,11 @@ FocusScope {
         }
 
         // When logging in with a token
-        Item {
+        Column {
           visible: mode === modes.token
-          anchors.fill: parent
+          width: parent.width
+          spacing: 15
+          anchors.centerIn: parent
 
           Image {
             id: spinnerImage
@@ -235,8 +242,6 @@ FocusScope {
             width: 40
             source: Theme.login.buttonSpinnerImage
             anchors.horizontalCenter: parent.horizontalCenter
-            anchors.top: parent.top
-            anchors.topMargin: 40
 
             RotationAnimator {
               target: spinnerImage
@@ -257,9 +262,8 @@ FocusScope {
               else
                 return Theme.dashboard.textColor
             }
-            anchors.top: spinnerImage.bottom
-            anchors.topMargin: 15
-            anchors.horizontalCenter: parent.horizontalCenter
+            width: parent.width
+            horizontalAlignment: Text.AlignHCenter
             text: {
               if(tokenError === errors.none) {
                 return uiTr("Please Wait...")
@@ -275,69 +279,17 @@ FocusScope {
 
       Item {
         id: linkContainer
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 24
+        anchors.top: loginContent.bottom
+        anchors.topMargin: 20
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.leftMargin: 20
         anchors.rightMargin: 20
-
-        height: buyAccount.y + buyAccount.height
-
-        // Normally, put the last two links side-by-side:
-        //
-        // | Log in with Email                   |
-        // | Forgot Password         Buy Account |
-        // +-------------------------------------+
-        //
-        // For long translations, stack the last two links instead
-        //
-        // | Log in with Email translation       |
-        // | Forgot password translation         |
-        // | Buy Account translation             |
-        // +-------------------------------------+
-        //
-        // This layout also ensures that the "login mode" link always gets a full
-        // line; the translations for this line vary quite a bit and we don't want
-        // the layout to change when the login mode changes.
-        readonly property int minimumHorzGap: 4
-        readonly property int stackedGap: 4
-        readonly property bool stackLinks: {
-          return forgotPassword.implicitWidth + buyAccount.implicitWidth + minimumHorzGap > linkContainer.width
-        }
-
-        TextLink {
-          id: loginMode
-          x: 0
-          y: 0
-          visible: false // emailLoginFeatureEnabled
-          text: {
-            if(mode === modes.login)
-              return uiTr("Log in with Email")
-            else if(mode === modes.email)
-              return uiTr("Log in with Username")
-            else if(mode === modes.token)
-              return uiTr("Log in with Username")
-          }
-          onClicked: {
-            if(mode === modes.login)
-              resetLoginPage(modes.email)
-            else if(mode === modes.email)
-              resetLoginPage(modes.login)
-            else if(mode === modes.token)
-              resetLoginPage(modes.login)
-          }
-        }
+        height: buyAccount.height
 
         TextLink {
           id: buyAccount
-          x: linkContainer.stackLinks ? 0 : parent.width - width
-          y: {
-            var y = forgotPassword.y
-            if(linkContainer.stackLinks)
-              y += forgotPassword.height + linkContainer.stackedGap
-            return y
-          }
+          anchors.horizontalCenter: parent.horizontalCenter
           text: uiTr("Buy Account")
           link: BrandHelper.getBrandParam("buyAccountLink")
         }
@@ -411,8 +363,7 @@ FocusScope {
   }
 
   function resetCreds() {
-    loginInput.text = Daemon.account.username
-    passwordInput.text = ""
+    emailInput.text = ""
   }
 
   // If the daemon updates its credentials (mainly for a logout), reset the
