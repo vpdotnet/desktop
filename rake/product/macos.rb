@@ -380,8 +380,18 @@ module PiaMacOS
                 # (required for notarization).  Don't do this when not notarizing
                 # so a dev build can still be made with a self-signed cert (hardened
                 # runtime requires a team ID)
+                entitlements_path = File.absolute_path('extras/mac/entitlements/app.entitlements')
+                puts "Using entitlements file: #{entitlements_path}"
+                
                 if(notarizeBuild)
-                    codesignArgs << '--options=runtime'
+                    # For hardened runtime
+                    codesignArgs << '--options' << 'runtime'
+                    codesignArgs << '--timestamp'
+                    # Add entitlements file for Apple Events
+                    codesignArgs << '--entitlements' << entitlements_path
+                else
+                    # Even without hardened runtime, we still need the entitlements
+                    codesignArgs << '--entitlements' << entitlements_path
                 end
 
                 if ENV['PIA_DEV_ST_APP'] != nil
@@ -403,7 +413,9 @@ module PiaMacOS
                     signDirRecursively codesignArgs, cert, File.join(bundle, 'Contents', subdir), ['PIA Split Tunnel.app']
                 end
                 puts 'Signing the bundle itself'
-                signSingleFile [*codesignArgs, '--force'], cert, bundle
+                # Add the --force flag to the existing arguments
+                bundle_sign_args = [*codesignArgs, '--force']
+                signSingleFile bundle_sign_args, cert, bundle
             end
         end
 
@@ -450,6 +462,10 @@ module PiaMacOS
 
     def self.signDirRecursively(codesignArgs, cert, directory, excludeList)
         # Since we have a lot of small files, we use find to have xargs run codesign in parallel.
-        `find "#{directory}" -type f -print | grep -v -e #{excludeList.map { |item| "'#{item}'" }.join(' -e ')} | xargs -P 8 -I {} codesign #{codesignArgs.join('" "')} --sign "#{cert}" {}`
+        # Properly format the codesign arguments with proper spacing
+        formatted_args = codesignArgs.map { |arg| "\"#{arg}\"" }.join(' ')
+        cmd = "find \"#{directory}\" -type f -print | grep -v -e #{excludeList.map { |item| "'#{item}'" }.join(' -e ')} | xargs -P 8 -I {} codesign #{formatted_args} --sign \"#{cert}\" {}"
+        puts "Running directory signing command: #{cmd}"
+        system(cmd)
     end
 end

@@ -310,7 +310,7 @@ FocusScope {
           id: loginMode
           x: 0
           y: 0
-          visible: false, // emailLoginFeatureEnabled
+          visible: false // emailLoginFeatureEnabled
           text: {
             if(mode === modes.login)
               return uiTr("Log in with Email")

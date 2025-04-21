@@ -1,7 +1,7 @@
 {
     "brandName": "VP.NET",
     "shortName": "VP.NET",
-    "brandIdentifier": "net.vp.app",
+    "brandIdentifier": "net.vp.vpnapp",
     "brandHasClassicTray": true,
     "brandReleaseChannelGA": "release",
     "brandReleaseChannelBeta": "beta",
