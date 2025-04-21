@@ -94,16 +94,36 @@ FocusScope {
       emailRequestInProgress = true
       emailError = errors.none
 
+      console.log('Requesting email login for:', emailInput.text);
+      
+      // Check if the email_login flag is enabled
+      if (!Daemon.data.flags.includes("email_login")) {
+        console.warn('Email login feature flag is not enabled! Available flags:', JSON.stringify(Daemon.data.flags));
+      }
+      
       Daemon.emailLogin(emailInput.text, function(error) {
         emailRequestInProgress = false
         if (error) {
+          console.error('Email token request failed. Error code:', error.code, 'Error message:', error.message);
+          console.log('Full error object:', JSON.stringify(error));
+          
+          // Display a more useful error message based on the error
           switch(error.code) {
+          case NativeError.ApiUnauthorizedError:
+            emailError = errors.auth
+            break
+          case NativeError.ApiRateLimitedError:
+            emailError = errors.rate
+            break
+          case NativeError.ApiNetworkError:
+            emailError = errors.api
+            break
           default:
             emailError = errors.unknown
             break
           }
-          console.warn('Email token request failed:', error);
         } else {
+          console.log('Email login request succeeded. Check your email for the login link.');
           emailError = errors['email_sent']
         }
       });
@@ -195,6 +215,12 @@ FocusScope {
               switch(emailError) {
               case errors.unknown:
                 return uiTr("Something went wrong. Please try again later.")
+              case errors.auth:
+                return uiTr("Authentication error - check your email address")
+              case errors.rate:
+                return uiTr("Too many login attempts. Please try again later.")
+              case errors.api:
+                return uiTr("Network error - Can't reach the server")
               case errors.email_sent:
                 return uiTr("Please check your email.")
               default:
