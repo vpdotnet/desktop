@@ -1454,11 +1454,11 @@ Async<void> Daemon::RPC_emailLogin(const QString &email)
     qDebug () << "Requesting email login for email:" << email;
     
     // Debug API base URLs
-    QStringList apiBaseUrls = _environment.getApiv2()->uris();
+    ApiBaseSequence apiBaseSequence = _environment.getApiv2()->beginAttempt();
     qDebug() << "API v2 base URLs:";
-    for (const QString &url : apiBaseUrls) {
-        qDebug() << "  " << url;
-    }
+    // We'll just get the first available base URI to log it
+    BaseUri baseUri = apiBaseSequence.getNextUri();
+    qDebug() << "  " << baseUri.uri;
     
     qDebug() << "API endpoint: login_link";
     
@@ -1467,17 +1467,17 @@ Async<void> Daemon::RPC_emailLogin(const QString &email)
         { QStringLiteral("email"), email}
     });
     
-    qDebug() << "Request payload:" << QJsonDocument(requestPayload).toJson();
+    qDebug() << "Request payload:" << QJsonDocument(requestPayload).toJson().constData();
     
     return _apiClient.postRetry(*_environment.getApiv2(),
                 QStringLiteral("login_link"),
                 QJsonDocument(requestPayload))
             ->then(this, [this](const QJsonDocument& json) {
         qDebug () << "Email login request success";
-        qDebug () << "Response:" << json.toJson(QJsonDocument::Compact);
+        qDebug () << "Response:" << json.toJson(QJsonDocument::Compact).constData();
     })->except(this, [](const Error& error) {
         qWarning () << "Email login request failed. Error:" << error.errorString();
-        qWarning () << "Error code:" << error.errorCode();
+        qWarning () << "Error code:" << static_cast<int>(error.code());
         throw error;
     });
 }
