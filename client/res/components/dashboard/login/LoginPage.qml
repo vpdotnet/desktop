@@ -101,31 +101,53 @@ FocusScope {
       tokenError = errors.none
       
       console.log('Validating token for email:', lastEmail);
+      console.log('Token length:', tokenInput.text.length);
       
-      Daemon.setToken(tokenInput.text, function(error) {
-        tokenValidationInProgress = false
-        if (error) {
-          console.error('Token validation failed. Error code:', error.code, 'Error message:', error.message);
+      // Add a small delay to ensure UI state is updated before proceeding
+      Qt.callLater(function() {
+        console.log('Calling setToken with token...');
+        
+        Daemon.setToken(tokenInput.text, function(error) {
+          console.log('Token validation callback received');
+          tokenValidationInProgress = false
           
-          // Display a more useful error message based on the error
-          switch(error.code) {
-            case NativeError.ApiUnauthorizedError:
-              tokenError = errors.auth
-              break
-            case NativeError.ApiRateLimitedError:
-              tokenError = errors.rate
-              break
-            case NativeError.ApiNetworkError:
-              tokenError = errors.api
-              break
-            default:
+          if (error) {
+            console.error('Token validation failed. Error code:', error.code, 'Error message:', error.errorString);
+            console.error('Error file:', error.file, 'Error line:', error.line);
+            console.log('Full error object:', JSON.stringify(error));
+            
+            // Display a more useful error message based on the error
+            switch(error.code) {
+              case NativeError.ApiUnauthorizedError:
+                console.error('API unauthorized error - invalid token');
+                tokenError = errors.auth
+                break
+              case NativeError.ApiRateLimitedError:
+                console.error('API rate limited error');
+                tokenError = errors.rate
+                break
+              case NativeError.ApiNetworkError:
+                console.error('API network error - cannot reach server');
+                tokenError = errors.api
+                break
+              default:
+                console.error('Unknown error with code:', error.code);
+                tokenError = errors.unknown
+                break
+            }
+          } else {
+            console.log('Token validation succeeded. User now logged in.');
+            // Check Daemon.account.loggedIn to verify login state
+            console.log('Daemon.account.loggedIn:', Daemon.account.loggedIn);
+            
+            if (Daemon.account.loggedIn) {
+              resetLoginPage(modes.email)
+            } else {
+              console.error('Token validation succeeded but account is not logged in!');
               tokenError = errors.unknown
-              break
+            }
           }
-        } else {
-          console.log('Token validation succeeded. User now logged in.');
-          resetLoginPage(modes.email)
-        }
+        });
       });
     }
   }
@@ -235,7 +257,8 @@ FocusScope {
         id: loginContent
         anchors.centerIn: parent
         width: parent.width
-        height: childrenRect.height
+        // Fix binding loop by using implicitHeight instead of childrenRect.height
+        implicitHeight: Math.max(emailLoginItem.height, tokenLoginItem.height)
         anchors.verticalCenterOffset: 20 // Move slightly downward from exact center
 
         //
