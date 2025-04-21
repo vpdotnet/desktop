@@ -96,6 +96,10 @@ FocusScope {
 
       console.log('Requesting email login for:', emailInput.text);
       
+      // Log Daemon state for debugging
+      console.log('Daemon connected:', Daemon.connected);
+      console.log('Daemon state connectionState:', Daemon.state.connectionState);
+      
       Daemon.emailLogin(emailInput.text, function(error) {
         emailRequestInProgress = false
         if (error) {
@@ -111,9 +115,22 @@ FocusScope {
             emailError = errors.rate
             break
           case NativeError.ApiNetworkError:
+            // Added specific API network error handling
+            emailError = errors.api
+            console.error('Network error details: Unable to reach API server - check connection');
+            // Check daemon connection status
+            console.log('Is daemon connected?', Daemon.connected);
+            break
+          case NativeError.ApiNotFoundError:
+            console.error('API endpoint not found (404) - The login_link endpoint may not exist on the server');
+            emailError = errors.api
+            break
+          case NativeError.ApiServerError:
+            console.error('Server error (5xx) - The server is experiencing issues');
             emailError = errors.api
             break
           default:
+            console.error('Unknown error type, code:', error.code);
             emailError = errors.unknown
             break
           }

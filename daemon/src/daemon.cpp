@@ -1451,18 +1451,33 @@ void Daemon::RPC_notifyClientDeactivate()
 Async<void> Daemon::RPC_emailLogin(const QString &email)
 {
     mustBeAwake(); // If this runs, the system must be awake
-    qDebug () << "Requesting email login";
+    qDebug () << "Requesting email login for email:" << email;
+    
+    // Debug API base URLs
+    QStringList apiBaseUrls = _environment.getApiv2()->uris();
+    qDebug() << "API v2 base URLs:";
+    for (const QString &url : apiBaseUrls) {
+        qDebug() << "  " << url;
+    }
+    
+    qDebug() << "API endpoint: login_link";
+    
+    // Create request payload
+    QJsonObject requestPayload({
+        { QStringLiteral("email"), email}
+    });
+    
+    qDebug() << "Request payload:" << QJsonDocument(requestPayload).toJson();
+    
     return _apiClient.postRetry(*_environment.getApiv2(),
                 QStringLiteral("login_link"),
-                QJsonDocument(
-                    QJsonObject({
-                          { QStringLiteral("email"), email},
-                  })))
+                QJsonDocument(requestPayload))
             ->then(this, [this](const QJsonDocument& json) {
-        Q_UNUSED(json);
         qDebug () << "Email login request success";
+        qDebug () << "Response:" << json.toJson(QJsonDocument::Compact);
     })->except(this, [](const Error& error) {
-        qWarning () << "Email login request failed " << error.errorString();
+        qWarning () << "Email login request failed. Error:" << error.errorString();
+        qWarning () << "Error code:" << error.errorCode();
         throw error;
     });
 }
