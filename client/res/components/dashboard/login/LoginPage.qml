@@ -43,9 +43,11 @@ FocusScope {
   property int shownError: errors.none
   property int emailError: errors.none
   property int tokenError: errors.none
-  property bool hasValidInput: emailInput.text.length > 0 && emailInput.acceptableInput
+  property bool hasValidInput: (mode === modes.email && emailInput.text.length > 0 && emailInput.acceptableInput) 
+                           || (mode === modes.token && tokenInput.text.length > 0)
   property bool loginInProgress: false
   property bool emailRequestInProgress: false
+  property bool tokenValidationInProgress: false
   readonly property int pageHeight: 400
   readonly property int maxPageHeight: pageHeight
   readonly property bool emailLoginFeatureEnabled: true // Always enabled as this is the only login method now
@@ -70,13 +72,14 @@ FocusScope {
 
   // The login page can be in one of two modes:
   //
-  // - email: Form to allow user to request email login link
-  // - token: A spinner which is displayed while the token validation is being performed
+  // - email: Form to allow user to request email login
+  // - token: Form to input the token received via email
   readonly property var modes: {
     'email': 0,
     'token': 1,
   }
   property int mode: 0 // Default to email mode
+  property string lastEmail: "" // Store the last email used to request a token
 
   function resetLoginPage (newMode) {
     newMode = newMode || modes.email;
@@ -85,8 +88,46 @@ FocusScope {
     tokenError = errors.none
     loginInProgress = false
     emailRequestInProgress = false
+    tokenValidationInProgress = false
     emailInput.text = ""
+    tokenInput.text = ""
+    lastEmail = ""
     mode = newMode
+  }
+  
+  function validateToken() {
+    if(tokenInput.text.length > 0 && !tokenValidationInProgress) {
+      tokenValidationInProgress = true
+      tokenError = errors.none
+      
+      console.log('Validating token for email:', lastEmail);
+      
+      Daemon.setToken(tokenInput.text, function(error) {
+        tokenValidationInProgress = false
+        if (error) {
+          console.error('Token validation failed. Error code:', error.code, 'Error message:', error.message);
+          
+          // Display a more useful error message based on the error
+          switch(error.code) {
+            case NativeError.ApiUnauthorizedError:
+              tokenError = errors.auth
+              break
+            case NativeError.ApiRateLimitedError:
+              tokenError = errors.rate
+              break
+            case NativeError.ApiNetworkError:
+              tokenError = errors.api
+              break
+            default:
+              tokenError = errors.unknown
+              break
+          }
+        } else {
+          console.log('Token validation succeeded. User now logged in.');
+          resetLoginPage(modes.email)
+        }
+      });
+    }
   }
 
   function requestEmailLogin () {
@@ -135,8 +176,10 @@ FocusScope {
             break
           }
         } else {
-          console.log('Email login request succeeded. Check your email for the login link.');
-          emailError = errors['email_sent']
+          console.log('Email login request succeeded. Check your email for the login token.');
+          lastEmail = emailInput.text
+          emailError = errors.none
+          mode = modes.token_input
         }
       });
     }
@@ -267,47 +310,73 @@ FocusScope {
           }
         }
 
-        // When logging in with a token
+        // Token input page
         Column {
+          id: tokenLoginItem
           visible: mode === modes.token
           width: parent.width
-          spacing: 15
+          spacing: 20
           anchors.centerIn: parent
 
-          Image {
-            id: spinnerImage
-            height: 40
-            width: 40
-            source: Theme.login.buttonSpinnerImage
+          Text {
             anchors.horizontalCenter: parent.horizontalCenter
-
-            RotationAnimator {
-              target: spinnerImage
-              running: spinnerImage.visible
-              from: 0;
-              to: 360;
-              duration: 1000
-              loops: Animation.Infinite
-            }
-
-            visible: tokenError === errors.none
+            text: lastEmail ? uiTr("Enter the token sent to %1").arg(lastEmail) : uiTr("Enter the token from your email")
+            color: Theme.dashboard.textColor
+            width: parent.width * 0.8
+            horizontalAlignment: Text.AlignHCenter
+            wrapMode: Text.WordWrap
+            font.pixelSize: 16
+            font.weight: Font.Medium
           }
 
           Text {
-            color: {
-              if(tokenError !== errors.none)
-                return Theme.login.errorTextColor
-              else
-                return Theme.dashboard.textColor
+            id: tokenErrorText
+            color: Theme.login.errorTextColor
+            text: {
+              switch(tokenError) {
+                case errors.unknown:
+                  return uiTr("Something went wrong. Please try again.")
+                case errors.auth:
+                  return uiTr("Invalid token. Please check and try again.")
+                case errors.rate:
+                  return uiTr("Too many attempts. Please try again later.")
+                case errors.api:
+                  return uiTr("Network error - Can't reach the server")
+                default:
+                  return ""
+              }
             }
             width: parent.width
             horizontalAlignment: Text.AlignHCenter
-            text: {
-              if(tokenError === errors.none) {
-                return uiTr("Please Wait...")
-              } else {
-                return uiTr("Something went wrong. Please try again later.")
-              }
+            font.pixelSize: Theme.login.errorTextPx
+            visible: tokenError !== errors.none
+          }
+
+          LoginText {
+            id: tokenInput
+            errorState: tokenError !== errors.none
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: 260
+            placeholderText: uiTr("Token")
+            onAccepted: validateToken()
+          }
+
+          LoginButton {
+            id: validateTokenButton
+            buttonText: uiTr("LOG IN")
+            anchors.horizontalCenter: parent.horizontalCenter
+            loginEnabled: tokenInput.text.length > 0
+            loginWorking: tokenValidationInProgress
+            onTriggered: validateToken()
+          }
+          
+          TextLink {
+            id: backToEmailLink
+            text: uiTr("Back to email form")
+            anchors.horizontalCenter: parent.horizontalCenter
+            font.pixelSize: 12
+            onClicked: {
+              resetLoginPage(modes.email)
             }
           }
         }
@@ -417,22 +486,13 @@ FocusScope {
     target: NativeHelpers
     function onUrlOpenRequested(path, query) {
       if(path === "login" && query.token && query.token.length > 0 && !Daemon.account.loggedIn) {
-        mode = modes.token
+        // Auto-fill the token input and switch to token mode
+        tokenInput.text = query.token
         tokenError = errors.none
-
-        Daemon.setToken(query.token, function (error) {
-          if(error) {
-            switch(error.code) {
-            default:
-              tokenError = errors.unknown
-              break
-            }
-          } else {
-            // reset the mode to email mode
-            mode = modes.email
-            tokenError = errors.none;
-          }
-        })
+        mode = modes.token
+        
+        // Optionally, auto-validate the token immediately
+        validateToken()
       }
     }
   }
