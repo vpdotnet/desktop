@@ -104,7 +104,7 @@ QtObject {
     repeat: false
     running: false
     onTriggered: {
-      wChangeLog.activePage = 0 // What's New
+      wChangeLog.activePage = 0 // Changelog
       wChangeLog.open()
     }
   }

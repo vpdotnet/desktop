@@ -198,10 +198,8 @@ ClientInterface::ClientInterface(bool hasExistingSettingsFile,
         qInfo() << "Clean QML cache directory" << cachePath;
         QDir{cachePath}.removeRecursively();
     }
-    // The current What's New content was introduced in 3.1.0, show this if
-    // upgrading from an older version
-    if(previousVersion < SemVersion{3, 1, 0})
-        _state.showWhatsNew(true);
+    // What's New feature is hidden
+    _state.showWhatsNew(false);
 
     // clientMain() already enabled safe mode if necessary, but set the client
     // state and apply the permanent setting if --safe-mode was given.

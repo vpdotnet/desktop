@@ -490,7 +490,7 @@ Item {
     message: uiTr("Private Internet Access was updated.")
     dismissible: true
     links: [{
-      text: uiTr("See what's new"),
+      text: uiTr("See changelog"),
       clicked: function() {
         showChangelog();
       }

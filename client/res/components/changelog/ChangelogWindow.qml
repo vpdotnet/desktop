@@ -44,10 +44,9 @@ DecoratedWindow {
   // SettingsWindow, this window's width is fixed, only the height changes.)
   windowLogicalHeight: 200
 
-  // Default to the actual changelog since we haven't updated What's New in
-  // some time.
-  property int activePage: 1
-  readonly property int pageCount: 2
+  // Default to the changelog view
+  property int activePage: 0
+  readonly property int pageCount: 1
 
   function updateWindowSize() {
     if(contentLoader.item)
@@ -123,7 +122,6 @@ DecoratedWindow {
             model: [
               // Don't actually translate the content of the model; this avoids
               // rebuilding the repeater content when the language changes
-              {label: QT_TR_NOOP("What's new")},
               {label: QT_TR_NOOP("Changelog")}
             ]
 
@@ -203,17 +201,6 @@ DecoratedWindow {
           currentIndex: changelog.activePage
           clip: true
 
-          WindowScrollView {
-            id: newsScrollView
-            contentWidth: newsContent.width
-            contentHeight: newsContent.height
-            label: uiTr("What's new")
-
-            WhatsNewContent {
-              id: newsContent
-              width: 680
-            }
-          }
           WindowScrollView {
             id: changelogScrollView
             contentWidth: changelogText.width
