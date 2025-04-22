@@ -96,10 +96,6 @@ SecondaryWindow {
         component: "general/GeneralPage.qml"
       },
       {
-        name: 'protocol',
-        component: "protocol/ProtocolPage.qml"
-      },
-      {
         name: 'network',
         component: "network/NetworkPage.qml"
       },
@@ -280,7 +276,7 @@ SecondaryWindow {
       settings.showPage('network')
     }
     function onShowConnectionPage() {
-      settings.showPage('protocol')
+      settings.showPage('general')
     }
     function onShowMultihopPage() {
       settings.showPage('multihop')

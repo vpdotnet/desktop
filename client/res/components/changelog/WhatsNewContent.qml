@@ -51,10 +51,8 @@ Rectangle {
       headlineText: uiTr("WireGuard Protocol")
       bodyText: uiTr("It's a new, more efficient protocol that offers better performance, lower CPU usage, and longer battery life.  [[Try it now]]")
       onMessageLinkClicked: {
-        wSettings.showPage('protocol')
-        // The Protocol setting uses a PrivacyInput, so it will show a nice
-        // sliding animation if the protocol changes due to this RPC, which
-        // makes it obvious that we applied a change.
+        wSettings.showPage('general')
+        // Apply the protocol change directly, since we removed the Protocol page
         Daemon.applySettings({"method":"wireguard"})
       }
       sourceImage: Theme.changelog.wireguardImage
