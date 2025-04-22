@@ -259,7 +259,7 @@ void Environment::loadApiBases()
     loadDynamicApiBase(overridePresent, apiOverride, _pModernRegionsListApi,
                 QStringLiteral("modern_regions_list_api"),
                 QStringLiteral("modern regions list API"), QStringLiteral("/"), {
-                    QStringLiteral("https://serverlist.piaservers.net")
+                    QStringLiteral("https://vp.net/_rest/Network/VPN:serverlist?resource=")
                 });
 
     loadApiBase(overridePresent, apiOverride, _pIpAddrApi, QStringLiteral("ip_api"),
