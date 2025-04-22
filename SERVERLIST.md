@@ -2,18 +2,6 @@
 
 This document details how the VPNet client fetches server information and the expected response format for server-side implementation.
 
-## API Endpoint URL
-
-For the VPNet brand, the client will use:
-```
-https://vp.net/_rest/Network/VPN:apiV2?resource=servers/v6
-```
-
-If this endpoint is unavailable, it will fall back to:
-```
-https://serverlist.piaservers.net/vpninfo/servers/v6
-```
-
 ## Response Format
 
 The server response should be a JSON document with the following structure:
