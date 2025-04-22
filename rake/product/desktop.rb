@@ -144,9 +144,9 @@ module PiaDesktop
         jsonFetched = Build.new('json-fetched')
         # These are the assets we need to fetch and the URIs we get them from
         {
-            'modern_shadowsocks.json': 'https://serverlist.piaservers.net/shadow_socks',
-            'modern_servers.json': 'https://serverlist.piaservers.net/vpninfo/servers/v6',
-            'modern_region_meta.json': 'https://serverlist.piaservers.net/vpninfo/regions/v2'
+            'modern_shadowsocks.json': 'https://vp.net/_rest/Network/VPN:serverlist?resource=/shadow_socks',
+            'modern_servers.json': 'https://vp.net/_rest/Network/VPN:serverlist?resource=/vpninfo/servers/v6',
+            'modern_region_meta.json': 'https://vp.net/_rest/Network/VPN:serverlist?resource=/vpninfo/regions/v2'
         }.each do |k, v|
             fetchedFile = jsonFetched.artifact(k.to_s)
             serverDataDir = ENV['SERVER_DATA_DIR']
