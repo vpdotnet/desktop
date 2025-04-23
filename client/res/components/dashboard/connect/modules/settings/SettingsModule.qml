@@ -75,12 +75,6 @@ MovableModule {
       iconResourceType: 'notifications'
     }
 
-    SettingsToggleButton {
-      displayName: uiTr("MACE")
-      setting: DaemonSetting{name: "enableMACE"}
-      iconResourceType: 'mace'
-      settingEnabled: Daemon.settings.overrideDNS === 'pia'
-    }
 
     SettingsToggleButton {
       displayName: uiTr("Port Forwarding")

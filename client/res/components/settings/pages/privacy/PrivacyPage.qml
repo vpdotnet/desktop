@@ -72,15 +72,6 @@ Page {
       }
       desc: uiTr("Prevent leaks by blocking any traffic from going outside the VPN, even when the VPN is turned off.")
     }
-    CheckboxInput {
-      uncheckWhenDisabled: true
-      Layout.columnSpan: 2
-      label: uiTr("PIA MACE")
-      setting: DaemonSetting { name: "enableMACE" }
-      enabled: Daemon.settings.overrideDNS === "pia"
-      warning: enabled ? "" : uiTr("PIA MACE requires using PIA DNS.")
-      desc: uiTr("Block domains used for ads, trackers, and malware.")
-    }
     Item {
       Layout.columnSpan: 2
       Layout.fillHeight: true
