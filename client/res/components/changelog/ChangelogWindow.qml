@@ -66,7 +66,7 @@ DecoratedWindow {
   Component {
     id: contentComponent
       Item {
-      readonly property int contentHeight: newsContent.height + tabBar.height
+      readonly property int contentHeight: changelogText.height + tabBar.height
       onContentHeightChanged: changelog.updateWindowSize()
 
       Rectangle {
