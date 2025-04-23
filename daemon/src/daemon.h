@@ -417,7 +417,6 @@ private:
     // (which should then be cached if successful).  Latencies from DaemonData
     // are used.
     bool rebuildModernLocations(const QJsonObject &regionsObj,
-                                const QJsonArray &shadowsocksObj,
                                 const QJsonObject &metadataObj);
 
     // Rebuild either the legacy or modern locations from the cached data,
@@ -426,7 +425,6 @@ private:
     void rebuildActiveLocations();
 
     // Handle region list results from JsonRefresher
-    void shadowsocksRegionsLoaded(const QJsonDocument &shadowsocksRegionsJsonDoc);
     void modernRegionsLoaded(const QJsonDocument &modernRegionsJsonDoc);
     void modernRegionsMetaLoaded(const QJsonDocument &modernRegionsJsonDoc);
     void publicIpLoaded(const QJsonDocument &publicIpDoc);
@@ -559,7 +557,7 @@ protected:
     LatencyTracker _modernLatencyTracker;
     PortForwarder _portForwarder;
     JsonRefresher _modernRegionRefresher, _modernRegionMetaRefresher,
-                  _shadowsocksRefresher, _publicIpRefresher;
+                  _publicIpRefresher;
     SocksServerThread _socksServer;
     UpdateDownloader _updateDownloader;
     SnoozeTimer _snoozeTimer;
