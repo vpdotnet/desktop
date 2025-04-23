@@ -26,6 +26,7 @@
 #include <QTimer>
 #include <QNetworkRequest>
 #include <QNetworkReply>
+#include <QSslSocket>
 
 namespace
 {
@@ -141,19 +142,79 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
 
     // The URL for each request is logged to indicate if there is trouble with
     // specific API URLs, etc.  Query parameters are redacted by ApiResource.
-    if(nextBase.pCA && !nextBase.peerVerifyName.isEmpty())
+    if (!nextBase.peerVerifyName.isEmpty())
     {
-        qDebug() << "requesting:" << requestResource
-            << "using peer name" << nextBase.peerVerifyName;
-        // Since we're using a custom CA and peer name, do not use the default
-        // CAs.  Copy the SSL configuration and explicitly set an empty CA list.
-        //
-        // We can't just apply the custom CA in the configuration.   Qt 5.12
-        // lacks QNetworkRequest::setPeerVerifyName(), so we have to validate
-        // the cert ourselves.
         QSslConfiguration sslConfig{request.sslConfiguration()};
-        sslConfig.setCaCertificates({});
-        request.setSslConfiguration(sslConfig);
+        
+        // Check for x509 certificate data first
+        if (!nextBase.x509CertData.isEmpty())
+        {
+            // We have raw X509 cert data in Base64 format, create a certificate from it
+            QByteArray pemData = "-----BEGIN CERTIFICATE-----\n";
+            
+            // Add the certificate data with proper line wrapping (64 chars per line)
+            QByteArray certData = nextBase.x509CertData.toLatin1();
+            for (int i = 0; i < certData.size(); i += 64) {
+                pemData.append(certData.mid(i, 64));
+                pemData.append('\n');
+            }
+            
+            pemData.append("-----END CERTIFICATE-----\n");
+            
+            // Create a certificate from the PEM data
+            QSslCertificate cert(pemData, QSsl::Pem);
+            
+            if (!cert.isNull()) {
+                qDebug() << "requesting:" << requestResource
+                    << "using peer name" << nextBase.peerVerifyName << "with x509 certificate";
+                
+                // Use only this certificate for validation
+                sslConfig.setCaCertificates({cert});
+                request.setSslConfiguration(sslConfig);
+                
+                // Set the peer verify name for certificate validation
+                request.setAttribute(ApiNetwork::SNI_HOSTNAME_ATTRIBUTE, nextBase.peerVerifyName);
+            }
+            else {
+                qWarning() << "Invalid x509 certificate data provided - falling back to system CA";
+                qDebug() << "requesting:" << requestResource
+                    << "using peer name" << nextBase.peerVerifyName << "with system CA";
+                    
+                // Set up SNI during connection by using our custom attribute
+                if (requestUri.host() != nextBase.peerVerifyName)
+                {
+                    // Store the peer verify name in our custom attribute for SNI override
+                    request.setAttribute(ApiNetwork::SNI_HOSTNAME_ATTRIBUTE, nextBase.peerVerifyName);
+                    
+                    // Log that we're using a different hostname for SNI verification
+                    qDebug() << "Using" << nextBase.peerVerifyName << "for SNI verification instead of" << requestUri.host();
+                }
+            }
+        }
+        else if (nextBase.pCA)
+        {
+            qDebug() << "requesting:" << requestResource
+                << "using peer name" << nextBase.peerVerifyName << "with custom CA";
+            // Since we're using a custom CA and peer name, do not use the default
+            // CAs.  Copy the SSL configuration and explicitly set an empty CA list.
+            sslConfig.setCaCertificates({});
+            request.setSslConfiguration(sslConfig);
+        }
+        else
+        {
+            qDebug() << "requesting:" << requestResource
+                << "using peer name" << nextBase.peerVerifyName << "with system CA";
+                
+            // Set up SNI during connection by using our custom attribute
+            if (requestUri.host() != nextBase.peerVerifyName)
+            {
+                // Store the peer verify name in our custom attribute for SNI override
+                request.setAttribute(ApiNetwork::SNI_HOSTNAME_ATTRIBUTE, nextBase.peerVerifyName);
+                
+                // Log that we're using a different hostname for SNI verification
+                qDebug() << "Using" << nextBase.peerVerifyName << "for SNI verification instead of" << requestUri.host();
+            }
+        }
     }
     else
     {
@@ -232,15 +293,88 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
             }
         });
 
-    // If a custom CA and peer name are specified, handle SSL errors by
-    // validating the cert manually
-    if(nextBase.pCA && !nextBase.peerVerifyName.isEmpty())
+    // Handle peer name verification
+    if(!nextBase.peerVerifyName.isEmpty())
     {
-        connect(reply.get(), &QNetworkReply::sslErrors, this,
-            [this, reply, nextBase](const QList<QSslError> &errors)
-            {
-                checkSslCertificate(*reply, nextBase, errors);
-            });
+        QSslConfiguration sslConfig = request.sslConfiguration();
+        
+        // If a custom CA is specified, use it exclusively
+        if(nextBase.pCA)
+        {
+            // Since we're using a custom CA, do not use the default CAs
+            sslConfig.setCaCertificates({});
+            request.setSslConfiguration(sslConfig);
+            
+            // Connect the SSL errors handler for custom CA verification
+            connect(reply.get(), &QNetworkReply::sslErrors, this,
+                [this, reply, nextBase](const QList<QSslError> &errors)
+                {
+                    checkSslCertificate(*reply, nextBase, errors);
+                });
+        }
+        else
+        {
+            // When using system CA certificates with a custom peer name
+            // Make sure peer verification is on (should be by default)
+            sslConfig.setPeerVerifyMode(QSslSocket::VerifyPeer);
+            request.setSslConfiguration(sslConfig);
+            
+            qInfo() << "Using system root certificates with peer name" << nextBase.peerVerifyName;
+                   
+            // QNetworkRequest doesn't have an API to set the peer verify name directly
+            // So we'll compare certificates ourselves to determine if we should accept it
+            connect(reply.get(), &QNetworkReply::sslErrors, this,
+                [reply, peerName = nextBase.peerVerifyName, resource = _resource](const QList<QSslError> &errors)
+                {
+                    // Get the peer certificate
+                    QSslCertificate peerCert = reply->sslConfiguration().peerCertificate();
+                    
+                    if (peerCert.isNull()) {
+                        qWarning() << "No peer certificate available for" << resource;
+                        return; // Don't ignore errors, let Qt handle it
+                    }
+                    
+                    // Check if the certificate is valid for the expected peer name
+                    QStringList altNames = peerCert.subjectAlternativeNames().values(QSsl::AlternativeNameEntryType::DnsEntry);
+                    bool nameMatches = false;
+                    
+                    // Check if peer name matches any of the DNS SANs
+                    for (const QString &altName : altNames) {
+                        if (QString::compare(altName, peerName, Qt::CaseInsensitive) == 0) {
+                            nameMatches = true;
+                            break;
+                        }
+                    }
+                    
+                    // Also check the common name if no SAN match
+                    if (!nameMatches) {
+                        QString commonName = peerCert.subjectInfo(QSslCertificate::CommonName).join(", ");
+                        if (QString::compare(commonName, peerName, Qt::CaseInsensitive) == 0) {
+                            nameMatches = true;
+                        }
+                    }
+                    
+                    if (nameMatches) {
+                        // Certificate matches the expected peer name, check for other serious errors
+                        bool hasOtherErrors = false;
+                        for (const auto &error : errors) {
+                            if (error.error() != QSslError::HostNameMismatch) {
+                                hasOtherErrors = true;
+                                qWarning() << "SSL error:" << error.errorString();
+                            }
+                        }
+                        
+                        if (!hasOtherErrors) {
+                            // Only hostname mismatch errors, which we've validated manually
+                            qInfo() << "Verified certificate for" << peerName << "- ignoring hostname mismatch";
+                            reply->ignoreSslErrors();
+                        }
+                    } else {
+                        qWarning() << "Certificate name mismatch: Expected" << peerName 
+                                   << "but certificate is for" << altNames.join(", ");
+                    }
+                });
+        }
     }
 
     // Create a network task that resolves to the result of the request

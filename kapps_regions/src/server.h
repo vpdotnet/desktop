@@ -39,10 +39,21 @@ public:
         assert(_pServiceGroup); // Ensured by caller
     }
 
+    // Constructor with x509 certificate data
+    Server(core::Ipv4Address address, std::string commonName, std::string fqdn,
+           std::shared_ptr<ServiceGroup> pServiceGroup, std::string x509CertData)
+        : _address{address}, _commonName{std::move(commonName)},
+          _fqdn{std::move(fqdn)}, _x509CertData{std::move(x509CertData)},
+          _pServiceGroup{std::move(pServiceGroup)}
+    {
+        assert(_pServiceGroup); // Ensured by caller
+    }
+
 public:
     core::Ipv4Address address() const {return _address;}
     core::StringSlice commonName() const {return _commonName;}
     core::StringSlice fqdn() const {return _fqdn;}
+    core::StringSlice x509CertData() const {return _x509CertData;}
 
     bool hasService(Service service) const;
     Ports servicePorts(Service service) const;
@@ -72,6 +83,7 @@ private:
     core::Ipv4Address _address;
     std::string _commonName;
     std::string _fqdn;
+    std::string _x509CertData;  // Base64 encoded certificate data (optional)
     std::shared_ptr<ServiceGroup> _pServiceGroup;
 };
 

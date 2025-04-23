@@ -254,6 +254,13 @@ auto RegionList::readJsonRegionServers(const nlohmann::json &jsonRegion,
             auto itFqdn = jsonServer.find("fqdn");
             if(itFqdn != jsonServer.end())
                 fqdn = itFqdn->get<std::string>();
+            
+            // x509 certificate data is optional - used for certificate pinning
+            std::string x509CertData;
+            auto itX509 = jsonServer.find("x509");
+            if(itX509 != jsonServer.end())
+                x509CertData = itX509->get<std::string>();
+                
             auto group = jsonServer.at("service_config").get<core::StringSlice>();
 
             // Find the group
@@ -268,8 +275,15 @@ auto RegionList::readJsonRegionServers(const nlohmann::json &jsonRegion,
             // this server.)
             else if(itGroup->second && itGroup->second->hasAnyService())
             {
-                servers.push_back(std::make_shared<Server>(ip, std::move(cn),
-                    std::move(fqdn), itGroup->second));
+                if (!x509CertData.empty()) {
+                    // If we have a certificate, include it
+                    servers.push_back(std::make_shared<Server>(ip, std::move(cn),
+                        std::move(fqdn), itGroup->second, std::move(x509CertData)));
+                } else {
+                    // Otherwise, use the regular constructor
+                    servers.push_back(std::make_shared<Server>(ip, std::move(cn),
+                        std::move(fqdn), itGroup->second));
+                }
             }
         }
         catch(const std::exception &ex)
@@ -429,6 +443,12 @@ auto RegionList::readPiav6JsonRegionServers(const nlohmann::json &jsonRegion,
                 // * "van" is optional:
                 //   - false indicates that the server requires pia-signal-settings
                 //   - true or absent indicates that the servers supports NCP
+                
+                // x509 certificate data is optional - used for certificate pinning
+                std::string x509CertData;
+                auto itX509 = jsonServer.find("x509");
+                if(itX509 != jsonServer.end())
+                    x509CertData = itX509->get<std::string>();
 
                 bool ncp{true};
                 auto itVanProperty = jsonServer.find("van");
@@ -448,8 +468,15 @@ auto RegionList::readPiav6JsonRegionServers(const nlohmann::json &jsonRegion,
                 // this server.)
                 else if(itGroup->second && itGroup->second->hasAnyService())
                 {
-                    servers.push_back(std::make_shared<Server>(ip, std::move(cn),
-                        std::string{}, itGroup->second));
+                    if (!x509CertData.empty()) {
+                        // If we have a certificate, include it
+                        servers.push_back(std::make_shared<Server>(ip, std::move(cn),
+                            std::string{}, itGroup->second, std::move(x509CertData)));
+                    } else {
+                        // Otherwise use the standard constructor
+                        servers.push_back(std::make_shared<Server>(ip, std::move(cn),
+                            std::string{}, itGroup->second));
+                    }
                 }
             }
             catch(const std::exception &ex)

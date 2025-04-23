@@ -71,9 +71,34 @@ PortForwardRequestModern::PortForwardRequestModern(ApiClient &apiClient,
                                                    StateModel &state,
                                                    const Environment &environment)
     : _apiClient{apiClient}, _account{account},
-      _pfApiBase{QStringLiteral("https://") + state.tunnelDeviceRemoteAddress() + QStringLiteral(":19999"),
-                 environment.getRsa4096CA(),
-                 state.connectedServer().isNull() ? QString{} : state.connectedServer()->commonName()},
+      _pfApiBase{[&state]() -> FixedApiBase {
+            QString baseUrl = QStringLiteral("https://") + state.tunnelDeviceRemoteAddress() + QStringLiteral(":19999");
+            auto pServer = state.connectedServer();
+            if (!pServer.isNull()) {
+                QString x509Cert = pServer->x509Certificate();
+                if (!x509Cert.isEmpty()) {
+                    qInfo() << "Using server-provided X509 certificate for port forwarding with hostname" << pServer->commonName();
+                    // Use the server certificate
+                    return FixedApiBase(
+                        baseUrl,
+                        pServer->commonName(),
+                        x509Cert
+                    );
+                } else {
+                    // Use system root certificates with the hostname for verification
+                    return FixedApiBase(
+                        baseUrl,
+                        pServer->commonName(),
+                        QString()
+                    );
+                }
+            } else {
+                // No server information available, just use the base URL
+                return FixedApiBase(
+                    QStringLiteral("https://") + state.tunnelDeviceRemoteAddress() + QStringLiteral(":19999")
+                );
+            }
+        }()},
       _canRetry{true}
 {
     if(!checkAccountPfToken())

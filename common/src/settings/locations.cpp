@@ -39,6 +39,12 @@ bool Server::hasVpnService() const
         hasService(Service::WireGuard);
 }
 
+QString Server::x509Certificate() const
+{
+    // Return the x509 certificate data from the server implementation
+    return qs::toQString(_pImpl->x509CertData());
+}
+
 bool Server::hasPort(Service service, quint16 port) const
 {
     const auto &ports = servicePorts(service);

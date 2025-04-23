@@ -48,6 +48,9 @@ public:
     // Get the shared QNetworkAccessManager.  This object remains valid until
     // static destruction.
     QNetworkAccessManager &getAccessManager() const;
+    
+    // Custom Network Attribute for SNI hostname override
+    static const QNetworkRequest::Attribute SNI_HOSTNAME_ATTRIBUTE;
 
 private:
     // The QNetworkAccessManager used for all connections.  Dynamically

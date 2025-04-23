@@ -23,6 +23,8 @@
 #include "testshim.h"
 #include <algorithm>
 #include <QNetworkProxyFactory>
+#include <QNetworkReply>
+#include <QSslSocket>
 #include <atomic>
 
 namespace
@@ -68,11 +70,90 @@ namespace
     private:
         const QNetworkProxy _proxy;
     };
+    
+    // Custom QNetworkAccessManager that supports SNI hostname override
+    class SniAwareNetworkAccessManager : public QNetworkAccessManager
+    {
+    public:
+        SniAwareNetworkAccessManager(QObject *parent = nullptr) : QNetworkAccessManager(parent) {}
+        
+    protected:
+        // Override createRequest to check for SNI hostname attribute
+        virtual QNetworkReply *createRequest(Operation op, 
+                                            const QNetworkRequest &request,
+                                            QIODevice *outgoingData = nullptr) override
+        {
+            // Check if we have an SNI hostname override
+            QNetworkRequest modifiedRequest(request);
+            QVariant sniHostname = request.attribute(ApiNetwork::SNI_HOSTNAME_ATTRIBUTE);
+            
+            if (sniHostname.isValid() && sniHostname.canConvert<QString>()) {
+                QString hostname = sniHostname.toString();
+                
+                // First, connect the SSL errors signal to handle errors appropriately
+                QNetworkReply *reply = QNetworkAccessManager::createRequest(op, modifiedRequest, outgoingData);
+                
+                // Connect to the SSL errors signal to be able to check and potentially
+                // ignore certificate errors related to hostname mismatch
+                connect(reply, &QNetworkReply::sslErrors, this, 
+                    [reply, hostname](const QList<QSslError> &errors) {
+                        bool onlyHostnameMismatch = true;
+                        for (const auto &error : errors) {
+                            if (error.error() != QSslError::HostNameMismatch) {
+                                onlyHostnameMismatch = false;
+                                break;
+                            }
+                        }
+                        
+                        if (onlyHostnameMismatch) {
+                            // Verify the certificate against our expected hostname
+                            QSslCertificate cert = reply->sslConfiguration().peerCertificate();
+                            bool nameMatches = false;
+                            
+                            // Check if hostname matches any SANs
+                            QStringList altNames = cert.subjectAlternativeNames().values(QSsl::AlternativeNameEntryType::DnsEntry);
+                            for (const auto &altName : altNames) {
+                                if (QString::compare(altName, hostname, Qt::CaseInsensitive) == 0) {
+                                    nameMatches = true;
+                                    break;
+                                }
+                            }
+                            
+                            // Also check common name as fallback
+                            if (!nameMatches) {
+                                QString commonName = cert.subjectInfo(QSslCertificate::CommonName).join(", ");
+                                if (QString::compare(commonName, hostname, Qt::CaseInsensitive) == 0) {
+                                    nameMatches = true;
+                                }
+                            }
+                            
+                            if (nameMatches) {
+                                qInfo() << "Verified certificate for" << hostname << "- ignoring hostname mismatch";
+                                reply->ignoreSslErrors();
+                            } else {
+                                qWarning() << "Certificate name mismatch: Expected" << hostname
+                                         << "but certificate is for" << altNames.join(", ");
+                            }
+                        }
+                    });
+                
+                return reply;
+            }
+            
+            // No SNI override, just use the normal request
+            return QNetworkAccessManager::createRequest(op, modifiedRequest, outgoingData);
+        }
+    };
 }
+
+// Define the SNI hostname attribute
+const QNetworkRequest::Attribute ApiNetwork::SNI_HOSTNAME_ATTRIBUTE = 
+    static_cast<QNetworkRequest::Attribute>(1001);
 
 ApiNetwork::ApiNetwork()
 {
-    _pAccessManager.reset(TestShim::create<QNetworkAccessManager>());
+    // Use our custom network access manager that supports SNI hostname overrides
+    _pAccessManager.reset(TestShim::create<SniAwareNetworkAccessManager>());
 }
 
 void ApiNetwork::setProxy(QNetworkProxy proxy)

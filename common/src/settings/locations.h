@@ -85,6 +85,8 @@ public:
     QString ip() const {return qs::toQString(_pImpl->address().toString());}
     // The server certificate CN to expect
     QString commonName() const {return qs::toQString(_pImpl->commonName());}
+    // The x509 certificate data in Base64 format (if available)
+    QString x509Certificate() const;
 
     // These fields identify the available ports on this server for each
     // possible service.  If a server doesn't have a particular service, that

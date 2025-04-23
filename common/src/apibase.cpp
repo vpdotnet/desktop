@@ -84,6 +84,42 @@ unsigned FixedApiBase::getAttemptCount(unsigned attemptsPerBase)
     return _pData->getUriCount() * attemptsPerBase;
 }
 
+std::shared_ptr<PrivateCA> FixedApiBase::createCAFromX509(const QString &x509CertData)
+{
+    if (x509CertData.isEmpty()) {
+        return nullptr;
+    }
+    
+    // Convert the Base64 certificate to PEM format
+    QByteArray pemData = "-----BEGIN CERTIFICATE-----\n";
+    
+    // Add the certificate data with proper line wrapping (64 chars per line)
+    QByteArray certData = x509CertData.toLatin1();
+    for (int i = 0; i < certData.size(); i += 64) {
+        pemData.append(certData.mid(i, 64));
+        pemData.append('\n');
+    }
+    
+    pemData.append("-----END CERTIFICATE-----\n");
+    
+    // Create a PrivateCA from the PEM data
+    try {
+        return std::make_shared<PrivateCA>(pemData);
+    } catch (...) {
+        qWarning() << "Failed to create PrivateCA from X509 certificate data";
+        return nullptr;
+    }
+}
+
+FixedApiBase::FixedApiBase(const QString &uri, const QString &peerVerifyName, const QString &x509CertData)
+    : _pData{new ApiBaseData{uri, createCAFromX509(x509CertData), peerVerifyName}}
+{
+    // If creating the CA failed, log a warning
+    if (!x509CertData.isEmpty() && !_pData->getUri(0).pCA) {
+        qWarning() << "Failed to create CA from provided X509 data. Will use system certificates instead.";
+    }
+}
+
 ApiBaseSequence::ApiBaseSequence(QSharedPointer<ApiBaseData> pData)
     : _pData{std::move(pData)}
 {
