@@ -121,7 +121,7 @@ ApiBaseSequence MetaServiceApiBase::beginAttempt()
                 .arg(pBaseServer->ip())
                 .arg(basePort)
                 .arg(_dynamicBasePath);
-            bases.push_back({uri, _pDynamicBaseCA, pBaseServer->commonName(), QString()});
+            bases.push_back({uri, _pDynamicBaseCA, pBaseServer->commonName(), pBaseServer->x509Certificate()});
         }
     };
 
