@@ -570,3 +570,30 @@ bool genCurve25519KeyPair(unsigned char *pPubkey, unsigned char *pPrivkey)
 
     return true;
 }
+
+std::shared_ptr<PrivateCA> createPrivateCAFromX509(const QString &x509CertData)
+{
+    if (x509CertData.isEmpty()) {
+        return nullptr;
+    }
+    
+    // Convert the Base64 certificate to PEM format
+    QByteArray pemData = "-----BEGIN CERTIFICATE-----\n";
+    
+    // Add the certificate data with proper line wrapping (64 chars per line)
+    QByteArray certData = x509CertData.toLatin1();
+    for (int i = 0; i < certData.size(); i += 64) {
+        pemData.append(certData.mid(i, 64));
+        pemData.append('\n');
+    }
+    
+    pemData.append("-----END CERTIFICATE-----\n");
+    
+    // Create a PrivateCA from the PEM data
+    try {
+        return std::make_shared<PrivateCA>(pemData);
+    } catch (...) {
+        qWarning() << "Failed to create PrivateCA from X509 certificate data";
+        return nullptr;
+    }
+}

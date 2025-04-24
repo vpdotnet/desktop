@@ -150,39 +150,7 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
         // This sets up SNI and hostname verification correctly
         request.setPeerVerifyName(nextBase.peerVerifyName);
         
-        // Check for x509 certificate data
-        if (!nextBase.x509CertData.isEmpty())
-        {
-            // We have raw X509 cert data in Base64 format, create a certificate from it
-            QByteArray pemData = "-----BEGIN CERTIFICATE-----\n";
-            
-            // Add the certificate data with proper line wrapping (64 chars per line)
-            QByteArray certData = nextBase.x509CertData.toLatin1();
-            for (int i = 0; i < certData.size(); i += 64) {
-                pemData.append(certData.mid(i, 64));
-                pemData.append('\n');
-            }
-            
-            pemData.append("-----END CERTIFICATE-----\n");
-            
-            // Create a certificate from the PEM data
-            QSslCertificate cert(pemData, QSsl::Pem);
-            
-            if (!cert.isNull()) {
-                qDebug() << "requesting:" << requestResource
-                    << "using peer name" << nextBase.peerVerifyName << "with x509 certificate";
-                
-                // Use only this certificate for validation
-                sslConfig.setCaCertificates({cert});
-                request.setSslConfiguration(sslConfig);
-            }
-            else {
-                qWarning() << "Invalid x509 certificate data provided - falling back to system CA";
-                qDebug() << "requesting:" << requestResource
-                    << "using peer name" << nextBase.peerVerifyName << "with system CA";
-            }
-        }
-        else if (nextBase.pCA)
+        if (nextBase.pCA)
         {
             qDebug() << "requesting:" << requestResource
                 << "using peer name" << nextBase.peerVerifyName << "with custom CA";

@@ -63,4 +63,8 @@ enum
 };
 bool COMMON_EXPORT genCurve25519KeyPair(unsigned char *pPubkey, unsigned char *pPrivkey);
 
+// Helper function to convert raw X509 Base64 certificate data to a PrivateCA
+// Returns nullptr if the certificate data is invalid
+std::shared_ptr<PrivateCA> COMMON_EXPORT createPrivateCAFromX509(const QString &x509CertData);
+
 #endif // OPENSSL_H

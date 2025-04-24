@@ -75,23 +75,15 @@ PortForwardRequestModern::PortForwardRequestModern(ApiClient &apiClient,
             QString baseUrl = QStringLiteral("https://") + state.tunnelDeviceRemoteAddress() + QStringLiteral(":19999");
             auto pServer = state.connectedServer();
             if (!pServer.isNull()) {
-                QString x509Cert = pServer->x509Certificate();
-                if (!x509Cert.isEmpty()) {
+                // Try to create a PrivateCA from the server's x509 certificate
+                std::shared_ptr<PrivateCA> pServerCA = createPrivateCAFromX509(pServer->x509Certificate());
+                
+                if (pServerCA) {
                     qInfo() << "Using server-provided X509 certificate for port forwarding with hostname" << pServer->commonName();
-                    // Use the server certificate
-                    return FixedApiBase(
-                        baseUrl,
-                        pServer->commonName(),
-                        x509Cert
-                    );
-                } else {
-                    // Use system root certificates with the hostname for verification
-                    return FixedApiBase(
-                        baseUrl,
-                        pServer->commonName(),
-                        QString()
-                    );
                 }
+                
+                // Use either the server CA or system certificates (if pServerCA is null)
+                return FixedApiBase(baseUrl, pServerCA, pServer->commonName());
             } else {
                 // No server information available, just use the base URL
                 return FixedApiBase(

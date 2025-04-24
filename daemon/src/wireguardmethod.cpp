@@ -1268,29 +1268,17 @@ void WireguardMethod::run(const ConnectionConfig &connectingConfig,
     }
     // Don't do DNS resolution while connecting - specify the IP address in the
     // request, and use the host name to verify the certificate.
-    FixedApiBase hostAuthBase([&]() -> FixedApiBase {
-        // Check if the server has an x509 certificate provided
-        QString x509Cert = vpnServer.x509Certificate();
-        if (!x509Cert.isEmpty()) {
-            // Convert the raw base64 certificate data to a PrivateCA
-            QByteArray pemData = "-----BEGIN CERTIFICATE-----\n";
-            QByteArray certData = x509Cert.toLatin1();
-            for (int i = 0; i < certData.size(); i += 64) {
-                pemData.append(certData.mid(i, 64));
-                pemData.append('\n');
-            }
-            pemData.append("-----END CERTIFICATE-----\n");
-            
-            std::shared_ptr<PrivateCA> pServerCA = std::make_shared<PrivateCA>(pemData);
-            
-            qInfo() << "Using server-provided X509 certificate for" << certCommonName;
-            // Use the provided certificate as the CA for this connection
-            return FixedApiBase(authHost, pServerCA, certCommonName);
-        } else {
-            // Use system root certificates instead of bundled RSA 4096 CA
-            return FixedApiBase(authHost, nullptr, certCommonName);
-        }
-    }());
+    // Check if the server has an x509 certificate provided
+    std::shared_ptr<PrivateCA> pServerCA = createPrivateCAFromX509(vpnServer.x509Certificate());
+    
+    if (pServerCA) {
+        qInfo() << "Using server-provided X509 certificate for" << certCommonName;
+    } else {
+        qInfo() << "Using system root certificates for" << certCommonName;
+    }
+    
+    // Create the FixedApiBase with either the server CA or system certificates
+    FixedApiBase hostAuthBase(authHost, pServerCA, certCommonName);
 
     _pAuthRequest = g_daemon->apiClient().getRetry(hostAuthBase, resource, authHeader)
         ->then(this, [this, clientKeypair=std::move(clientKeypair)](const QJsonDocument &result)

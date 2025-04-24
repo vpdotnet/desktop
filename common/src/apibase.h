@@ -59,10 +59,6 @@ struct COMMON_EXPORT BaseUri
     // The peer verify name to use when checking the host's certificate.
     // Requires pCA, and must be set if pCA is set.
     QString peerVerifyName;
-    
-    // Optional raw X509 certificate data in Base64 format (without BEGIN/END markers or linebreaks)
-    // When provided, this will be used to create a custom CA for certificate verification
-    QString x509CertData;
 };
 
 // Data used by both ApiBase and ApiBaseSequence - the actual base URIs and the
@@ -78,8 +74,6 @@ public:
     // Create ApiBaseData with one host, with an optional CA and peer name.
     ApiBaseData(const QString &uri, std::shared_ptr<PrivateCA> pCA,
                 const QString &peerVerifyName);
-    // Create ApiBaseData with a single BaseUri
-    ApiBaseData(const BaseUri &baseUri);
     // Create an ApiBaseData with any combination of base URIs
     ApiBaseData(std::vector<BaseUri> baseUris);
 
@@ -152,12 +146,6 @@ class COMMON_EXPORT FixedApiBase : public ApiBase
 public:
     template<class... Arg>
     FixedApiBase(Arg &&... args) : _pData{new ApiBaseData{std::forward<Arg>(args)...}} {}
-    
-    // Constructor that accepts a URI, optional peer name, and an X509 certificate in Base64 format
-    FixedApiBase(const QString &uri, const QString &peerVerifyName, const QString &x509CertData);
-    
-    // Helper method to create a PrivateCA from raw X509 certificate data
-    static std::shared_ptr<PrivateCA> createCAFromX509(const QString &x509CertData);
 
 public:
     virtual ApiBaseSequence beginAttempt() override;
