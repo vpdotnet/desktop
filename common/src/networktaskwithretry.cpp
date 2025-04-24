@@ -146,7 +146,11 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
     {
         QSslConfiguration sslConfig{request.sslConfiguration()};
         
-        // Check for x509 certificate data first
+        // Set peer verify name for all requests with a peer name
+        // This sets up SNI and hostname verification correctly
+        request.setPeerVerifyName(nextBase.peerVerifyName);
+        
+        // Check for x509 certificate data
         if (!nextBase.x509CertData.isEmpty())
         {
             // We have raw X509 cert data in Base64 format, create a certificate from it
@@ -171,24 +175,11 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
                 // Use only this certificate for validation
                 sslConfig.setCaCertificates({cert});
                 request.setSslConfiguration(sslConfig);
-                
-                // Set the peer verify name for certificate validation
-                request.setAttribute(ApiNetwork::SNI_HOSTNAME_ATTRIBUTE, nextBase.peerVerifyName);
             }
             else {
                 qWarning() << "Invalid x509 certificate data provided - falling back to system CA";
                 qDebug() << "requesting:" << requestResource
                     << "using peer name" << nextBase.peerVerifyName << "with system CA";
-                    
-                // Set up SNI during connection by using our custom attribute
-                if (requestUri.host() != nextBase.peerVerifyName)
-                {
-                    // Store the peer verify name in our custom attribute for SNI override
-                    request.setAttribute(ApiNetwork::SNI_HOSTNAME_ATTRIBUTE, nextBase.peerVerifyName);
-                    
-                    // Log that we're using a different hostname for SNI verification
-                    qDebug() << "Using" << nextBase.peerVerifyName << "for SNI verification instead of" << requestUri.host();
-                }
             }
         }
         else if (nextBase.pCA)
@@ -196,7 +187,7 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
             qDebug() << "requesting:" << requestResource
                 << "using peer name" << nextBase.peerVerifyName << "with custom CA";
             // Since we're using a custom CA and peer name, do not use the default
-            // CAs.  Copy the SSL configuration and explicitly set an empty CA list.
+            // CAs. Copy the SSL configuration and explicitly set an empty CA list.
             sslConfig.setCaCertificates({});
             request.setSslConfiguration(sslConfig);
         }
@@ -204,16 +195,6 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
         {
             qDebug() << "requesting:" << requestResource
                 << "using peer name" << nextBase.peerVerifyName << "with system CA";
-                
-            // Set up SNI during connection by using our custom attribute
-            if (requestUri.host() != nextBase.peerVerifyName)
-            {
-                // Store the peer verify name in our custom attribute for SNI override
-                request.setAttribute(ApiNetwork::SNI_HOSTNAME_ATTRIBUTE, nextBase.peerVerifyName);
-                
-                // Log that we're using a different hostname for SNI verification
-                qDebug() << "Using" << nextBase.peerVerifyName << "for SNI verification instead of" << requestUri.host();
-            }
         }
     }
     else
