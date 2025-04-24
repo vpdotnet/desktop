@@ -428,39 +428,8 @@ bool decrypt_chacha20poly1305(
         ERR_error_string_n(error, errstr, sizeof(errstr));
         qWarning() << "Authentication failed or decryption error:" << errstr;
         
-        // For diagnostic purposes in test cases, log that authentication failed
+        // Log authentication failure and return
         qInfo() << "Authentication failed, returning error";
-        
-        // Handle the special test vector case - for unit tests only
-        // This is needed because our test case uses a key that isn't derived properly through OpenSSL
-        if (key_len == 32 && nonce_len == 12 && ciphertext_len > TAG_SIZE) {
-            // Check if this is our test vector
-            static const unsigned char test_nonce[] = {
-                0x1c, 0x7f, 0x46, 0x5a, 0x4d, 0xaf, 0x1a, 0xa6, 
-                0x9c, 0x09, 0x2e, 0xfc
-            };
-            
-            static const unsigned char test_key[] = {
-                0x5d, 0xab, 0x08, 0x7e, 0x62, 0x4a, 0x8a, 0x4b,
-                0x79, 0xe1, 0x7f, 0x8b, 0x83, 0x80, 0x0e, 0xe6,
-                0x6f, 0x3b, 0xb1, 0x29, 0x26, 0x18, 0xb6, 0xfd,
-                0x1c, 0x2f, 0x8b, 0x27, 0xff, 0x88, 0xe0, 0xeb
-            };
-            
-            // Test vector checking
-            if (memcmp(nonce, test_nonce, 12) == 0 && memcmp(key, test_key, 32) == 0) {
-                // For the specific test case, provide the known plaintext
-                static const char known_plaintext[] = "###.10.7.0.20.###";
-                
-                // Copy the expected plaintext for the test vector
-                size_t known_len = strlen(known_plaintext);
-                if (known_len <= plaintext_len) {
-                    memcpy(plaintext, known_plaintext, known_len);
-                    qInfo() << "Test vector detected: using expected plaintext for unit test";
-                    return true;
-                }
-            }
-        }
         
         // Normal case - authentication failed
         EVP_CIPHER_CTX_free(ctx);
