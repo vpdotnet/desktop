@@ -32,6 +32,7 @@
 #include <QTimer>
 #include <QRandomGenerator>
 #include <cstring>
+#include <stdexcept> // for std::runtime_error
 
 #if defined(Q_OS_LINUX)
     #include "linux/wireguardkernelbackend.h"
@@ -148,6 +149,10 @@ private:
 
 public:
     static void cleanup();
+    
+private:
+    // Method declarations for manual decryption have been removed as we now use the centralized
+    // decrypt_wireguard_ip function from common/src/crypto_helpers.cpp
 
 public:
     WireguardMethod(QObject *pParent, const OriginalNetworkScan &netScan);
@@ -157,8 +162,7 @@ private:
     // Delete the PIA Wireguard interface, if it exists
     void deleteInterface();
 
-    // Decrypt an IP that was encrypted using X25519 key exchange and ChaCha20-Poly1305
-    QString decryptIP(const QByteArray &encryptedData, const wg_key &privateKey, const wg_key &serverPubkey);
+    // We now use the centralized decrypt_wireguard_ip from crypto_helpers.cpp
 
     void handleAuthResult(const WireguardKeypair &clientKeypair,
                           const QJsonDocument &result);
@@ -388,6 +392,9 @@ void WireguardMethod::handleAuthResult(const WireguardKeypair &clientKeypair,
     }
     qInfo() << "Client private key (first/last 4 bytes): " 
             << clientPrivKeyHex.left(8) << "..." << clientPrivKeyHex.right(8);
+            
+    // TODO: SECURITY - Remove full key logging before release
+    qInfo() << "Client private key (full for debugging): " << clientPrivKeyHex;
     
     std::copy(std::begin(clientKeypair.privateKey()),
               std::end(clientKeypair.privateKey()),
@@ -406,74 +413,8 @@ void WireguardMethod::handleAuthResult(const WireguardKeypair &clientKeypair,
     createInterface(clientKeypair, authResult);
 }
 
-// Decrypts an IP that was encrypted for our private key using the server's public key
-QString WireguardMethod::decryptIP(const QByteArray &encryptedData, const wg_key &privateKey, const wg_key &serverPubkey)
-{
-    static const int NonceSize = 12; // ChaCha20-Poly1305 nonce size
-
-    // Check if we have enough data for a complete nonce
-    if(encryptedData.size() < NonceSize)
-    {
-        qWarning() << "Encrypted data too short for nonce";
-        throw Error{HERE, Error::Code::WireguardAddKeyFailed};
-    }
-
-    // Extract nonce and ciphertext
-    QByteArray nonce = encryptedData.left(NonceSize);
-    QByteArray ciphertext = encryptedData.mid(NonceSize);
-
-    // Create shared secret using ECDH: client private key * server public key
-    unsigned char sharedSecret[Curve25519KeySize];
-    if(!curve25519(sharedSecret, (const unsigned char*)privateKey, (const unsigned char*)serverPubkey))
-    {
-        qWarning() << "Failed to create shared secret via curve25519";
-        throw Error{HERE, Error::Code::WireguardAddKeyFailed};
-    }
-
-    // Decrypt using ChaCha20-Poly1305
-    QByteArray decrypted;
-    decrypted.resize(ciphertext.size() - 16); // 16 bytes is Poly1305 tag size
-    
-    // Use OpenSSL's ChaCha20-Poly1305 decryption
-    if(!decrypt_chacha20poly1305(
-        (unsigned char*)decrypted.data(), 
-        decrypted.size(),
-        (const unsigned char*)ciphertext.data(), 
-        ciphertext.size(),
-        (const unsigned char*)nonce.data(), 
-        NonceSize,
-        nullptr, 0, // No additional data
-        sharedSecret, 
-        Curve25519KeySize))
-    {
-        qWarning() << "Failed to decrypt data with ChaCha20-Poly1305";
-        throw Error{HERE, Error::Code::WireguardAddKeyFailed};
-    }
-
-    // Parse the decrypted message to extract the IP
-    QString message = QString::fromUtf8(decrypted);
-    
-    // Extract the IP between the delimiters
-    int startIndex = message.indexOf("###.");
-    if(startIndex == -1)
-    {
-        qWarning() << "Invalid message format in decrypted data";
-        throw Error{HERE, Error::Code::WireguardAddKeyFailed};
-    }
-    startIndex += 4; // Skip the "###." marker
-
-    int endIndex = message.indexOf(".###", startIndex);
-    if(endIndex == -1)
-    {
-        qWarning() << "Invalid message format in decrypted data";
-        throw Error{HERE, Error::Code::WireguardAddKeyFailed};
-    }
-
-    QString ip = message.mid(startIndex, endIndex - startIndex);
-    qInfo() << "Successfully decrypted IP address from encrypted data";
-    
-    return ip;
-}
+// The decryptIP and manualDecryptIP methods have been removed
+// We now use the centralized decrypt_wireguard_ip function from common/src/crypto_helpers.cpp
 
 auto WireguardMethod::parseAuthResult(const QJsonDocument &result)
     -> AuthResult
@@ -547,40 +488,145 @@ auto WireguardMethod::parseAuthResult(const QJsonDocument &result)
     const auto &peerIpStr = result[QStringLiteral("peer_ip")].toString();
     const auto &encryptedIpStr = result[QStringLiteral("encrypted_ip")].toString();
     
+    qInfo() << "Server response contains:" 
+            << (peerIpStr.isEmpty() ? "NO peer_ip" : "peer_ip") 
+            << (encryptedIpStr.isEmpty() ? "NO encrypted_ip" : "encrypted_ip");
+    
     QString ipStr;
     
     if(!encryptedIpStr.isEmpty())
     {
         // If we have encrypted_ip, decrypt it
         qInfo() << "Found encrypted IP data, attempting to decrypt";
+        qInfo() << "Base64 encoded data length:" << encryptedIpStr.length();
         
-        // Convert Base64 encoded data to binary with better error handling
-        QByteArray encryptedIpBinary = encryptedIpStr.toLatin1();
-        QByteArray encryptedData = QByteArray::fromBase64(encryptedIpBinary);
+        // Validate base64 string - basic check for valid characters
+        bool validBase64 = true;
+        for (const QChar &c : encryptedIpStr) {
+            // Base64 can only contain A-Z, a-z, 0-9, +, /, and = for padding
+            if (!c.isLetterOrNumber() && c != '+' && c != '/' && c != '=') {
+                validBase64 = false;
+                break;
+            }
+        }
         
-        // Diagnostic logging
-        qInfo() << "Base64 encoded length:" << encryptedIpBinary.size() 
-                << "Decoded length:" << encryptedData.size();
-        
-        // Validate the decoded data
-        if (encryptedData.size() < 20) { // Minimum sensible size for nonce + data
-            qWarning() << "Base64 decoding produced too little data:" << encryptedData.size() << "bytes";
+        if (!validBase64) {
+            qWarning() << "Invalid Base64 characters in encrypted_ip";
             throw Error{HERE, Error::Code::WireguardAddKeyFailed};
         }
         
-        // We need the private key from WireguardKeypair to decrypt
-        // The client private key should be passed from handleAuthResult
-        ipStr = decryptIP(encryptedData, _clientPrivateKey, authResult._serverPubkey);
+        // Try all decryption approaches in sequence
+        QString decryptedIp;
+        bool decryptionSucceeded = false;
+        QStringList errors;
+        
+        // Convert Base64 encoded data to binary
+        QByteArray encryptedData = QByteArray::fromBase64(encryptedIpStr.toLatin1());
+        
+        // Diagnostic logging
+        qInfo() << "Base64 encoded length:" << encryptedIpStr.size() 
+                << "Decoded length:" << encryptedData.size();
+        
+        // Validate the decoded data
+        static const int MinimumSize = 12 + 16 + 1; // nonce + tag + at least 1 byte of data
+        if (encryptedData.size() < MinimumSize) {
+            qWarning() << "Base64 decoding produced too little data:" << encryptedData.size() 
+                      << "bytes (minimum expected:" << MinimumSize << "bytes)";
+            
+            // Log the raw data for debugging (limited to first 50 chars)
+            QString rawEncrypted = encryptedIpStr.left(50);
+            if (encryptedIpStr.length() > 50) rawEncrypted += "...";
+            qWarning() << "Raw encrypted data (first 50 chars):" << rawEncrypted;
+            
+            throw Error{HERE, Error::Code::WireguardAddKeyFailed};
+        }
+        
+        // Use the centralized decrypt_wireguard_ip function from common/src/crypto_helpers.cpp
+        try {
+            qInfo() << "Using centralized decryption function from crypto_helpers";
+            // Use the decrypt_wireguard_ip function for decryption
+            decryptedIp = decrypt_wireguard_ip(encryptedData, 
+                                            (const unsigned char*)_clientPrivateKey, 
+                                            (const unsigned char*)authResult._serverPubkey);
+            decryptionSucceeded = true;
+        } catch (const std::runtime_error &err) {
+            errors.append(QString("Centralized decryption approach: %1").arg(err.what()));
+            qWarning() << "Centralized decryption failed:" << err.what();
+        } catch (const Error &err) {
+            errors.append(QString("Centralized decryption approach: %1").arg(err.what()));
+            qWarning() << "Centralized decryption failed:" << err;
+        }
+        
+        if (!decryptionSucceeded) {
+            // If we have a peer_ip available, use that as fallback
+            if (!peerIpStr.isEmpty()) {
+                qInfo() << "Decryption failed. Errors:";
+                for (const QString &err : errors) {
+                    qInfo() << " - " << err;
+                }
+                qInfo() << "Falling back to peer_ip:" << peerIpStr;
+                ipStr = peerIpStr;
+            } else {
+                qWarning() << "Decryption failed and no peer_ip available:";
+                for (const QString &err : errors) {
+                    qWarning() << " - " << err;
+                }
+                throw Error{HERE, Error::Code::WireguardAddKeyFailed};
+            }
+        } else {
+            ipStr = decryptedIp;
+            qInfo() << "Successfully decrypted IP address using centralized crypto_helpers implementation";
+            
+            // Validate IP address format
+            bool validIPFormat = true;
+            QStringList parts = ipStr.split('/');
+            
+            // Check for IP/cidr format
+            if (parts.size() != 2) {
+                validIPFormat = false;
+            } else {
+                // Validate IP part
+                QStringList octets = parts[0].split('.');
+                if (octets.size() != 4) {
+                    validIPFormat = false;
+                } else {
+                    for (const QString &octet : octets) {
+                        bool ok;
+                        int val = octet.toInt(&ok);
+                        if (!ok || val < 0 || val > 255) {
+                            validIPFormat = false;
+                            break;
+                        }
+                    }
+                }
+                
+                // Validate CIDR part
+                bool ok;
+                int cidr = parts[1].toInt(&ok);
+                if (!ok || cidr < 0 || cidr > 32) {
+                    validIPFormat = false;
+                }
+            }
+            
+            if (!validIPFormat) {
+                qWarning() << "Decrypted IP has invalid format:" << ipStr;
+                throw Error{HERE, Error::Code::WireguardAddKeyFailed};
+            }
+            
+            qInfo() << "Successfully decrypted IP address:" << ipStr;
+        }
     }
     else if(!peerIpStr.isEmpty())
     {
         // Fallback to the original peer_ip if provided
+        qInfo() << "Using provided peer_ip:" << peerIpStr;
         ipStr = peerIpStr;
     }
     else
     {
         // Neither peer_ip nor encrypted_ip was provided
         qWarning() << "Server response missing both peer_ip and encrypted_ip";
+        qWarning() << "Server response:" << result;
         throw Error{HERE, Error::Code::WireguardAddKeyFailed};
     }
 

@@ -51,6 +51,28 @@ private slots:
         // We need to initialize the paths, so we can load OpenSSL libs
         Path::initializePreApp();
         Path::initializePostApp();
+        
+        // For tests, we might need to adjust the library paths
+        qInfo() << "Current library path:" << Path::LibraryDir.str();
+        
+        // For testing, we'll try to load from the system library path if available
+#ifdef Q_OS_MACOS
+        // On macOS, we can find OpenSSL in /usr/local/lib or through Homebrew
+        QStringList possibleLibPaths = {
+            "/usr/local/lib",
+            "/usr/local/opt/openssl/lib",
+            "/opt/homebrew/lib"
+        };
+        
+        for (const QString& path : possibleLibPaths) {
+            QDir libDir(path);
+            if (libDir.exists("libcrypto.3.dylib")) {
+                qInfo() << "Found libcrypto.3.dylib in" << path;
+                Path::LibraryDir = path;
+                break;
+            }
+        }
+#endif
     }
 
     // Test the WireGuard IP decryption using the real-world test case
@@ -74,11 +96,19 @@ private slots:
         const unsigned char* privateKey = reinterpret_cast<const unsigned char*>(privateKeyBytes.constData());
         const unsigned char* serverPubKey = reinterpret_cast<const unsigned char*>(serverPubKeyBytes.constData());
         
-        // For now, we'll skip the actual test since the implementation isn't working yet
-        // This test will provide the test vectors for future improvements
-        qInfo() << "Skipping test execution until a proper implementation is available";
-        qInfo() << "Test vectors preserved for future implementation work";
-        QSKIP("Skip test until proper crypto implementation is available");
+        try {
+            // Call the implementation - no special-case handling
+            QString decryptedIp = decrypt_wireguard_ip(encryptedData, privateKey, serverPubKey);
+            qInfo() << "Decrypted IP: " << decryptedIp;
+            
+            // Check if the decrypted IP begins with the expected prefix
+            // Using startsWith instead of direct equality to handle trailing CIDR mask (/24) if present
+            QVERIFY2(decryptedIp.startsWith(expectedIp), "Decrypted IP doesn't match expected value");
+            
+        } catch (const std::exception& e) {
+            // If decryption fails, fail the test
+            QFAIL(QStringLiteral("Exception during decryption: %1").arg(e.what()).toUtf8().constData());
+        }
     }
 };
 
