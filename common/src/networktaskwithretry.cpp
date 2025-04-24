@@ -288,7 +288,9 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
         qInfo() << "  Response Headers:";
         const auto &headers = reply->rawHeaderPairs();
         for (const auto &header : headers) {
-            qInfo() << "    " << header.first << ":" << header.second;
+            QString name = QString::fromUtf8(header.first);
+            QString value = QString::fromUtf8(header.second);
+            qInfo() << "    " << name << ":" << value;
         }
         
         // Try to log response body for error diagnosis (even for errors)
@@ -299,7 +301,16 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
             // Create a buffer for the data
             responseBody = reply->peek(reply->bytesAvailable());
             if (!responseBody.isEmpty()) {
-                qInfo() << "  Response Body:" << responseBody;
+                // Convert to QString for logging, with fallback for non-text data
+                QString bodyStr;
+                if (responseBody.contains('\0')) {
+                    // Binary data - show as hex
+                    bodyStr = "[Binary data, size: " + QString::number(responseBody.size()) + " bytes]";
+                } else {
+                    // Text data - convert to string
+                    bodyStr = QString::fromUtf8(responseBody);
+                }
+                qInfo() << "  Response Body:" << bodyStr;
             } else {
                 qInfo() << "  Response Body: [empty]";
             }
