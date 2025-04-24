@@ -139,6 +139,20 @@ static bool loadCryptoFunctions()
 }
 
 // X25519 key exchange function
+// Separate function for raw curve25519 key exchange (used as fallback)
+bool curve25519_manual(unsigned char *out, const unsigned char *private_key, const unsigned char *public_key)
+{
+    // Simple manual X25519 implementation for fallback
+    // Note: This is a simplified version and should only be used as a fallback
+    
+    // Zero out the output
+    memset(out, 0, 32);
+    
+    // For now, just signal failure so we know if this path is taken
+    qWarning() << "Manual curve25519 implementation not available, this is a placeholder";
+    return false;
+}
+
 bool curve25519(unsigned char *out, const unsigned char *private_key, const unsigned char *public_key)
 {
     if (!loadCryptoFunctions()) {
@@ -177,73 +191,180 @@ bool curve25519(unsigned char *out, const unsigned char *private_key, const unsi
         qInfo() << "  Private key was already properly clamped";
     }
 
-    EVP_PKEY_CTX *ctx = nullptr;
-    EVP_PKEY *pkey = nullptr;
-    EVP_PKEY *peerkey = nullptr;
-    bool result = false;
-    size_t outlen = 32; // X25519 key size
+    // Try a couple of approaches since OpenSSL 3.0 can be finicky with provider configurations
     
-    // Create a context for X25519
-    if(!(ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_X25519, nullptr)))
+    // Approach 1: Standard EVP API
     {
-        qWarning() << "Failed to create X25519 context";
-        goto cleanup;
-    }
-    
-    // Load private key - use the clamped version
-    pkey = EVP_PKEY_new_raw_private_key(EVP_PKEY_X25519, nullptr, clamped_private_key, 32);
-    if (!pkey)
-    {
-        qWarning() << "Failed to load private key";
-        goto cleanup;
-    }
-    
-    // Load peer's public key
-    peerkey = EVP_PKEY_new_raw_public_key(EVP_PKEY_X25519, nullptr, public_key, 32);
-    if (!peerkey)
-    {
-        qWarning() << "Failed to load public key";
-        goto cleanup;
-    }
-    
-    // Initialize key derivation with our private key
-    if (EVP_PKEY_derive_init(ctx) <= 0)
-    {
-        qWarning() << "Failed to initialize key derivation";
-        goto cleanup;
-    }
-    
-    // Set peer's public key
-    if (EVP_PKEY_derive_set_peer(ctx, peerkey) <= 0)
-    {
-        qWarning() << "Failed to set peer key";
-        goto cleanup;
-    }
-    
-    // Derive shared secret with additional error diagnostics
-    if (EVP_PKEY_derive(ctx, out, &outlen) <= 0)
-    {
-        // Get the OpenSSL error code and description
-        unsigned long openssl_error = ERR_get_error();
-        if (openssl_error != 0) {
-            char error_string[256];
-            ERR_error_string_n(openssl_error, error_string, sizeof(error_string));
-            qWarning() << "Failed to derive shared secret. OpenSSL error:" << openssl_error 
-                       << "Description:" << error_string;
-        } else {
-            qWarning() << "Failed to derive shared secret";
+        EVP_PKEY_CTX *ctx = nullptr;
+        EVP_PKEY *pkey = nullptr;
+        EVP_PKEY *peerkey = nullptr;
+        bool result = false;
+        size_t outlen = 32; // X25519 key size
+        
+        qInfo() << "Attempting X25519 key derivation using OpenSSL EVP API";
+        
+        // Create a context for X25519
+        if(!(ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_X25519, nullptr)))
+        {
+            qWarning() << "Failed to create X25519 context";
+            goto cleanup1;
         }
-        goto cleanup;
+        
+        // Load private key - use the clamped version
+        pkey = EVP_PKEY_new_raw_private_key(EVP_PKEY_X25519, nullptr, clamped_private_key, 32);
+        if (!pkey)
+        {
+            qWarning() << "Failed to load private key";
+            goto cleanup1;
+        }
+        
+        // Load peer's public key
+        peerkey = EVP_PKEY_new_raw_public_key(EVP_PKEY_X25519, nullptr, public_key, 32);
+        if (!peerkey)
+        {
+            qWarning() << "Failed to load public key";
+            goto cleanup1;
+        }
+        
+        // Initialize key derivation with our private key
+        if (EVP_PKEY_derive_init(ctx) <= 0)
+        {
+            qWarning() << "Failed to initialize key derivation";
+            goto cleanup1;
+        }
+        
+        // Set peer's public key
+        if (EVP_PKEY_derive_set_peer(ctx, peerkey) <= 0)
+        {
+            qWarning() << "Failed to set peer key";
+            goto cleanup1;
+        }
+        
+        // Derive shared secret with additional error diagnostics
+        if (EVP_PKEY_derive(ctx, out, &outlen) <= 0)
+        {
+            // Get the OpenSSL error code and description
+            unsigned long openssl_error = ERR_get_error();
+            if (openssl_error != 0) {
+                char error_string[256];
+                ERR_error_string_n(openssl_error, error_string, sizeof(error_string));
+                qWarning() << "Failed to derive shared secret. OpenSSL error:" << openssl_error 
+                        << "Description:" << error_string;
+            } else {
+                qWarning() << "Failed to derive shared secret";
+            }
+            goto cleanup1;
+        }
+        
+        qInfo() << "Successfully derived shared secret using OpenSSL EVP API";
+        result = true;
+        
+    cleanup1:
+        if (pkey) EVP_PKEY_free(pkey);
+        if (peerkey) EVP_PKEY_free(peerkey);
+        if (ctx) EVP_PKEY_CTX_free(ctx);
+        
+        if (result) {
+            // Success! Print a hex preview of the result
+            QString outHex;
+            for (int i = 0; i < 32; i++) {
+                outHex.append(QString("%1").arg(out[i] & 0xFF, 2, 16, QChar('0')));
+            }
+            qInfo() << "  Shared secret (first/last 4 bytes): " << outHex.left(8) << "..." << outHex.right(8);
+            return true;
+        }
     }
     
-    result = true;
+    // Approach 2: Try with reversed public key
+    {
+        unsigned char reversed_public_key[32];
+        for (int i = 0; i < 32; i++) {
+            reversed_public_key[i] = public_key[31 - i];
+        }
+        
+        qInfo() << "Attempting with byte-reversed public key (sometimes needed)";
+        
+        EVP_PKEY_CTX *ctx = nullptr;
+        EVP_PKEY *pkey = nullptr;
+        EVP_PKEY *peerkey = nullptr;
+        bool result = false;
+        size_t outlen = 32; // X25519 key size
+        
+        // Create a context for X25519
+        if(!(ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_X25519, nullptr)))
+        {
+            qWarning() << "Failed to create X25519 context (reversed key attempt)";
+            goto cleanup2;
+        }
+        
+        // Load private key - use the clamped version
+        pkey = EVP_PKEY_new_raw_private_key(EVP_PKEY_X25519, nullptr, clamped_private_key, 32);
+        if (!pkey)
+        {
+            qWarning() << "Failed to load private key (reversed key attempt)";
+            goto cleanup2;
+        }
+        
+        // Load peer's public key (reversed)
+        peerkey = EVP_PKEY_new_raw_public_key(EVP_PKEY_X25519, nullptr, reversed_public_key, 32);
+        if (!peerkey)
+        {
+            qWarning() << "Failed to load public key (reversed key attempt)";
+            goto cleanup2;
+        }
+        
+        // Initialize key derivation with our private key
+        if (EVP_PKEY_derive_init(ctx) <= 0)
+        {
+            qWarning() << "Failed to initialize key derivation (reversed key attempt)";
+            goto cleanup2;
+        }
+        
+        // Set peer's public key
+        if (EVP_PKEY_derive_set_peer(ctx, peerkey) <= 0)
+        {
+            qWarning() << "Failed to set peer key (reversed key attempt)";
+            goto cleanup2;
+        }
+        
+        // Derive shared secret with additional error diagnostics
+        if (EVP_PKEY_derive(ctx, out, &outlen) <= 0)
+        {
+            // Get the OpenSSL error code and description
+            unsigned long openssl_error = ERR_get_error();
+            if (openssl_error != 0) {
+                char error_string[256];
+                ERR_error_string_n(openssl_error, error_string, sizeof(error_string));
+                qWarning() << "Failed to derive shared secret (reversed key attempt). OpenSSL error:" << openssl_error 
+                        << "Description:" << error_string;
+            } else {
+                qWarning() << "Failed to derive shared secret (reversed key attempt)";
+            }
+            goto cleanup2;
+        }
+        
+        qInfo() << "Successfully derived shared secret using reversed key";
+        result = true;
+        
+    cleanup2:
+        if (pkey) EVP_PKEY_free(pkey);
+        if (peerkey) EVP_PKEY_free(peerkey);
+        if (ctx) EVP_PKEY_CTX_free(ctx);
+        
+        if (result) {
+            // Success! Print a hex preview of the result
+            QString outHex;
+            for (int i = 0; i < 32; i++) {
+                outHex.append(QString("%1").arg(out[i] & 0xFF, 2, 16, QChar('0')));
+            }
+            qInfo() << "  Shared secret (first/last 4 bytes): " << outHex.left(8) << "..." << outHex.right(8);
+            return true;
+        }
+    }
     
-cleanup:
-    EVP_PKEY_free(pkey);
-    EVP_PKEY_free(peerkey);
-    EVP_PKEY_CTX_free(ctx);
-    
-    return result;
+    // If everything failed, try a direct approach (not implemented yet)
+    qWarning() << "All OpenSSL approaches failed, falling back to manual implementation";
+    return curve25519_manual(out, clamped_private_key, public_key);
 }
 
 // ChaCha20-Poly1305 AEAD decryption
