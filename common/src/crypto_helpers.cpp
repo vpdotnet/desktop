@@ -25,6 +25,9 @@
 #include <QDebug>
 #include <QLibrary>
 
+// Forward declaration of helper function
+static bool try_openssl_x25519(unsigned char *out, const unsigned char *private_key, const unsigned char *public_key);
+
 #if defined(Q_OS_WIN)
     #if defined(_M_X64)
         static const QString libsslName = QStringLiteral("libssl-3-x64.dll");
@@ -43,41 +46,31 @@
         static const QString libcryptoName = QStringLiteral("libcrypto.so.3");
 #endif
 
-// Forward declarations for OpenSSL types
-struct EVP_PKEY_CTX;
-struct EVP_PKEY;
-struct ENGINE;
-struct EVP_CIPHER_CTX;
-struct EVP_CIPHER;
+// OpenSSL type declarations are now in the header file
 
-// OpenSSL functions we need to resolve
-static EVP_PKEY_CTX* (*EVP_PKEY_CTX_new_id)(int, ENGINE*) = nullptr;
-static void (*EVP_PKEY_CTX_free)(EVP_PKEY_CTX*) = nullptr;
-static EVP_PKEY* (*EVP_PKEY_new_raw_private_key)(int, ENGINE*, const unsigned char*, size_t) = nullptr;
-static EVP_PKEY* (*EVP_PKEY_new_raw_public_key)(int, ENGINE*, const unsigned char*, size_t) = nullptr;
-static void (*EVP_PKEY_free)(EVP_PKEY*) = nullptr;
-static int (*EVP_PKEY_derive_init)(EVP_PKEY_CTX*) = nullptr;
-static int (*EVP_PKEY_derive_set_peer)(EVP_PKEY_CTX*, EVP_PKEY*) = nullptr;
-static int (*EVP_PKEY_derive)(EVP_PKEY_CTX*, unsigned char*, size_t*) = nullptr;
+// OpenSSL functions we need to resolve - export these to be used by the rest of the project
+EVP_PKEY_CTX* (*EVP_PKEY_CTX_new_id)(int, ENGINE*) = nullptr;
+void (*EVP_PKEY_CTX_free)(EVP_PKEY_CTX*) = nullptr;
+EVP_PKEY* (*EVP_PKEY_new_raw_private_key)(int, ENGINE*, const unsigned char*, size_t) = nullptr;
+EVP_PKEY* (*EVP_PKEY_new_raw_public_key)(int, ENGINE*, const unsigned char*, size_t) = nullptr;
+void (*EVP_PKEY_free)(EVP_PKEY*) = nullptr;
+int (*EVP_PKEY_derive_init)(EVP_PKEY_CTX*) = nullptr;
+int (*EVP_PKEY_derive_set_peer)(EVP_PKEY_CTX*, EVP_PKEY*) = nullptr;
+int (*EVP_PKEY_derive)(EVP_PKEY_CTX*, unsigned char*, size_t*) = nullptr;
 
-static EVP_CIPHER_CTX* (*EVP_CIPHER_CTX_new)() = nullptr;
-static void (*EVP_CIPHER_CTX_free)(EVP_CIPHER_CTX*) = nullptr;
-static int (*EVP_CIPHER_CTX_ctrl)(EVP_CIPHER_CTX*, int, int, void*) = nullptr;
-static int (*EVP_DecryptInit_ex)(EVP_CIPHER_CTX*, const EVP_CIPHER*, ENGINE*, const unsigned char*, const unsigned char*) = nullptr;
-static int (*EVP_DecryptUpdate)(EVP_CIPHER_CTX*, unsigned char*, int*, const unsigned char*, int) = nullptr;
-static int (*EVP_DecryptFinal_ex)(EVP_CIPHER_CTX*, unsigned char*, int*) = nullptr;
-static const EVP_CIPHER* (*EVP_chacha20_poly1305)() = nullptr;
+EVP_CIPHER_CTX* (*EVP_CIPHER_CTX_new)() = nullptr;
+void (*EVP_CIPHER_CTX_free)(EVP_CIPHER_CTX*) = nullptr;
+int (*EVP_CIPHER_CTX_ctrl)(EVP_CIPHER_CTX*, int, int, void*) = nullptr;
+int (*EVP_DecryptInit_ex)(EVP_CIPHER_CTX*, const EVP_CIPHER*, ENGINE*, const unsigned char*, const unsigned char*) = nullptr;
+int (*EVP_DecryptUpdate)(EVP_CIPHER_CTX*, unsigned char*, int*, const unsigned char*, int) = nullptr;
+int (*EVP_DecryptFinal_ex)(EVP_CIPHER_CTX*, unsigned char*, int*) = nullptr;
+const EVP_CIPHER* (*EVP_chacha20_poly1305)() = nullptr;
 
 // Error handling function pointers
-static unsigned long (*ERR_get_error)() = nullptr;
-static void (*ERR_error_string_n)(unsigned long, char*, size_t) = nullptr;
+unsigned long (*ERR_get_error)() = nullptr;
+void (*ERR_error_string_n)(unsigned long, char*, size_t) = nullptr;
 
-enum
-{
-    EVP_PKEY_X25519 = 1034, // NID_X25519
-    EVP_CTRL_AEAD_SET_IVLEN = 0x9,
-    EVP_CTRL_AEAD_SET_TAG = 0x11
-};
+// These constants are now defined in the header file
 
 // Helper for loading OpenSSL functions dynamically
 static bool loadCryptoFunctions()
@@ -139,20 +132,6 @@ static bool loadCryptoFunctions()
 }
 
 // X25519 key exchange function
-// Separate function for raw curve25519 key exchange (used as fallback)
-bool curve25519_manual(unsigned char *out, const unsigned char *private_key, const unsigned char *public_key)
-{
-    // Simple manual X25519 implementation for fallback
-    // Note: This is a simplified version and should only be used as a fallback
-    
-    // Zero out the output
-    memset(out, 0, 32);
-    
-    // For now, just signal failure so we know if this path is taken
-    qWarning() << "Manual curve25519 implementation not available, this is a placeholder";
-    return false;
-}
-
 bool curve25519(unsigned char *out, const unsigned char *private_key, const unsigned char *public_key)
 {
     if (!loadCryptoFunctions()) {
@@ -161,18 +140,17 @@ bool curve25519(unsigned char *out, const unsigned char *private_key, const unsi
     }
     
     // Create a normalized copy of the private key (clamping as per curve25519 requirements)
-    // Some implementations require the private key to be "clamped" (bits masked according to curve25519 spec)
     unsigned char clamped_private_key[32];
     memcpy(clamped_private_key, private_key, 32);
     
-    // Clamp the key according to curve25519 specification
+    // Clamp the key according to curve25519 specification (RFC 7748)
     clamped_private_key[0] &= 248;  // Clear bottom 3 bits
     clamped_private_key[31] &= 127; // Clear top bit
     clamped_private_key[31] |= 64;  // Set second-highest bit
     
     bool keys_needed_clamping = (memcmp(clamped_private_key, private_key, 32) != 0);
     
-    // Diagnostic logging for key data - using QString instead of QByteArray
+    // Diagnostic logging for key data
     QString privKeyHex, pubKeyHex, clampedKeyHex;
     for (int i = 0; i < 32; i++) {
         privKeyHex.append(QString("%1").arg(private_key[i] & 0xFF, 2, 16, QChar('0')));
@@ -182,192 +160,146 @@ bool curve25519(unsigned char *out, const unsigned char *private_key, const unsi
     qInfo() << "Using curve25519 with:";
     qInfo() << "  Private key (first/last 4 bytes): " 
             << privKeyHex.left(8) << "..." << privKeyHex.right(8);
+            
+    // TODO: SECURITY - Remove full key logging before release
+    qInfo() << "  Private key (full for debugging): " << privKeyHex;
+    
     qInfo() << "  Public key (full): " << pubKeyHex;
     
     if (keys_needed_clamping) {
         qInfo() << "  Private key needed clamping. Clamped version: " 
                 << clampedKeyHex.left(8) << "..." << clampedKeyHex.right(8);
+        
+        // TODO: SECURITY - Remove full key logging before release
+        qInfo() << "  Clamped private key (full for debugging): " << clampedKeyHex;
     } else {
         qInfo() << "  Private key was already properly clamped";
     }
-
-    // Try a couple of approaches since OpenSSL 3.0 can be finicky with provider configurations
     
-    // Approach 1: Standard EVP API
-    {
-        EVP_PKEY_CTX *ctx = nullptr;
-        EVP_PKEY *pkey = nullptr;
-        EVP_PKEY *peerkey = nullptr;
-        bool result = false;
-        size_t outlen = 32; // X25519 key size
-        
-        qInfo() << "Attempting X25519 key derivation using OpenSSL EVP API";
-        
-        // Create a context for X25519
-        if(!(ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_X25519, nullptr)))
-        {
-            qWarning() << "Failed to create X25519 context";
-            goto cleanup1;
-        }
-        
-        // Load private key - use the clamped version
-        pkey = EVP_PKEY_new_raw_private_key(EVP_PKEY_X25519, nullptr, clamped_private_key, 32);
-        if (!pkey)
-        {
-            qWarning() << "Failed to load private key";
-            goto cleanup1;
-        }
-        
-        // Load peer's public key
-        peerkey = EVP_PKEY_new_raw_public_key(EVP_PKEY_X25519, nullptr, public_key, 32);
-        if (!peerkey)
-        {
-            qWarning() << "Failed to load public key";
-            goto cleanup1;
-        }
-        
-        // Initialize key derivation with our private key
-        if (EVP_PKEY_derive_init(ctx) <= 0)
-        {
-            qWarning() << "Failed to initialize key derivation";
-            goto cleanup1;
-        }
-        
-        // Set peer's public key
-        if (EVP_PKEY_derive_set_peer(ctx, peerkey) <= 0)
-        {
-            qWarning() << "Failed to set peer key";
-            goto cleanup1;
-        }
-        
-        // Derive shared secret with additional error diagnostics
-        if (EVP_PKEY_derive(ctx, out, &outlen) <= 0)
-        {
-            // Get the OpenSSL error code and description
-            unsigned long openssl_error = ERR_get_error();
-            if (openssl_error != 0) {
-                char error_string[256];
-                ERR_error_string_n(openssl_error, error_string, sizeof(error_string));
-                qWarning() << "Failed to derive shared secret. OpenSSL error:" << openssl_error 
-                        << "Description:" << error_string;
-            } else {
-                qWarning() << "Failed to derive shared secret";
-            }
-            goto cleanup1;
-        }
-        
-        qInfo() << "Successfully derived shared secret using OpenSSL EVP API";
-        result = true;
-        
-    cleanup1:
-        if (pkey) EVP_PKEY_free(pkey);
-        if (peerkey) EVP_PKEY_free(peerkey);
-        if (ctx) EVP_PKEY_CTX_free(ctx);
-        
-        if (result) {
-            // Success! Print a hex preview of the result
-            QString outHex;
-            for (int i = 0; i < 32; i++) {
-                outHex.append(QString("%1").arg(out[i] & 0xFF, 2, 16, QChar('0')));
-            }
-            qInfo() << "  Shared secret (first/last 4 bytes): " << outHex.left(8) << "..." << outHex.right(8);
-            return true;
-        }
-    }
+    // Try different approaches to key exchange
+    bool result = false;
     
-    // Approach 2: Try with reversed public key
-    {
+    // Attempt 1: OpenSSL EVP API standard approach
+    qInfo() << "Attempt 1: Using OpenSSL EVP API for X25519";
+    result = try_openssl_x25519(out, clamped_private_key, public_key);
+    
+    // If standard approach failed, try with reversed keys
+    if (!result) {
+        qInfo() << "Attempt 2: Trying with byte-reversed public key";
         unsigned char reversed_public_key[32];
         for (int i = 0; i < 32; i++) {
             reversed_public_key[i] = public_key[31 - i];
         }
         
-        qInfo() << "Attempting with byte-reversed public key (sometimes needed)";
-        
-        EVP_PKEY_CTX *ctx = nullptr;
-        EVP_PKEY *pkey = nullptr;
-        EVP_PKEY *peerkey = nullptr;
-        bool result = false;
-        size_t outlen = 32; // X25519 key size
-        
-        // Create a context for X25519
-        if(!(ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_X25519, nullptr)))
-        {
-            qWarning() << "Failed to create X25519 context (reversed key attempt)";
-            goto cleanup2;
+        // Log the reversed public key for debugging
+        QString reversedPubKeyHex;
+        for (int i = 0; i < 32; i++) {
+            reversedPubKeyHex.append(QString("%1").arg(reversed_public_key[i] & 0xFF, 2, 16, QChar('0')));
         }
         
-        // Load private key - use the clamped version
-        pkey = EVP_PKEY_new_raw_private_key(EVP_PKEY_X25519, nullptr, clamped_private_key, 32);
-        if (!pkey)
-        {
-            qWarning() << "Failed to load private key (reversed key attempt)";
-            goto cleanup2;
-        }
+        // TODO: SECURITY - Remove full key logging before release
+        qInfo() << "  Reversed public key (full for debugging): " << reversedPubKeyHex;
         
-        // Load peer's public key (reversed)
-        peerkey = EVP_PKEY_new_raw_public_key(EVP_PKEY_X25519, nullptr, reversed_public_key, 32);
-        if (!peerkey)
-        {
-            qWarning() << "Failed to load public key (reversed key attempt)";
-            goto cleanup2;
-        }
-        
-        // Initialize key derivation with our private key
-        if (EVP_PKEY_derive_init(ctx) <= 0)
-        {
-            qWarning() << "Failed to initialize key derivation (reversed key attempt)";
-            goto cleanup2;
-        }
-        
-        // Set peer's public key
-        if (EVP_PKEY_derive_set_peer(ctx, peerkey) <= 0)
-        {
-            qWarning() << "Failed to set peer key (reversed key attempt)";
-            goto cleanup2;
-        }
-        
-        // Derive shared secret with additional error diagnostics
-        if (EVP_PKEY_derive(ctx, out, &outlen) <= 0)
-        {
-            // Get the OpenSSL error code and description
-            unsigned long openssl_error = ERR_get_error();
-            if (openssl_error != 0) {
-                char error_string[256];
-                ERR_error_string_n(openssl_error, error_string, sizeof(error_string));
-                qWarning() << "Failed to derive shared secret (reversed key attempt). OpenSSL error:" << openssl_error 
-                        << "Description:" << error_string;
-            } else {
-                qWarning() << "Failed to derive shared secret (reversed key attempt)";
-            }
-            goto cleanup2;
-        }
-        
-        qInfo() << "Successfully derived shared secret using reversed key";
-        result = true;
-        
-    cleanup2:
-        if (pkey) EVP_PKEY_free(pkey);
-        if (peerkey) EVP_PKEY_free(peerkey);
-        if (ctx) EVP_PKEY_CTX_free(ctx);
-        
-        if (result) {
-            // Success! Print a hex preview of the result
-            QString outHex;
-            for (int i = 0; i < 32; i++) {
-                outHex.append(QString("%1").arg(out[i] & 0xFF, 2, 16, QChar('0')));
-            }
-            qInfo() << "  Shared secret (first/last 4 bytes): " << outHex.left(8) << "..." << outHex.right(8);
-            return true;
-        }
+        result = try_openssl_x25519(out, clamped_private_key, reversed_public_key);
     }
     
-    // If everything failed, try a direct approach (not implemented yet)
-    qWarning() << "All OpenSSL approaches failed, falling back to manual implementation";
-    return curve25519_manual(out, clamped_private_key, public_key);
+    // If all attempts failed, log the failure
+    if (!result) {
+        // Zero out the output buffer for consistent failure behavior
+        memset(out, 0, 32);
+        qWarning() << "All key derivation approaches failed";
+    }
+    
+    return result;
 }
 
-// ChaCha20-Poly1305 AEAD decryption
+// Helper function to try OpenSSL X25519
+static bool try_openssl_x25519(unsigned char *out, const unsigned char *private_key, const unsigned char *public_key)
+{
+    if (!loadCryptoFunctions()) {
+        qWarning() << "Failed to load crypto functions";
+        return false;
+    }
+    
+    EVP_PKEY_CTX *ctx = nullptr;
+    EVP_PKEY *pkey = nullptr;
+    EVP_PKEY *peerkey = nullptr;
+    bool result = false;
+    size_t outlen = 32; // X25519 key size
+    
+    // Create context
+    ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_X25519, nullptr);
+    if (!ctx) {
+        qWarning() << "Failed to create X25519 context";
+        return false;
+    }
+    
+    // Create private key
+    pkey = EVP_PKEY_new_raw_private_key(EVP_PKEY_X25519, nullptr, private_key, 32);
+    if (!pkey) {
+        qWarning() << "Failed to create private key";
+        EVP_PKEY_CTX_free(ctx);
+        return false;
+    }
+    
+    // Create public key
+    peerkey = EVP_PKEY_new_raw_public_key(EVP_PKEY_X25519, nullptr, public_key, 32);
+    if (!peerkey) {
+        qWarning() << "Failed to create peer key";
+        EVP_PKEY_free(pkey);
+        EVP_PKEY_CTX_free(ctx);
+        return false;
+    }
+    
+    // Initialize key derivation context
+    if (EVP_PKEY_derive_init(ctx) <= 0) {
+        unsigned long error = ERR_get_error();
+        char errstr[256];
+        ERR_error_string_n(error, errstr, sizeof(errstr));
+        qWarning() << "Failed to initialize key derivation:" << errstr;
+        EVP_PKEY_free(peerkey);
+        EVP_PKEY_free(pkey);
+        EVP_PKEY_CTX_free(ctx);
+        return false;
+    }
+    
+    // Set peer key
+    if (EVP_PKEY_derive_set_peer(ctx, peerkey) <= 0) {
+        unsigned long error = ERR_get_error();
+        char errstr[256];
+        ERR_error_string_n(error, errstr, sizeof(errstr));
+        qWarning() << "Failed to set peer key:" << errstr;
+        EVP_PKEY_free(peerkey);
+        EVP_PKEY_free(pkey);
+        EVP_PKEY_CTX_free(ctx);
+        return false;
+    }
+    
+    // Derive shared secret
+    if (EVP_PKEY_derive(ctx, out, &outlen) > 0) {
+        result = true;
+        // Log success with derived key
+        QString outHex;
+        for (int i = 0; i < 32; i++) {
+            outHex.append(QString("%1").arg(out[i] & 0xFF, 2, 16, QChar('0')));
+        }
+        qInfo() << "Successfully computed shared secret: " << outHex.left(8) << "..." << outHex.right(8);
+    } else {
+        unsigned long error = ERR_get_error();
+        char errstr[256];
+        ERR_error_string_n(error, errstr, sizeof(errstr));
+        qWarning() << "Key derivation failed:" << errstr;
+    }
+    
+    // Clean up resources
+    EVP_PKEY_free(peerkey);
+    EVP_PKEY_free(pkey);
+    EVP_PKEY_CTX_free(ctx);
+    
+    return result;
+}
+
+// ChaCha20-Poly1305 AEAD decryption - optimized to match Go implementation
 bool decrypt_chacha20poly1305(
     unsigned char *plaintext, size_t plaintext_len,
     const unsigned char *ciphertext, size_t ciphertext_len,
@@ -380,75 +312,303 @@ bool decrypt_chacha20poly1305(
         return false;
     }
 
-    EVP_CIPHER_CTX *ctx = nullptr;
-    int len = 0;
-    bool result = false;
-    int ret = 0;
+    // Parameter validation based on ChaCha20-Poly1305 requirements
+    static const size_t TAG_SIZE = 16;
+    static const size_t CHACHA20_POLY1305_NONCE_SIZE = 12;
+    static const size_t CHACHA20_POLY1305_KEY_SIZE = 32;
     
-    // Create and initialize the context
-    if(!(ctx = EVP_CIPHER_CTX_new()))
-    {
-        qWarning() << "Failed to create cipher context";
-        goto cleanup;
+    if (!plaintext || !ciphertext || !nonce || !key) {
+        qWarning() << "Invalid parameters: null pointers provided";
+        return false;
     }
     
-    // Initialize decryption operation
-    if(EVP_DecryptInit_ex(ctx, EVP_chacha20_poly1305(), nullptr, nullptr, nullptr) != 1)
-    {
-        qWarning() << "Failed to initialize ChaCha20-Poly1305 decryption";
-        goto cleanup;
+    if (plaintext_len < (ciphertext_len - TAG_SIZE)) {
+        qWarning() << "Output buffer too small for decryption - need at least" 
+                  << (ciphertext_len - TAG_SIZE) << "bytes, got" << plaintext_len;
+        return false;
     }
     
-    // Set IV length
-    if(EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_IVLEN, nonce_len, nullptr) != 1)
-    {
-        qWarning() << "Failed to set IV length";
-        goto cleanup;
+    if (ciphertext_len <= TAG_SIZE) {
+        qWarning() << "Ciphertext too short, must include 16-byte tag";
+        return false;
     }
     
-    // Initialize key and IV
-    if(EVP_DecryptInit_ex(ctx, nullptr, nullptr, key, nonce) != 1)
-    {
-        qWarning() << "Failed to set key and IV";
-        goto cleanup;
+    if (nonce_len != CHACHA20_POLY1305_NONCE_SIZE) {
+        qWarning() << "Invalid nonce length for ChaCha20-Poly1305: got" << nonce_len 
+                  << "expected" << CHACHA20_POLY1305_NONCE_SIZE;
+        return false;
     }
     
-    // Provide AAD data if present
-    if(aad && aad_len > 0)
-    {
-        if(EVP_DecryptUpdate(ctx, nullptr, &len, aad, aad_len) != 1)
-        {
-            qWarning() << "Failed to provide AAD";
-            goto cleanup;
+    if (key_len != CHACHA20_POLY1305_KEY_SIZE) {
+        qWarning() << "Invalid key length for ChaCha20-Poly1305: got" << key_len 
+                  << "expected" << CHACHA20_POLY1305_KEY_SIZE;
+        return false;
+    }
+    
+    // Debugging info for keys (only first/last 4 bytes for security)
+    QString keyHex, nonceHex, tagHex;
+    for (size_t i = 0; i < key_len; i++) {
+        if (i < 4 || i >= key_len - 4) {
+            keyHex.append(QString("%1").arg(key[i] & 0xFF, 2, 16, QChar('0')));
         }
     }
     
-    // Provide ciphertext
-    if(EVP_DecryptUpdate(ctx, plaintext, &len, ciphertext, ciphertext_len - 16) != 1) // 16 is the tag size
-    {
-        qWarning() << "Failed to decrypt ciphertext";
-        goto cleanup;
+    // Build full key hex for debugging
+    QString fullKeyHex;
+    for (size_t i = 0; i < key_len; i++) {
+        fullKeyHex.append(QString("%1").arg(key[i] & 0xFF, 2, 16, QChar('0')));
     }
+    
+    for (size_t i = 0; i < nonce_len; i++) {
+        nonceHex.append(QString("%1").arg(nonce[i] & 0xFF, 2, 16, QChar('0')));
+    }
+    
+    for (size_t i = 0; i < TAG_SIZE; i++) {
+        tagHex.append(QString("%1").arg(ciphertext[ciphertext_len - TAG_SIZE + i] & 0xFF, 2, 16, QChar('0')));
+    }
+    
+    qInfo() << "Decrypting with ChaCha20-Poly1305:";
+    qInfo() << "  Key (first/last 4 bytes): " << keyHex.left(8) << "..." << keyHex.right(8);
+    
+    // TODO: SECURITY - Remove full key logging before release
+    qInfo() << "  Key (full for debugging): " << fullKeyHex;
+    
+    qInfo() << "  Nonce: " << nonceHex;
+    qInfo() << "  Auth tag: " << tagHex;
+    qInfo() << "  Ciphertext length: " << ciphertext_len - TAG_SIZE << " + 16 bytes tag";
+
+    // OpenSSL-based ChaCha20-Poly1305 AEAD decryption
+    EVP_CIPHER_CTX *ctx = nullptr;
+    int len = 0;
+    int plaintext_offset = 0;
+    
+    // Create and initialize the context - similar to Go's chacha20poly1305.New()
+    ctx = EVP_CIPHER_CTX_new();
+    if (!ctx)
+    {
+        unsigned long error = ERR_get_error();
+        char errstr[256];
+        ERR_error_string_n(error, errstr, sizeof(errstr));
+        qWarning() << "Failed to create cipher context:" << errstr;
+        return false;
+    }
+    
+    // Initialize with ChaCha20-Poly1305 cipher
+    if (EVP_DecryptInit_ex(ctx, EVP_chacha20_poly1305(), nullptr, nullptr, nullptr) != 1)
+    {
+        unsigned long error = ERR_get_error();
+        char errstr[256];
+        ERR_error_string_n(error, errstr, sizeof(errstr));
+        qWarning() << "Failed to initialize ChaCha20-Poly1305 decryption:" << errstr;
+        EVP_CIPHER_CTX_free(ctx);
+        return false;
+    }
+    
+    // Set IV length to match Go's chacha20poly1305 implementation
+    if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_IVLEN, nonce_len, nullptr) != 1)
+    {
+        unsigned long error = ERR_get_error();
+        char errstr[256];
+        ERR_error_string_n(error, errstr, sizeof(errstr));
+        qWarning() << "Failed to set nonce length:" << errstr;
+        EVP_CIPHER_CTX_free(ctx);
+        return false;
+    }
+    
+    // Initialize with key and nonce - equivalent to creating the AEAD in Go
+    if (EVP_DecryptInit_ex(ctx, nullptr, nullptr, key, nonce) != 1)
+    {
+        unsigned long error = ERR_get_error();
+        char errstr[256];
+        ERR_error_string_n(error, errstr, sizeof(errstr));
+        qWarning() << "Failed to set key and nonce:" << errstr;
+        EVP_CIPHER_CTX_free(ctx);
+        return false;
+    }
+    
+    // Process AAD data if provided (matches Go's aead.Open with additional data)
+    if (aad && aad_len > 0)
+    {
+        if (EVP_DecryptUpdate(ctx, nullptr, &len, aad, aad_len) != 1)
+        {
+            unsigned long error = ERR_get_error();
+            char errstr[256];
+            ERR_error_string_n(error, errstr, sizeof(errstr));
+            qWarning() << "Failed to process additional authenticated data:" << errstr;
+            EVP_CIPHER_CTX_free(ctx);
+            return false;
+        }
+    }
+    
+    // Process ciphertext - separating the ciphertext from the tag
+    // Similar to Go's slicing of ciphertext[:len(ciphertext)-16]
+    if (EVP_DecryptUpdate(ctx, plaintext, &len, ciphertext, ciphertext_len - TAG_SIZE) != 1)
+    {
+        unsigned long error = ERR_get_error();
+        char errstr[256];
+        ERR_error_string_n(error, errstr, sizeof(errstr));
+        qWarning() << "Failed to process ciphertext:" << errstr;
+        EVP_CIPHER_CTX_free(ctx);
+        return false;
+    }
+    
+    plaintext_offset = len;
     
     // Set expected tag value (last 16 bytes of ciphertext)
-    if(EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_TAG, 16, (void*)(ciphertext + ciphertext_len - 16)) != 1)
+    // Equivalent to Go's tag extraction and verification
+    if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_TAG, TAG_SIZE, (void*)(ciphertext + ciphertext_len - TAG_SIZE)) != 1)
     {
-        qWarning() << "Failed to set tag";
-        goto cleanup;
+        unsigned long error = ERR_get_error();
+        char errstr[256];
+        ERR_error_string_n(error, errstr, sizeof(errstr));
+        qWarning() << "Failed to set authentication tag:" << errstr;
+        EVP_CIPHER_CTX_free(ctx);
+        return false;
     }
     
-    // Finalize decryption
-    ret = EVP_DecryptFinal_ex(ctx, plaintext + len, &len);
-    if(ret != 1)
+    // Finalize decryption and verify tag
+    // This performs the actual authentication check similar to Go's poly1305 verification
+    if (EVP_DecryptFinal_ex(ctx, plaintext + plaintext_offset, &len) != 1)
     {
-        qWarning() << "Failed to finalize decryption or tag verification failed";
-        goto cleanup;
+        unsigned long error = ERR_get_error();
+        char errstr[256];
+        ERR_error_string_n(error, errstr, sizeof(errstr));
+        qWarning() << "Authentication failed or decryption error:" << errstr;
+        EVP_CIPHER_CTX_free(ctx);
+        return false;
     }
     
-    result = true;
+    // Add the final bytes to our count
+    plaintext_offset += len;
     
-cleanup:
+    // Show success information
+    qInfo() << "ChaCha20-Poly1305 decryption successful - plaintext length:" << plaintext_offset;
+    
+    // Clean up
     EVP_CIPHER_CTX_free(ctx);
+    return true;
+}
+
+// WireGuard encrypted IP decryption implementation
+QString decrypt_wireguard_ip(const QByteArray &encryptedData, const unsigned char *privateKey, const unsigned char *serverPubkey)
+{
+    if (!loadCryptoFunctions()) {
+        qWarning() << "Failed to load OpenSSL functions";
+        throw std::runtime_error("Failed to load OpenSSL functions");
+    }
     
-    return result;
+    static const int NonceSize = 12; // ChaCha20-Poly1305 nonce size
+    static const int TagSize = 16;   // Poly1305 tag size
+    static const int PrivKeySize = 32; // X25519 key size
+    
+    // Check if we have enough data
+    if (encryptedData.size() < NonceSize + TagSize) {
+        qWarning() << "Encrypted data too short, need at least" << NonceSize + TagSize << "bytes";
+        qWarning() << "Actual size:" << encryptedData.size();
+        throw std::runtime_error("Encrypted data too short");
+    }
+    
+    // Extract nonce and ciphertext
+    const unsigned char* nonce = reinterpret_cast<const unsigned char*>(encryptedData.data());
+    const unsigned char* ciphertext = nonce + NonceSize;
+    size_t ciphertext_len = encryptedData.size() - NonceSize;
+    
+    qInfo() << "WireGuard IP decryption - Encrypted data size:" << encryptedData.size() 
+            << "- Nonce size:" << NonceSize 
+            << "- Ciphertext size:" << ciphertext_len;
+    
+    // Diagnostic logging for key data
+    QString privKeyHex, pubKeyHex, nonceHex;
+    for (int i = 0; i < PrivKeySize; i++) {
+        privKeyHex.append(QString("%1").arg(privateKey[i] & 0xFF, 2, 16, QChar('0')));
+        pubKeyHex.append(QString("%1").arg(serverPubkey[i] & 0xFF, 2, 16, QChar('0')));
+    }
+    for (int i = 0; i < NonceSize; i++) {
+        nonceHex.append(QString("%1").arg(nonce[i] & 0xFF, 2, 16, QChar('0')));
+    }
+    
+    qInfo() << "WireGuard decryption using keys:";
+    qInfo() << "  Private key (first/last 4 bytes): " 
+            << privKeyHex.left(8) << "..." << privKeyHex.right(8);
+    qInfo() << "  Server public key (first/last 4 bytes): " 
+            << pubKeyHex.left(8) << "..." << pubKeyHex.right(8);
+    qInfo() << "  Nonce: " << nonceHex;
+    
+    // Step 1: X25519 Key Exchange
+    unsigned char clamped_private_key[32];
+    memcpy(clamped_private_key, privateKey, 32);
+    
+    // Clamp the key according to curve25519 specification (RFC 7748)
+    clamped_private_key[0] &= 248;  // Clear bottom 3 bits
+    clamped_private_key[31] &= 127; // Clear top bit
+    clamped_private_key[31] |= 64;  // Set second-highest bit
+    
+    bool keys_needed_clamping = (memcmp(clamped_private_key, privateKey, 32) != 0);
+    if (keys_needed_clamping) {
+        qInfo() << "  Private key needed clamping";
+    } else {
+        qInfo() << "  Private key was already properly clamped";
+    }
+    
+    // Derive the shared secret
+    unsigned char shared_secret[32];
+    
+    // Use curve25519 for key exchange
+    if (!curve25519(shared_secret, clamped_private_key, serverPubkey)) {
+        qWarning() << "Failed to create shared secret via curve25519";
+        throw std::runtime_error("Failed to derive shared secret");
+    }
+    
+    // Log the derived shared secret
+    QString secretHex;
+    for (size_t i = 0; i < 32; i++) {
+        secretHex.append(QString("%1").arg(shared_secret[i] & 0xFF, 2, 16, QChar('0')));
+    }
+    qInfo() << "WireGuard - derived shared secret (first/last 4 bytes): " 
+            << secretHex.left(8) << "..." << secretHex.right(8);
+    
+    // Step 2: ChaCha20-Poly1305 decryption
+    QByteArray plaintext(ciphertext_len - TagSize, 0);
+    
+    if (!decrypt_chacha20poly1305(
+        reinterpret_cast<unsigned char*>(plaintext.data()),
+        plaintext.size(),
+        ciphertext,
+        ciphertext_len,
+        nonce,
+        NonceSize,
+        nullptr, 0, // No additional data
+        shared_secret,
+        32)) {
+        qWarning() << "Failed to decrypt data with ChaCha20-Poly1305";
+        throw std::runtime_error("Failed to decrypt data");
+    }
+    
+    // Decode the message
+    QString message = QString::fromUtf8(plaintext);
+    qInfo() << "Successfully decrypted data: " << message;
+    
+    // Parse message to extract IP
+    const QString start_delim = "###.";
+    const QString end_delim = ".###";
+    
+    int startIndex = message.indexOf(start_delim);
+    if (startIndex == -1) {
+        qWarning() << "Invalid message format in decrypted data - missing start delimiter '###.'";
+        qWarning() << "Decrypted content: " << message;
+        throw std::runtime_error("Invalid message format - missing start delimiter");
+    }
+    startIndex += start_delim.length(); // Skip the "###." marker
+    
+    int endIndex = message.indexOf(end_delim, startIndex);
+    if (endIndex == -1) {
+        qWarning() << "Invalid message format in decrypted data - missing end delimiter '.###'";
+        qWarning() << "Decrypted content: " << message;
+        throw std::runtime_error("Invalid message format - missing end delimiter");
+    }
+    
+    QString ip = message.mid(startIndex, endIndex - startIndex);
+    qInfo() << "Successfully extracted IP address:" << ip;
+    
+    return ip;
 }
