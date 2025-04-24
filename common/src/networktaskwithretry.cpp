@@ -273,9 +273,11 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
 
         // Check specifically for an auth error, which indicates that the creds are
         // not valid.
-        if (replyError == QNetworkReply::NetworkError::AuthenticationRequiredError)
+        // Look for both the QNetworkReply error code and the actual HTTP status code
+        int httpStatus = reply->attribute(QNetworkRequest::Attribute::HttpStatusCodeAttribute).toInt();
+        if (replyError == QNetworkReply::NetworkError::AuthenticationRequiredError || httpStatus == 401)
         {
-            qWarning() << "Could not request" << resource << "due to invalid credentials";
+            qWarning() << "Could not request" << resource << "due to invalid credentials (HTTP " << httpStatus << ")";
             networkTask->reject(Error(HERE, Error::ApiUnauthorizedError));
             return;
         }
@@ -283,7 +285,7 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
         // If the API returned 429, it is rate limiting us, return a specific error.
         // This is still retriable, but it can cause NetworkTaskWithRetry to return
         // a specific error if all retries fail.
-        if (reply->attribute(QNetworkRequest::Attribute::HttpStatusCodeAttribute).toInt() == 429)
+        if (httpStatus == 429)
         {
             QByteArray header = reply->rawHeader("Retry-After");
             // Default retry delay is 59 seconds
@@ -318,7 +320,7 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
             return;
         }
 
-        if (reply->attribute(QNetworkRequest::Attribute::HttpStatusCodeAttribute).toInt() == 402)
+        if (httpStatus == 402)
         {
             // 402 is used by our client API to indicate an account subscription has expired
             qWarning() << "Could not request" << resource << "due to payment required";
