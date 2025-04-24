@@ -40,6 +40,7 @@ module PiaUnitTest
         'transportselector',
         'updatedownloader',
         'vpnmethod',
+        'wireguardip',
         'wireguarduapi',
         'workthread'
     ].tap do |t|
