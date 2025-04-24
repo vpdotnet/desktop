@@ -39,30 +39,7 @@ extern "C" {
 // X25519 key exchange function
 COMMON_EXPORT bool curve25519(unsigned char *out, const unsigned char *private_key, const unsigned char *public_key);
 
-// Make the OpenSSL function pointers accessible to other files in the project
-// For X25519 key exchange
-extern EVP_PKEY_CTX* (*EVP_PKEY_CTX_new_id)(int, ENGINE*);
-extern EVP_PKEY_CTX* (*EVP_PKEY_CTX_new)(EVP_PKEY*, ENGINE*);
-extern void (*EVP_PKEY_CTX_free)(EVP_PKEY_CTX*);
-extern EVP_PKEY* (*EVP_PKEY_new_raw_private_key)(int, ENGINE*, const unsigned char*, size_t);
-extern EVP_PKEY* (*EVP_PKEY_new_raw_public_key)(int, ENGINE*, const unsigned char*, size_t);
-extern void (*EVP_PKEY_free)(EVP_PKEY*);
-extern int (*EVP_PKEY_derive_init)(EVP_PKEY_CTX*);
-extern int (*EVP_PKEY_derive_set_peer)(EVP_PKEY_CTX*, EVP_PKEY*);
-extern int (*EVP_PKEY_derive)(EVP_PKEY_CTX*, unsigned char*, size_t*);
-
-// For ChaCha20-Poly1305 decryption
-extern EVP_CIPHER_CTX* (*EVP_CIPHER_CTX_new)();
-extern void (*EVP_CIPHER_CTX_free)(EVP_CIPHER_CTX*);
-extern int (*EVP_CIPHER_CTX_ctrl)(EVP_CIPHER_CTX*, int, int, void*);
-extern int (*EVP_DecryptInit_ex)(EVP_CIPHER_CTX*, const EVP_CIPHER*, ENGINE*, const unsigned char*, const unsigned char*);
-extern int (*EVP_DecryptUpdate)(EVP_CIPHER_CTX*, unsigned char*, int*, const unsigned char*, int);
-extern int (*EVP_DecryptFinal_ex)(EVP_CIPHER_CTX*, unsigned char*, int*);
-extern const EVP_CIPHER* (*EVP_chacha20_poly1305)();
-
-// For error handling
-extern unsigned long (*ERR_get_error)();
-extern void (*ERR_error_string_n)(unsigned long, char*, size_t);
+// OpenSSL function pointers are internal to crypto_helpers.cpp
 
 // Constants
 #ifndef EVP_PKEY_X25519

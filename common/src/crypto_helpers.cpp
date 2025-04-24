@@ -48,28 +48,28 @@
 
 // OpenSSL type declarations are now in the header file
 
-// OpenSSL functions we need to resolve - export these to be used by the rest of the project
-EVP_PKEY_CTX* (*EVP_PKEY_CTX_new_id)(int, ENGINE*) = nullptr;
-EVP_PKEY_CTX* (*EVP_PKEY_CTX_new)(EVP_PKEY*, ENGINE*) = nullptr;
-void (*EVP_PKEY_CTX_free)(EVP_PKEY_CTX*) = nullptr;
-EVP_PKEY* (*EVP_PKEY_new_raw_private_key)(int, ENGINE*, const unsigned char*, size_t) = nullptr;
-EVP_PKEY* (*EVP_PKEY_new_raw_public_key)(int, ENGINE*, const unsigned char*, size_t) = nullptr;
-void (*EVP_PKEY_free)(EVP_PKEY*) = nullptr;
-int (*EVP_PKEY_derive_init)(EVP_PKEY_CTX*) = nullptr;
-int (*EVP_PKEY_derive_set_peer)(EVP_PKEY_CTX*, EVP_PKEY*) = nullptr;
-int (*EVP_PKEY_derive)(EVP_PKEY_CTX*, unsigned char*, size_t*) = nullptr;
+// OpenSSL functions we need to resolve - static to this file only
+static EVP_PKEY_CTX* (*EVP_PKEY_CTX_new_id)(int, ENGINE*) = nullptr;
+static EVP_PKEY_CTX* (*EVP_PKEY_CTX_new)(EVP_PKEY*, ENGINE*) = nullptr;
+static void (*EVP_PKEY_CTX_free)(EVP_PKEY_CTX*) = nullptr;
+static EVP_PKEY* (*EVP_PKEY_new_raw_private_key)(int, ENGINE*, const unsigned char*, size_t) = nullptr;
+static EVP_PKEY* (*EVP_PKEY_new_raw_public_key)(int, ENGINE*, const unsigned char*, size_t) = nullptr;
+static void (*EVP_PKEY_free)(EVP_PKEY*) = nullptr;
+static int (*EVP_PKEY_derive_init)(EVP_PKEY_CTX*) = nullptr;
+static int (*EVP_PKEY_derive_set_peer)(EVP_PKEY_CTX*, EVP_PKEY*) = nullptr;
+static int (*EVP_PKEY_derive)(EVP_PKEY_CTX*, unsigned char*, size_t*) = nullptr;
 
-EVP_CIPHER_CTX* (*EVP_CIPHER_CTX_new)() = nullptr;
-void (*EVP_CIPHER_CTX_free)(EVP_CIPHER_CTX*) = nullptr;
-int (*EVP_CIPHER_CTX_ctrl)(EVP_CIPHER_CTX*, int, int, void*) = nullptr;
-int (*EVP_DecryptInit_ex)(EVP_CIPHER_CTX*, const EVP_CIPHER*, ENGINE*, const unsigned char*, const unsigned char*) = nullptr;
-int (*EVP_DecryptUpdate)(EVP_CIPHER_CTX*, unsigned char*, int*, const unsigned char*, int) = nullptr;
-int (*EVP_DecryptFinal_ex)(EVP_CIPHER_CTX*, unsigned char*, int*) = nullptr;
-const EVP_CIPHER* (*EVP_chacha20_poly1305)() = nullptr;
+static EVP_CIPHER_CTX* (*EVP_CIPHER_CTX_new)() = nullptr;
+static void (*EVP_CIPHER_CTX_free)(EVP_CIPHER_CTX*) = nullptr;
+static int (*EVP_CIPHER_CTX_ctrl)(EVP_CIPHER_CTX*, int, int, void*) = nullptr;
+static int (*EVP_DecryptInit_ex)(EVP_CIPHER_CTX*, const EVP_CIPHER*, ENGINE*, const unsigned char*, const unsigned char*) = nullptr;
+static int (*EVP_DecryptUpdate)(EVP_CIPHER_CTX*, unsigned char*, int*, const unsigned char*, int) = nullptr;
+static int (*EVP_DecryptFinal_ex)(EVP_CIPHER_CTX*, unsigned char*, int*) = nullptr;
+static const EVP_CIPHER* (*EVP_chacha20_poly1305)() = nullptr;
 
 // Error handling function pointers
-unsigned long (*ERR_get_error)() = nullptr;
-void (*ERR_error_string_n)(unsigned long, char*, size_t) = nullptr;
+static unsigned long (*ERR_get_error)() = nullptr;
+static void (*ERR_error_string_n)(unsigned long, char*, size_t) = nullptr;
 
 // These constants are now defined in the header file
 
