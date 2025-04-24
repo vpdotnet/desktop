@@ -21,6 +21,7 @@
 
 #include "metaserviceapibase.h"
 #include <common/src/locations.h>
+#include <common/src/openssl.h>
 
 MetaServiceApiBase::MetaServiceApiBase(const StateModel &state,
                                        QString dynamicBasePath,
@@ -47,7 +48,7 @@ ApiBaseSequence MetaServiceApiBase::beginAttempt()
     auto appendFixedBases = [&]
     {
         for(const auto &fixedBase : _fixedBaseUris)
-            bases.push_back({fixedBase, nullptr, {}, QString()});
+            bases.push_back({fixedBase, nullptr, {}});
     };
 
     // If we're connected check which infra we're using
@@ -58,7 +59,7 @@ ApiBaseSequence MetaServiceApiBase::beginAttempt()
             // Use a fixed address for the internal meta sevice available in
             // the modern infrastructure.  This is provided by the VPN server,
             // so use the VPN cert's common name
-            bases.push_back({QString("https://10.0.0.1:443") + _dynamicBasePath, _pDynamicBaseCA, _state.connectedServer()->commonName(), QString()});
+            bases.push_back({QString("https://10.0.0.1:443") + _dynamicBasePath, _pDynamicBaseCA, _state.connectedServer()->commonName()});
             // Fallback addresses
             appendFixedBases();
 
@@ -121,7 +122,10 @@ ApiBaseSequence MetaServiceApiBase::beginAttempt()
                 .arg(pBaseServer->ip())
                 .arg(basePort)
                 .arg(_dynamicBasePath);
-            bases.push_back({uri, _pDynamicBaseCA, pBaseServer->commonName(), pBaseServer->x509Certificate()});
+            std::shared_ptr<PrivateCA> pServerCA = createPrivateCAFromX509(pBaseServer->x509Certificate());
+            // If we have a server CA, use it, otherwise fall back to dynamic CA
+            std::shared_ptr<PrivateCA> pCA = pServerCA ? pServerCA : _pDynamicBaseCA;
+            bases.push_back({uri, pCA, pBaseServer->commonName()});
         }
     };
 
