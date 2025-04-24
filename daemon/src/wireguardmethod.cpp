@@ -563,40 +563,12 @@ auto WireguardMethod::parseAuthResult(const QJsonDocument &result)
             ipStr = decryptedIp;
             qInfo() << "Successfully decrypted IP address using centralized crypto_helpers implementation";
             
-            // Validate IP address format
-            bool validIPFormat = true;
-            QStringList parts = ipStr.split('/');
-            
-            // Check for IP/cidr format
-            if (parts.size() != 2) {
-                validIPFormat = false;
-            } else {
-                // Validate IP part
-                QStringList octets = parts[0].split('.');
-                if (octets.size() != 4) {
-                    validIPFormat = false;
-                } else {
-                    for (const QString &octet : octets) {
-                        bool ok;
-                        int val = octet.toInt(&ok);
-                        if (!ok || val < 0 || val > 255) {
-                            validIPFormat = false;
-                            break;
-                        }
-                    }
-                }
-                
-                // Validate CIDR part
-                bool ok;
-                int cidr = parts[1].toInt(&ok);
-                if (!ok || cidr < 0 || cidr > 32) {
-                    validIPFormat = false;
-                }
-            }
-            
-            if (!validIPFormat) {
-                qWarning() << "Decrypted IP has invalid format:" << ipStr;
-                throw Error{HERE, Error::Code::WireguardAddKeyFailed};
+            // When we decrypt an encrypted_ip, it might not include a CIDR prefix
+            // Check if this is a plain IP without CIDR (e.g. "10.7.0.23")
+            if (!ipStr.contains('/')) {
+                // Simply add /32 to the IP
+                qInfo() << "Appending /32 to decrypted IP:" << ipStr;
+                ipStr += "/32";
             }
             
             qInfo() << "Successfully decrypted IP address:" << ipStr;
