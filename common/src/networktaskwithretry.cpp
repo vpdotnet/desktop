@@ -150,8 +150,18 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
         // This sets up SNI and hostname verification correctly
         request.setPeerVerifyName(nextBase.peerVerifyName);
         
-        // Ensure Host header matches the SNI name to avoid request rejection
-        request.setRawHeader("Host", nextBase.peerVerifyName.toUtf8());
+        // Set SNI for TLS, but use a consistent approach for Host header
+        // For a diagnostic approach, let's log both options but use the actual URL host
+        QUrl requestUrl(requestUri);
+        QString urlHost = requestUrl.host();
+        if (requestUrl.port() != -1) {
+            urlHost += ":" + QString::number(requestUrl.port());
+        }
+        
+        qDebug() << "Host options - URL host:" << urlHost << "SNI hostname:" << nextBase.peerVerifyName;
+        
+        // Use the URL host for the Host header instead of the SNI name
+        request.setRawHeader("Host", urlHost.toUtf8());
         
         if (nextBase.pCA)
         {
@@ -263,13 +273,39 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
     {
         auto keepAlive = networkTask->sharedFromThis();
 
-        // Log the status just for supportability.
+        // Enhanced logging for detailed diagnostics of HTTP responses
         const auto &statusCode = reply->attribute(QNetworkRequest::Attribute::HttpStatusCodeAttribute);
         const auto &statusMsg = reply->attribute(QNetworkRequest::Attribute::HttpReasonPhraseAttribute);
-
         auto replyError = reply->error();
-        qInfo() << "Request for" << resource << "-" << statusCode.toInt()
-            << statusMsg.toByteArray().data() << "- error code:" << replyError;
+        
+        // Log full request/response details
+        qInfo() << "HTTP Response details for:" << resource;
+        qInfo() << "  Status: " << statusCode.toInt() << statusMsg.toByteArray().data();
+        qInfo() << "  QNetworkReply error code:" << replyError;
+        
+        // Log request URL and headers
+        qInfo() << "  Request URL:" << reply->request().url().toString();
+        qInfo() << "  Response Headers:";
+        const auto &headers = reply->rawHeaderPairs();
+        for (const auto &header : headers) {
+            qInfo() << "    " << header.first << ":" << header.second;
+        }
+        
+        // Try to log response body for error diagnosis (even for errors)
+        // Make a copy of the data so we don't interfere with regular processing
+        QByteArray responseBody;
+        
+        if (reply->isReadable()) {
+            // Create a buffer for the data
+            responseBody = reply->peek(reply->bytesAvailable());
+            if (!responseBody.isEmpty()) {
+                qInfo() << "  Response Body:" << responseBody;
+            } else {
+                qInfo() << "  Response Body: [empty]";
+            }
+        } else {
+            qInfo() << "  Response Body: [not readable]";
+        }
 
         // Check specifically for an auth error, which indicates that the creds are
         // not valid.
