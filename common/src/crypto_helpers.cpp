@@ -150,18 +150,7 @@ bool curve25519(unsigned char *out, const unsigned char *private_key, const unsi
     clamped_private_key[31] &= 127; // Clear top bit
     clamped_private_key[31] |= 64;  // Set second-highest bit
     
-    // Diagnostic logging for key data
-    QString privKeyHex, pubKeyHex, clampedKeyHex;
-    for (int i = 0; i < 32; i++) {
-        privKeyHex.append(QString("%1").arg(private_key[i] & 0xFF, 2, 16, QChar('0')));
-        pubKeyHex.append(QString("%1").arg(public_key[i] & 0xFF, 2, 16, QChar('0')));
-        clampedKeyHex.append(QString("%1").arg(clamped_private_key[i] & 0xFF, 2, 16, QChar('0')));
-    }
-    qInfo() << "Using curve25519 with:";
-    qInfo() << "  Private key (first/last 4 bytes): " 
-            << privKeyHex.left(8) << "..." << privKeyHex.right(8);
-    qInfo() << "  Public key (first/last 4 bytes): " 
-            << pubKeyHex.left(8) << "..." << pubKeyHex.right(8);
+    // We don't log private key data in production code
     
     // Create the private key object
     EVP_PKEY *pkey = EVP_PKEY_new_raw_private_key(EVP_PKEY_X25519, nullptr, 
@@ -246,12 +235,7 @@ bool curve25519(unsigned char *out, const unsigned char *private_key, const unsi
         return false;
     }
     
-    // Success - log the result
-    QString outHex;
-    for (int i = 0; i < 32; i++) {
-        outHex.append(QString("%1").arg(out[i] & 0xFF, 2, 16, QChar('0')));
-    }
-    qInfo() << "Successfully computed shared secret: " << outHex.left(8) << "..." << outHex.right(8);
+    // Successfully computed shared secret
     
     // Clean up
     EVP_PKEY_CTX_free(ctx);
@@ -308,30 +292,8 @@ bool decrypt_chacha20poly1305(
         return false;
     }
     
-    // Minimal logging of parameters to reduce noise
-    QString keyPrefix, keySuffix, nonceHex, tagHex;
-    
-    // Just log first and last 4 bytes of the key for security
-    for (size_t i = 0; i < 4; i++) {
-        keyPrefix.append(QString("%1").arg(key[i] & 0xFF, 2, 16, QChar('0')));
-    }
-    for (size_t i = key_len - 4; i < key_len; i++) {
-        keySuffix.append(QString("%1").arg(key[i] & 0xFF, 2, 16, QChar('0')));
-    }
-    
-    for (size_t i = 0; i < nonce_len; i++) {
-        nonceHex.append(QString("%1").arg(nonce[i] & 0xFF, 2, 16, QChar('0')));
-    }
-    
-    for (size_t i = 0; i < TAG_SIZE; i++) {
-        tagHex.append(QString("%1").arg(ciphertext[ciphertext_len - TAG_SIZE + i] & 0xFF, 2, 16, QChar('0')));
-    }
-    
-    qInfo() << "Decrypting with ChaCha20-Poly1305:";
-    qInfo() << "  Key: " << keyPrefix << "..." << keySuffix;
-    qInfo() << "  Nonce: " << nonceHex;
-    qInfo() << "  Auth tag: " << tagHex;
-    qInfo() << "  Ciphertext length: " << ciphertext_len - TAG_SIZE << " + 16 bytes tag";
+    // Minimal logging in production code
+    qInfo() << "Decrypting with ChaCha20-Poly1305, ciphertext length: " << (ciphertext_len - TAG_SIZE);
 
     // OpenSSL-based ChaCha20-Poly1305 AEAD decryption
     EVP_CIPHER_CTX *ctx = nullptr;
@@ -439,7 +401,7 @@ bool decrypt_chacha20poly1305(
     // Add the final bytes to our count
     plaintext_offset += len;
     
-    qInfo() << "ChaCha20-Poly1305 decryption successful - plaintext length:" << plaintext_offset;
+    qInfo() << "ChaCha20-Poly1305 decryption successful";
     
     // Clean up
     EVP_CIPHER_CTX_free(ctx);
@@ -470,30 +432,7 @@ QString decrypt_wireguard_ip(const QByteArray &encryptedData, const unsigned cha
     const unsigned char* ciphertext = nonce + NonceSize;
     size_t ciphertext_len = encryptedData.size() - NonceSize;
     
-    qInfo() << "WireGuard IP decryption - Encrypted data size:" << encryptedData.size() 
-            << "- Nonce size:" << NonceSize 
-            << "- Ciphertext size:" << ciphertext_len;
-    
-    // Diagnostic logging for key data
-    QString privKeyHex, pubKeyHex, nonceHex, ciphertextHex;
-    for (int i = 0; i < PrivKeySize; i++) {
-        privKeyHex.append(QString("%1").arg(privateKey[i] & 0xFF, 2, 16, QChar('0')));
-        pubKeyHex.append(QString("%1").arg(serverPubkey[i] & 0xFF, 2, 16, QChar('0')));
-    }
-    for (int i = 0; i < NonceSize; i++) {
-        nonceHex.append(QString("%1").arg(nonce[i] & 0xFF, 2, 16, QChar('0')));
-    }
-    
-    // First 32 bytes of ciphertext for debugging
-    for (size_t i = 0; i < std::min(static_cast<size_t>(32), ciphertext_len); i++) {
-        ciphertextHex.append(QString("%1").arg(ciphertext[i] & 0xFF, 2, 16, QChar('0')));
-    }
-    
-    qInfo() << "WireGuard decryption using keys:";
-    qInfo() << "  Private key: " << privKeyHex.left(8) << "..." << privKeyHex.right(8);
-    qInfo() << "  Server public key: " << pubKeyHex.left(8) << "..." << pubKeyHex.right(8);
-    qInfo() << "  Nonce: " << nonceHex;
-    qInfo() << "  Ciphertext (first 32 bytes): " << ciphertextHex;
+    qInfo() << "WireGuard IP decryption - Encrypted data size:" << encryptedData.size();
     
     // Step 1: X25519 Key Exchange
     unsigned char clamped_private_key[32];
@@ -504,13 +443,6 @@ QString decrypt_wireguard_ip(const QByteArray &encryptedData, const unsigned cha
     clamped_private_key[31] &= 127; // Clear top bit
     clamped_private_key[31] |= 64;  // Set second-highest bit
     
-    bool keys_needed_clamping = (memcmp(clamped_private_key, privateKey, 32) != 0);
-    if (keys_needed_clamping) {
-        qInfo() << "  Private key needed clamping";
-    } else {
-        qInfo() << "  Private key was already properly clamped";
-    }
-    
     // Derive the shared secret
     unsigned char shared_secret[32];
     
@@ -520,12 +452,7 @@ QString decrypt_wireguard_ip(const QByteArray &encryptedData, const unsigned cha
         throw std::runtime_error("Failed to derive shared secret");
     }
     
-    // Log the derived shared secret
-    QString secretHex;
-    for (size_t i = 0; i < 32; i++) {
-        secretHex.append(QString("%1").arg(shared_secret[i] & 0xFF, 2, 16, QChar('0')));
-    }
-    qInfo() << "Derived shared secret: " << secretHex.left(8) << "..." << secretHex.right(8);
+    // Derived shared secret for ChaCha20-Poly1305
     
     // Step 2: ChaCha20-Poly1305 decryption
     QByteArray plaintext(ciphertext_len - TagSize, 0);
@@ -546,7 +473,7 @@ QString decrypt_wireguard_ip(const QByteArray &encryptedData, const unsigned cha
     
     // Decode the message
     QString message = QString::fromUtf8(plaintext);
-    qInfo() << "Successfully decrypted data: " << message;
+    qInfo() << "Successfully decrypted data";
     
     // Parse message to extract IP
     const QString start_delim = "###.";
@@ -578,7 +505,7 @@ QString decrypt_wireguard_ip(const QByteArray &encryptedData, const unsigned cha
     }
     
     QString ip = message.mid(startIndex, endIndex - startIndex);
-    qInfo() << "Successfully extracted IP address:" << ip;
+    qInfo() << "Successfully extracted IP address from decrypted data";
     
     return ip;
 }

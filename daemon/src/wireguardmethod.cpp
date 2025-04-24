@@ -382,19 +382,7 @@ void WireguardMethod::deleteInterface()
 void WireguardMethod::handleAuthResult(const WireguardKeypair &clientKeypair,
                                        const QJsonDocument &result)
 {
-    // Store client private key for potential IP decryption with more diagnostics
-    qInfo() << "Storing client private key for decryption (size:" << sizeof(clientKeypair.privateKey()) << ")";
-    
-    // Create hex representation for logging - using QString instead of QByteArray
-    QString clientPrivKeyHex;
-    for (size_t i = 0; i < sizeof(clientKeypair.privateKey()); i++) {
-        clientPrivKeyHex.append(QString("%1").arg(clientKeypair.privateKey()[i] & 0xFF, 2, 16, QChar('0')));
-    }
-    qInfo() << "Client private key (first/last 4 bytes): " 
-            << clientPrivKeyHex.left(8) << "..." << clientPrivKeyHex.right(8);
-            
-    // TODO: SECURITY - Remove full key logging before release
-    qInfo() << "Client private key (full for debugging): " << clientPrivKeyHex;
+    // Store client private key for potential IP decryption
     
     std::copy(std::begin(clientKeypair.privateKey()),
               std::end(clientKeypair.privateKey()),
@@ -523,9 +511,7 @@ auto WireguardMethod::parseAuthResult(const QJsonDocument &result)
         // Convert Base64 encoded data to binary
         QByteArray encryptedData = QByteArray::fromBase64(encryptedIpStr.toLatin1());
         
-        // Diagnostic logging
-        qInfo() << "Base64 encoded length:" << encryptedIpStr.size() 
-                << "Decoded length:" << encryptedData.size();
+        qInfo() << "Decoding encrypted IP data";
         
         // Validate the decoded data
         static const int MinimumSize = 12 + 16 + 1; // nonce + tag + at least 1 byte of data
