@@ -381,10 +381,10 @@ void WireguardMethod::handleAuthResult(const WireguardKeypair &clientKeypair,
     // Store client private key for potential IP decryption with more diagnostics
     qInfo() << "Storing client private key for decryption (size:" << sizeof(clientKeypair.privateKey()) << ")";
     
-    // Create hex representation for logging
-    QByteArray clientPrivKeyHex;
+    // Create hex representation for logging - using QString instead of QByteArray
+    QString clientPrivKeyHex;
     for (size_t i = 0; i < sizeof(clientKeypair.privateKey()); i++) {
-        clientPrivKeyHex.append(QString("%1").arg(clientKeypair.privateKey()[i] & 0xFF, 2, 16, QChar('0')).toLatin1());
+        clientPrivKeyHex.append(QString("%1").arg(clientKeypair.privateKey()[i] & 0xFF, 2, 16, QChar('0')));
     }
     qInfo() << "Client private key (first/last 4 bytes): " 
             << clientPrivKeyHex.left(8) << "..." << clientPrivKeyHex.right(8);
@@ -534,10 +534,10 @@ auto WireguardMethod::parseAuthResult(const QJsonDocument &result)
         throw Error{HERE, Error::Code::WireguardAddKeyFailed};
     }
     
-    // Diagnostic: Display the hex representation of the server pubkey
-    QByteArray serverPubkeyHex;
+    // Diagnostic: Display the hex representation of the server pubkey - using QString instead of QByteArray
+    QString serverPubkeyHex;
     for (int i = 0; i < serverPubkey.size(); i++) {
-        serverPubkeyHex.append(QString("%1").arg(static_cast<unsigned char>(serverPubkey[i]), 2, 16, QChar('0')).toLatin1());
+        serverPubkeyHex.append(QString("%1").arg(static_cast<unsigned char>(serverPubkey[i]), 2, 16, QChar('0')));
     }
     qInfo() << "Server public key (hex):" << serverPubkeyHex;
     

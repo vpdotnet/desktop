@@ -138,11 +138,11 @@ bool curve25519(unsigned char *out, const unsigned char *private_key, const unsi
         return false;
     }
     
-    // Diagnostic logging for key data
-    QByteArray privKeyHex, pubKeyHex;
+    // Diagnostic logging for key data - using QString instead of QByteArray
+    QString privKeyHex, pubKeyHex;
     for (int i = 0; i < 32; i++) {
-        privKeyHex.append(QString("%1").arg(private_key[i] & 0xFF, 2, 16, QChar('0')).toLatin1());
-        pubKeyHex.append(QString("%1").arg(public_key[i] & 0xFF, 2, 16, QChar('0')).toLatin1());
+        privKeyHex.append(QString("%1").arg(private_key[i] & 0xFF, 2, 16, QChar('0')));
+        pubKeyHex.append(QString("%1").arg(public_key[i] & 0xFF, 2, 16, QChar('0')));
     }
     qInfo() << "Using curve25519 with:";
     qInfo() << "  Private key (first/last 4 bytes): " 
