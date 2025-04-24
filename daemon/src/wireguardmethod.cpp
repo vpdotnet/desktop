@@ -398,6 +398,10 @@ void WireguardMethod::handleAuthResult(const WireguardKeypair &clientKeypair,
         << serverPubkeyTrace
         << " server virtual ip:" << authResult._serverVirtualIp;
 
+    // Log the peer IP info for debugging
+    qInfo() << "Creating WireGuard interface with peer IP:" 
+            << authResult._peerIpNet.first.toString() << "/" << authResult._peerIpNet.second;
+            
     createInterface(clientKeypair, authResult);
 }
 
@@ -629,6 +633,10 @@ void WireguardMethod::createInterface(const WireguardKeypair &clientKeypair,
     wg_allowedip anyIpv4Allowed{};
     wgDev.first_peer = wgDev.last_peer = &serverPeer;
     serverPeer.first_allowedip = serverPeer.last_allowedip = &anyIpv4Allowed;
+    
+    qInfo() << "Creating device for server IP:" << authResult._serverIp 
+            << "port:" << authResult._serverPort
+            << "server virtual IP:" << authResult._serverVirtualIp;
 
     // Specify the device
     wgDev.flags = static_cast<wg_device_flags>(WGDEVICE_REPLACE_PEERS |

@@ -527,6 +527,55 @@ WireguardConfigDeviceTask::WireguardConfigDeviceTask(std::shared_ptr<QLocalSocke
     }
     request += '\n';    // Blank line to terminate request
 
+    // Log the configuration being sent (with private key redacted)
+    QString configSummary = QString("Sending WireGuard configuration:\n")
+                          + "- Device flags: replace_peers, private_key (redacted)";
+    
+    // Log peer info
+    for (const wg_peer *pPeer = wgDev.first_peer; pPeer; pPeer = pPeer->next_peer) {
+        QString peerInfo = "\n- Peer: ";
+        
+        if (pPeer->flags & WGPEER_HAS_PUBLIC_KEY) {
+            char keyHex[67]; // 32 bytes * 2 chars + null terminator
+            for (int i = 0; i < 32; i++) {
+                snprintf(keyHex + i*2, 3, "%02x", (unsigned char)pPeer->public_key[i]);
+            }
+            keyHex[64] = '\0';
+            peerInfo += QString("public_key=%1...").arg(QString::fromLatin1(keyHex, 8));
+        }
+        
+        if (pPeer->endpoint.addr.sa_family == AF_INET) {
+            const struct sockaddr_in &sin = pPeer->endpoint.addr4;
+            char ipStr[INET_ADDRSTRLEN];
+            inet_ntop(AF_INET, &sin.sin_addr, ipStr, INET_ADDRSTRLEN);
+            peerInfo += QString(", endpoint=%1:%2").arg(ipStr).arg(ntohs(sin.sin_port));
+        }
+        
+        if (pPeer->flags & WGPEER_HAS_PERSISTENT_KEEPALIVE_INTERVAL) {
+            peerInfo += QString(", keepalive=%1").arg(pPeer->persistent_keepalive_interval);
+        }
+        
+        // Log allowed IPs
+        for (const wg_allowedip *pAllowedIp = pPeer->first_allowedip; 
+             pAllowedIp; 
+             pAllowedIp = pAllowedIp->next_allowedip) {
+            peerInfo += "\n  - Allowed IP: ";
+            if (pAllowedIp->family == AF_INET) {
+                char ipStr[INET_ADDRSTRLEN];
+                inet_ntop(AF_INET, &pAllowedIp->ip4, ipStr, INET_ADDRSTRLEN);
+                peerInfo += QString("%1/%2").arg(ipStr).arg(pAllowedIp->cidr);
+            } else if (pAllowedIp->family == AF_INET6) {
+                char ipStr[INET6_ADDRSTRLEN];
+                inet_ntop(AF_INET6, &pAllowedIp->ip6, ipStr, INET6_ADDRSTRLEN);
+                peerInfo += QString("%1/%2").arg(ipStr).arg(pAllowedIp->cidr);
+            }
+        }
+        
+        configSummary += peerInfo;
+    }
+    
+    qInfo() << configSummary;
+
     if(!_ipc.writeIpcRequest(request))
     {
         // Failed; traced by writeIpcRequest
