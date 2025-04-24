@@ -588,17 +588,34 @@ auto WireguardMethod::parseAuthResult(const QJsonDocument &result)
         throw Error{HERE, Error::Code::WireguardAddKeyFailed};
     }
 
-    // Parse the IP/subnet
-    authResult._peerIpNet = QHostAddress::parseSubnet(ipStr);
-    if(authResult._peerIpNet.first.isNull() ||
-        authResult._peerIpNet.first.protocol() != QAbstractSocket::NetworkLayerProtocol::IPv4Protocol ||
-        authResult._peerIpNet.second <= 0 || authResult._peerIpNet.second > 32)
+    // Parse the IP/subnet but maintain the original IP address (not network address)
+    // Step 1: Use parseSubnet for validation but don't use its first component (network address)
+    auto parsedSubnet = QHostAddress::parseSubnet(ipStr);
+    
+    if(parsedSubnet.first.isNull() ||
+        parsedSubnet.first.protocol() != QAbstractSocket::NetworkLayerProtocol::IPv4Protocol ||
+        parsedSubnet.second <= 0 || parsedSubnet.second > 32)
     {
         qWarning() << "Invalid peer IP:" << ipStr << "->"
-            << authResult._peerIpNet.first << "/"
-            << authResult._peerIpNet.second;
+            << parsedSubnet.first << "/"
+            << parsedSubnet.second;
         throw Error{HERE, Error::Code::WireguardAddKeyFailed};
     }
+    
+    // Step 2: Extract the original IP portion and keep the validated subnet prefix
+    QStringList parts = ipStr.split("/");
+    QHostAddress originalIp(parts[0]);
+    
+    if(originalIp.isNull() || 
+       originalIp.protocol() != QAbstractSocket::NetworkLayerProtocol::IPv4Protocol) 
+    {
+        qWarning() << "Invalid IP address format:" << parts[0];
+        throw Error{HERE, Error::Code::WireguardAddKeyFailed};
+    }
+    
+    // Store the original IP with the validated subnet prefix
+    authResult._peerIpNet.first = originalIp;
+    authResult._peerIpNet.second = parsedSubnet.second;
 
     return authResult;
 }
