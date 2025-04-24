@@ -24,7 +24,11 @@
 #include "builtin/path.h"
 #include <QDebug>
 #include <QLibrary>
-#include <openssl/err.h> // For error reporting
+
+// Include OpenSSL headers for compilation but not for runtime implementation
+// We'll use dynamic loading for the actual implementation
+#include <openssl/evp.h>
+#include <openssl/err.h>
 
 #if defined(Q_OS_WIN)
     #if defined(_M_X64)
@@ -44,12 +48,7 @@
         static const QString libcryptoName = QStringLiteral("libcrypto.so.3");
 #endif
 
-// Forward declarations for OpenSSL types
-struct EVP_PKEY_CTX;
-struct EVP_PKEY;
-struct ENGINE;
-struct EVP_CIPHER_CTX;
-struct EVP_CIPHER;
+// OpenSSL types are already included from headers
 
 // OpenSSL functions we need to resolve
 static EVP_PKEY_CTX* (*EVP_PKEY_CTX_new_id)(int, ENGINE*) = nullptr;
@@ -69,9 +68,8 @@ static int (*EVP_DecryptUpdate)(EVP_CIPHER_CTX*, unsigned char*, int*, const uns
 static int (*EVP_DecryptFinal_ex)(EVP_CIPHER_CTX*, unsigned char*, int*) = nullptr;
 static const EVP_CIPHER* (*EVP_chacha20_poly1305)() = nullptr;
 
-// Error reporting functions
-static unsigned long (*ERR_get_error)() = nullptr;
-static void (*ERR_error_string_n)(unsigned long, char*, size_t) = nullptr;
+// We'll use the direct functions from the headers for error reporting
+// This avoids redefinition errors since we're including the OpenSSL headers directly
 
 enum
 {
@@ -128,9 +126,7 @@ static bool loadCryptoFunctions()
     RESOLVE_OPENSSL_FUNCTION(EVP_DecryptFinal_ex);
     RESOLVE_OPENSSL_FUNCTION(EVP_chacha20_poly1305);
     
-    // Error reporting functions
-    RESOLVE_OPENSSL_FUNCTION(ERR_get_error);
-    RESOLVE_OPENSSL_FUNCTION(ERR_error_string_n);
+    // Error reporting functions are used directly from the headers
 
 #undef RESOLVE_OPENSSL_FUNCTION
 #undef TRY_RESOLVE_OPENSSL_FUNCTION
@@ -224,6 +220,7 @@ bool curve25519(unsigned char *out, const unsigned char *private_key, const unsi
     // Derive shared secret with additional error diagnostics
     if (EVP_PKEY_derive(ctx, out, &outlen) <= 0)
     {
+        // These are linked directly from the OpenSSL headers
         unsigned long openssl_error = ERR_get_error();
         char error_string[256];
         ERR_error_string_n(openssl_error, error_string, sizeof(error_string));
