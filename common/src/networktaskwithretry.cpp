@@ -150,6 +150,9 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
         // This sets up SNI and hostname verification correctly
         request.setPeerVerifyName(nextBase.peerVerifyName);
         
+        // Ensure Host header matches the SNI name to avoid request rejection
+        request.setRawHeader("Host", nextBase.peerVerifyName.toUtf8());
+        
         if (nextBase.pCA)
         {
             qDebug() << "requesting:" << requestResource
@@ -242,88 +245,15 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
             }
         });
 
-    // Handle peer name verification
-    if(!nextBase.peerVerifyName.isEmpty())
+    // Handle SSL errors for custom CA verification
+    if(!nextBase.peerVerifyName.isEmpty() && nextBase.pCA)
     {
-        QSslConfiguration sslConfig = request.sslConfiguration();
-        
-        // If a custom CA is specified, use it exclusively
-        if(nextBase.pCA)
-        {
-            // Since we're using a custom CA, do not use the default CAs
-            sslConfig.setCaCertificates({});
-            request.setSslConfiguration(sslConfig);
-            
-            // Connect the SSL errors handler for custom CA verification
-            connect(reply.get(), &QNetworkReply::sslErrors, this,
-                [this, reply, nextBase](const QList<QSslError> &errors)
-                {
-                    checkSslCertificate(*reply, nextBase, errors);
-                });
-        }
-        else
-        {
-            // When using system CA certificates with a custom peer name
-            // Make sure peer verification is on (should be by default)
-            sslConfig.setPeerVerifyMode(QSslSocket::VerifyPeer);
-            request.setSslConfiguration(sslConfig);
-            
-            qInfo() << "Using system root certificates with peer name" << nextBase.peerVerifyName;
-                   
-            // QNetworkRequest doesn't have an API to set the peer verify name directly
-            // So we'll compare certificates ourselves to determine if we should accept it
-            connect(reply.get(), &QNetworkReply::sslErrors, this,
-                [reply, peerName = nextBase.peerVerifyName, resource = _resource](const QList<QSslError> &errors)
-                {
-                    // Get the peer certificate
-                    QSslCertificate peerCert = reply->sslConfiguration().peerCertificate();
-                    
-                    if (peerCert.isNull()) {
-                        qWarning() << "No peer certificate available for" << resource;
-                        return; // Don't ignore errors, let Qt handle it
-                    }
-                    
-                    // Check if the certificate is valid for the expected peer name
-                    QStringList altNames = peerCert.subjectAlternativeNames().values(QSsl::AlternativeNameEntryType::DnsEntry);
-                    bool nameMatches = false;
-                    
-                    // Check if peer name matches any of the DNS SANs
-                    for (const QString &altName : altNames) {
-                        if (QString::compare(altName, peerName, Qt::CaseInsensitive) == 0) {
-                            nameMatches = true;
-                            break;
-                        }
-                    }
-                    
-                    // Also check the common name if no SAN match
-                    if (!nameMatches) {
-                        QString commonName = peerCert.subjectInfo(QSslCertificate::CommonName).join(", ");
-                        if (QString::compare(commonName, peerName, Qt::CaseInsensitive) == 0) {
-                            nameMatches = true;
-                        }
-                    }
-                    
-                    if (nameMatches) {
-                        // Certificate matches the expected peer name, check for other serious errors
-                        bool hasOtherErrors = false;
-                        for (const auto &error : errors) {
-                            if (error.error() != QSslError::HostNameMismatch) {
-                                hasOtherErrors = true;
-                                qWarning() << "SSL error:" << error.errorString();
-                            }
-                        }
-                        
-                        if (!hasOtherErrors) {
-                            // Only hostname mismatch errors, which we've validated manually
-                            qInfo() << "Verified certificate for" << peerName << "- ignoring hostname mismatch";
-                            reply->ignoreSslErrors();
-                        }
-                    } else {
-                        qWarning() << "Certificate name mismatch: Expected" << peerName 
-                                   << "but certificate is for" << altNames.join(", ");
-                    }
-                });
-        }
+        // Connect the SSL errors handler for custom CA verification
+        connect(reply.get(), &QNetworkReply::sslErrors, this,
+            [this, reply, nextBase](const QList<QSslError> &errors)
+            {
+                checkSslCertificate(*reply, nextBase, errors);
+            });
     }
 
     // Create a network task that resolves to the result of the request

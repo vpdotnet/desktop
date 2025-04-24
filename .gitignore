@@ -1,6 +1,7 @@
 /qbs/
 /out/
 /build-*/
+/build_macos.sh
 # Local build variable defaults (see rake/util/buildenv.rb)
 .buildenv
 # Default build directory when opening CMake glue project in most IDEs
