@@ -24,6 +24,7 @@
 #include "builtin/path.h"
 #include <QDebug>
 #include <QLibrary>
+#include <openssl/err.h> // For error reporting
 
 #if defined(Q_OS_WIN)
     #if defined(_M_X64)
@@ -67,6 +68,10 @@ static int (*EVP_DecryptInit_ex)(EVP_CIPHER_CTX*, const EVP_CIPHER*, ENGINE*, co
 static int (*EVP_DecryptUpdate)(EVP_CIPHER_CTX*, unsigned char*, int*, const unsigned char*, int) = nullptr;
 static int (*EVP_DecryptFinal_ex)(EVP_CIPHER_CTX*, unsigned char*, int*) = nullptr;
 static const EVP_CIPHER* (*EVP_chacha20_poly1305)() = nullptr;
+
+// Error reporting functions
+static unsigned long (*ERR_get_error)() = nullptr;
+static void (*ERR_error_string_n)(unsigned long, char*, size_t) = nullptr;
 
 enum
 {
@@ -122,6 +127,10 @@ static bool loadCryptoFunctions()
     RESOLVE_OPENSSL_FUNCTION(EVP_DecryptUpdate);
     RESOLVE_OPENSSL_FUNCTION(EVP_DecryptFinal_ex);
     RESOLVE_OPENSSL_FUNCTION(EVP_chacha20_poly1305);
+    
+    // Error reporting functions
+    RESOLVE_OPENSSL_FUNCTION(ERR_get_error);
+    RESOLVE_OPENSSL_FUNCTION(ERR_error_string_n);
 
 #undef RESOLVE_OPENSSL_FUNCTION
 #undef TRY_RESOLVE_OPENSSL_FUNCTION
@@ -138,16 +147,36 @@ bool curve25519(unsigned char *out, const unsigned char *private_key, const unsi
         return false;
     }
     
+    // Create a normalized copy of the private key (clamping as per curve25519 requirements)
+    // Some implementations require the private key to be "clamped" (bits masked according to curve25519 spec)
+    unsigned char clamped_private_key[32];
+    memcpy(clamped_private_key, private_key, 32);
+    
+    // Clamp the key according to curve25519 specification
+    clamped_private_key[0] &= 248;  // Clear bottom 3 bits
+    clamped_private_key[31] &= 127; // Clear top bit
+    clamped_private_key[31] |= 64;  // Set second-highest bit
+    
+    bool keys_needed_clamping = (memcmp(clamped_private_key, private_key, 32) != 0);
+    
     // Diagnostic logging for key data - using QString instead of QByteArray
-    QString privKeyHex, pubKeyHex;
+    QString privKeyHex, pubKeyHex, clampedKeyHex;
     for (int i = 0; i < 32; i++) {
         privKeyHex.append(QString("%1").arg(private_key[i] & 0xFF, 2, 16, QChar('0')));
         pubKeyHex.append(QString("%1").arg(public_key[i] & 0xFF, 2, 16, QChar('0')));
+        clampedKeyHex.append(QString("%1").arg(clamped_private_key[i] & 0xFF, 2, 16, QChar('0')));
     }
     qInfo() << "Using curve25519 with:";
     qInfo() << "  Private key (first/last 4 bytes): " 
             << privKeyHex.left(8) << "..." << privKeyHex.right(8);
     qInfo() << "  Public key (full): " << pubKeyHex;
+    
+    if (keys_needed_clamping) {
+        qInfo() << "  Private key needed clamping. Clamped version: " 
+                << clampedKeyHex.left(8) << "..." << clampedKeyHex.right(8);
+    } else {
+        qInfo() << "  Private key was already properly clamped";
+    }
 
     EVP_PKEY_CTX *ctx = nullptr;
     EVP_PKEY *pkey = nullptr;
@@ -162,8 +191,8 @@ bool curve25519(unsigned char *out, const unsigned char *private_key, const unsi
         goto cleanup;
     }
     
-    // Load private key
-    pkey = EVP_PKEY_new_raw_private_key(EVP_PKEY_X25519, nullptr, private_key, 32);
+    // Load private key - use the clamped version
+    pkey = EVP_PKEY_new_raw_private_key(EVP_PKEY_X25519, nullptr, clamped_private_key, 32);
     if (!pkey)
     {
         qWarning() << "Failed to load private key";
@@ -192,10 +221,14 @@ bool curve25519(unsigned char *out, const unsigned char *private_key, const unsi
         goto cleanup;
     }
     
-    // Derive shared secret
+    // Derive shared secret with additional error diagnostics
     if (EVP_PKEY_derive(ctx, out, &outlen) <= 0)
     {
-        qWarning() << "Failed to derive shared secret";
+        unsigned long openssl_error = ERR_get_error();
+        char error_string[256];
+        ERR_error_string_n(openssl_error, error_string, sizeof(error_string));
+        qWarning() << "Failed to derive shared secret. OpenSSL error:" << openssl_error 
+                   << "Description:" << error_string;
         goto cleanup;
     }
     
