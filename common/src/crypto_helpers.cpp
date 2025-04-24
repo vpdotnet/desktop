@@ -137,6 +137,17 @@ bool curve25519(unsigned char *out, const unsigned char *private_key, const unsi
         qWarning() << "Failed to load OpenSSL functions";
         return false;
     }
+    
+    // Diagnostic logging for key data
+    QByteArray privKeyHex, pubKeyHex;
+    for (int i = 0; i < 32; i++) {
+        privKeyHex.append(QString("%1").arg(private_key[i] & 0xFF, 2, 16, QChar('0')).toLatin1());
+        pubKeyHex.append(QString("%1").arg(public_key[i] & 0xFF, 2, 16, QChar('0')).toLatin1());
+    }
+    qInfo() << "Using curve25519 with:";
+    qInfo() << "  Private key (first/last 4 bytes): " 
+            << privKeyHex.left(8) << "..." << privKeyHex.right(8);
+    qInfo() << "  Public key (full): " << pubKeyHex;
 
     EVP_PKEY_CTX *ctx = nullptr;
     EVP_PKEY *pkey = nullptr;

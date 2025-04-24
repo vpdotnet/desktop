@@ -378,7 +378,17 @@ void WireguardMethod::deleteInterface()
 void WireguardMethod::handleAuthResult(const WireguardKeypair &clientKeypair,
                                        const QJsonDocument &result)
 {
-    // Store client private key for potential IP decryption
+    // Store client private key for potential IP decryption with more diagnostics
+    qInfo() << "Storing client private key for decryption (size:" << sizeof(clientKeypair.privateKey()) << ")";
+    
+    // Create hex representation for logging
+    QByteArray clientPrivKeyHex;
+    for (size_t i = 0; i < sizeof(clientKeypair.privateKey()); i++) {
+        clientPrivKeyHex.append(QString("%1").arg(clientKeypair.privateKey()[i] & 0xFF, 2, 16, QChar('0')).toLatin1());
+    }
+    qInfo() << "Client private key (first/last 4 bytes): " 
+            << clientPrivKeyHex.left(8) << "..." << clientPrivKeyHex.right(8);
+    
     std::copy(std::begin(clientKeypair.privateKey()),
               std::end(clientKeypair.privateKey()),
               std::begin(_clientPrivateKey));
@@ -511,14 +521,26 @@ auto WireguardMethod::parseAuthResult(const QJsonDocument &result)
     authResult._serverPort = static_cast<quint16>(serverPort);
     authResult._serverVirtualIp = std::move(serverVip);
 
-    // Copy server public key
+    // Copy server public key with additional diagnostics
     QByteArray serverPubkey = QByteArray::fromBase64(serverPubkeyStr.toLatin1());
+    qInfo() << "Server public key: Base64=" << serverPubkeyStr 
+            << "Decoded length=" << serverPubkey.size()
+            << "Expected length=" << sizeof(authResult._serverPubkey);
+            
     if(serverPubkey.size() != sizeof(authResult._serverPubkey))
     {
         qWarning() << "Invalid server public key (len" << serverPubkey.size()
             << "):" << serverPubkeyStr;
         throw Error{HERE, Error::Code::WireguardAddKeyFailed};
     }
+    
+    // Diagnostic: Display the hex representation of the server pubkey
+    QByteArray serverPubkeyHex;
+    for (int i = 0; i < serverPubkey.size(); i++) {
+        serverPubkeyHex.append(QString("%1").arg(static_cast<unsigned char>(serverPubkey[i]), 2, 16, QChar('0')).toLatin1());
+    }
+    qInfo() << "Server public key (hex):" << serverPubkeyHex;
+    
     std::copy(serverPubkey.begin(), serverPubkey.end(), std::begin(authResult._serverPubkey));
 
     // Check for peer_ip or encrypted_ip in the response
@@ -532,8 +554,19 @@ auto WireguardMethod::parseAuthResult(const QJsonDocument &result)
         // If we have encrypted_ip, decrypt it
         qInfo() << "Found encrypted IP data, attempting to decrypt";
         
-        // Convert Base64 encoded data to binary
-        QByteArray encryptedData = QByteArray::fromBase64(encryptedIpStr.toLatin1());
+        // Convert Base64 encoded data to binary with better error handling
+        QByteArray encryptedIpBinary = encryptedIpStr.toLatin1();
+        QByteArray encryptedData = QByteArray::fromBase64(encryptedIpBinary);
+        
+        // Diagnostic logging
+        qInfo() << "Base64 encoded length:" << encryptedIpBinary.size() 
+                << "Decoded length:" << encryptedData.size();
+        
+        // Validate the decoded data
+        if (encryptedData.size() < 20) { // Minimum sensible size for nonce + data
+            qWarning() << "Base64 decoding produced too little data:" << encryptedData.size() << "bytes";
+            throw Error{HERE, Error::Code::WireguardAddKeyFailed};
+        }
         
         // We need the private key from WireguardKeypair to decrypt
         // The client private key should be passed from handleAuthResult
