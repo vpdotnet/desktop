@@ -40,6 +40,16 @@ ApiBaseData::ApiBaseData(const QString &uri, std::shared_ptr<PrivateCA> pCA,
     addBaseUri(uri, std::move(pCA), peerVerifyName);
 }
 
+ApiBaseData::ApiBaseData(const BaseUri &baseUri)
+    : _baseUris{}, _nextStartIndex{0}
+{
+    // Add the Uri and ensure it ends with '/'
+    BaseUri uri = baseUri;
+    if(!uri.uri.endsWith('/'))
+        uri.uri += '/';
+    _baseUris.push_back(uri);
+}
+
 ApiBaseData::ApiBaseData(std::vector<BaseUri> baseUris)
     : _baseUris{std::move(baseUris)}, _nextStartIndex{0}
 {
@@ -55,9 +65,9 @@ void ApiBaseData::addBaseUri(const QString &uri, std::shared_ptr<PrivateCA> pCA,
                              const QString &peerVerifyName)
 {
     if(!uri.endsWith('/'))
-        _baseUris.push_back({uri + '/', std::move(pCA), peerVerifyName});
+        _baseUris.push_back({uri + '/', std::move(pCA), peerVerifyName, QString()});
     else
-        _baseUris.push_back({uri, std::move(pCA), peerVerifyName});
+        _baseUris.push_back({uri, std::move(pCA), peerVerifyName, QString()});
 }
 
 BaseUri ApiBaseData::getUri(unsigned index)
@@ -112,8 +122,17 @@ std::shared_ptr<PrivateCA> FixedApiBase::createCAFromX509(const QString &x509Cer
 }
 
 FixedApiBase::FixedApiBase(const QString &uri, const QString &peerVerifyName, const QString &x509CertData)
-    : _pData{new ApiBaseData{uri, createCAFromX509(x509CertData), peerVerifyName}}
 {
+    // Create the BaseUri structure
+    BaseUri baseUri;
+    baseUri.uri = uri;
+    baseUri.pCA = createCAFromX509(x509CertData);
+    baseUri.peerVerifyName = peerVerifyName;
+    baseUri.x509CertData = x509CertData;
+    
+    // Create the ApiBaseData with this uri
+    _pData = std::make_shared<ApiBaseData>(baseUri);
+    
     // If creating the CA failed, log a warning
     if (!x509CertData.isEmpty() && !_pData->getUri(0).pCA) {
         qWarning() << "Failed to create CA from provided X509 data. Will use system certificates instead.";

@@ -78,6 +78,8 @@ public:
     // Create ApiBaseData with one host, with an optional CA and peer name.
     ApiBaseData(const QString &uri, std::shared_ptr<PrivateCA> pCA,
                 const QString &peerVerifyName);
+    // Create ApiBaseData with a single BaseUri
+    ApiBaseData(const BaseUri &baseUri);
     // Create an ApiBaseData with any combination of base URIs
     ApiBaseData(std::vector<BaseUri> baseUris);
 
