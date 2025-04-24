@@ -418,7 +418,6 @@ QString decrypt_wireguard_ip(const QByteArray &encryptedData, const unsigned cha
     
     static const int NonceSize = 12; // ChaCha20-Poly1305 nonce size
     static const int TagSize = 16;   // Poly1305 tag size
-    static const int PrivKeySize = 32; // X25519 key size
     
     // Check if we have enough data
     if (encryptedData.size() < NonceSize + TagSize) {
