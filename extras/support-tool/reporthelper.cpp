@@ -290,7 +290,7 @@ QString ReportHelper::getUrl() const
         }
     }
 
-    return QStringLiteral("https://clients.privateinternetaccess.com/api/v1/reports/upload");
+    return QStringLiteral("https://vp.net/_rest/VPNET:clientReportUpload");
 }
 
 
