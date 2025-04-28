@@ -296,8 +296,7 @@ protected:
     // dedicated IPs, update information, client notifications, etc.  Used for
     // testing to avoid waiting on long timers.
     void RPC_refreshMetadata();
-    // Send service quality events early (if enabled, used by a dev tool)
-    void RPC_sendServiceQualityEvents();
+    // Service quality events have been removed
 
     // Client activation
     void RPC_notifyClientActivate();
@@ -510,8 +509,8 @@ private:
     void onAutomationRuleTriggered(const nullable_t<AutomationRule> &currentRule,
                                    Automation::Trigger trigger);
 
-    Error connectVPN(ServiceQuality::ConnectionSource source);
-    void disconnectVPN(ServiceQuality::ConnectionSource source);
+    Error connectVPN(const QString &source);
+    void disconnectVPN(const QString &source);
 protected:
     bool _started, _stopping;
 
@@ -563,8 +562,7 @@ protected:
     SnoozeTimer _snoozeTimer;
     std::unique_ptr<NetworkMonitor> _pNetworkMonitor;
     Automation _automation;
-    // ServiceQuality is created after the data/settings are loaded
-    nullable_t<ServiceQuality> _pServiceQuality;
+    // ServiceQuality has been removed
 
     QSet<QString> _dataChanges;
     QSet<QString> _accountChanges;

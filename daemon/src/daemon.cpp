@@ -447,7 +447,7 @@ Daemon::Daemon(QObject* parent)
     _methodRegistry->add(RPC_METHOD(writeDummyLogs));
     _methodRegistry->add(RPC_METHOD(crash));
     _methodRegistry->add(RPC_METHOD(refreshMetadata));
-    _methodRegistry->add(RPC_METHOD(sendServiceQualityEvents));
+    // Service quality events have been removed
     _methodRegistry->add(RPC_METHOD(notifyClientActivate));
     _methodRegistry->add(RPC_METHOD(notifyClientDeactivate));
     _methodRegistry->add(RPC_METHOD(emailLogin));
@@ -501,7 +501,7 @@ Daemon::Daemon(QObject* parent)
         [this]()
         {
             _state.needsReconnect(true);
-            Error err = connectVPN(ServiceQuality::ConnectionSource::Automatic);
+            Error err = connectVPN("Automatic");
             if(err)
             {
                 qError() << "Daemon was unable to reconnect after a network change while using OpenVPN";
@@ -699,21 +699,7 @@ Daemon::Daemon(QObject* parent)
     auto daemonCrashDir = Path::DaemonDataDir / QStringLiteral("crashes");
     daemonCrashDir.cleanDirFiles(5);
 
-    auto ver = SemVersion::tryParse(_settings.serviceQualityAcceptanceVersion());
-    bool enableQualityEventsFlag = _data.hasFlag(QStringLiteral("service_quality_events"))
-            && !_settings.serviceQualityAcceptanceVersion().isEmpty();
-
-    _pServiceQuality.emplace(_apiClient, _environment, _account, _data, enableQualityEventsFlag, ver);
-    auto updateEventsEnabled = [this]()
-    {
-        auto ver = SemVersion::tryParse(_settings.serviceQualityAcceptanceVersion());
-        bool enableQualityEvents = _data.hasFlag(QStringLiteral("service_quality_events"))
-                && !_settings.serviceQualityAcceptanceVersion().isEmpty();
-        _pServiceQuality->enable(enableQualityEvents, ver);
-    };
-    connect(&_settings, &DaemonSettings::serviceQualityAcceptanceVersionChanged, this,
-            updateEventsEnabled);
-    connect(&_data, &DaemonData::flagsChanged, this, updateEventsEnabled);
+    // Service quality has been completely removed
 }
 
 Daemon::~Daemon()
@@ -865,7 +851,7 @@ void Daemon::RPC_applySettings(const QJsonObject &settings, bool reconnectIfNeed
             // should still reflect the automation trigger.  All other
             // connection sources clear or update the trigger.
             auto automationLastTrigger = _state.automationLastTrigger();
-            Error err = connectVPN(ServiceQuality::ConnectionSource::Manual);
+            Error err = connectVPN("Manual");
             _state.automationLastTrigger(automationLastTrigger);
             if(err)
             {
@@ -1053,7 +1039,7 @@ void Daemon::RPC_dismissDedicatedIpChange()
 void Daemon::RPC_connectVPN()
 {
     mustBeAwake(); // If this runs, the system must be awake
-    Error err = connectVPN(ServiceQuality::ConnectionSource::Manual);
+    Error err = connectVPN("Manual");
     // If we can't connect now (not logged in or daemon is inactive), forward
     // the error to the client.  The CLI has specific support for these errors.
     if(err)
@@ -1073,7 +1059,7 @@ void Daemon::RPC_disconnectVPN()
     mustBeAwake(); // If this runs, the system must be awake
     // There's no additional logic needed for a manual disconnect.  This can't
     // fail, we don't count these, etc.
-    disconnectVPN(ServiceQuality::ConnectionSource::Manual);
+    disconnectVPN("Manual");
 }
 
 void Daemon::RPC_startSnooze(qint64 seconds)
@@ -1373,10 +1359,7 @@ void Daemon::RPC_refreshMetadata()
     _updateDownloader.refreshUpdate();
 }
 
-void Daemon::RPC_sendServiceQualityEvents()
-{
-    _pServiceQuality->sendEventsNow();
-}
+// Service quality events have been removed
 
 void Daemon::RPC_notifyClientActivate()
 {
@@ -2341,11 +2324,7 @@ void Daemon::vpnStateChanged(VPNConnection::State state,
     if(state == VPNConnection::State::Connected)
         queueNotification(&Daemon::logRoutingTable);
 
-    // Inform ServiceQuality of the Connected and Disconnected states
-    if(state == VPNConnection::State::Connected)
-        _pServiceQuality->vpnConnected();
-    else if(state == VPNConnection::State::Disconnected)
-        _pServiceQuality->vpnDisconnected();
+    // Service quality events have been removed
 
     queueApplyFirewallRules();
 }
@@ -3639,7 +3618,7 @@ void Daemon::applyCurrentAutomationRule()
         }
         // Call disconnectVPN() even if the VPN is already disabled, because it
         // can also end a snooze.
-        disconnectVPN(ServiceQuality::ConnectionSource::Automatic);
+        disconnectVPN("Automatic");
     }
     else
     {
@@ -3684,7 +3663,7 @@ void Daemon::onAutomationRuleTriggered(const nullable_t<AutomationRule> &current
     }
 }
 
-Error Daemon::connectVPN(ServiceQuality::ConnectionSource source)
+Error Daemon::connectVPN(const QString &source)
 {
     // Cannot connect when no active client is connected (there'd be no way for
     // the daemon to know if the user logs out, etc.)
@@ -3735,10 +3714,7 @@ Error Daemon::connectVPN(ServiceQuality::ConnectionSource source)
         // If this is a reconnect while still connecting, the previous "attempt"
         // event is left unresolved, since it was neither canceled nor
         // established.
-        ServiceQuality::VpnProtocol protocol{ServiceQuality::VpnProtocol::OpenVPN};
-        if(_settings.method() == QStringLiteral("wireguard"))
-            protocol = ServiceQuality::VpnProtocol::WireGuard;
-        _pServiceQuality->vpnEnabled(protocol, source);
+        // Service quality events have been removed
     }
     _state.needsReconnect(false);
 
@@ -3750,12 +3726,12 @@ Error Daemon::connectVPN(ServiceQuality::ConnectionSource source)
     return {};
 }
 
-void Daemon::disconnectVPN(ServiceQuality::ConnectionSource source)
+void Daemon::disconnectVPN(const QString &source)
 {
     _snoozeTimer.forceStopSnooze();
     _state.vpnEnabled(false);
 
-    _pServiceQuality->vpnDisabled(source);
+    // Service quality events have been removed
 
     _connection->disconnectVPN();
 
@@ -3970,7 +3946,7 @@ void SnoozeTimer::startSnooze(qint64 seconds)
     // anyway for snooze).  The user didn't really ask to "disconnect", they
     // asked to "snooze" and "disconnect" is just how we implement the first
     // part of the snooze.
-    _daemon->disconnectVPN(ServiceQuality::ConnectionSource::Automatic);
+    _daemon->disconnectVPN("Automatic");
     // Indicate that this disconnection is for snooze.
     g_state.snoozeEndTime(0);
     // Store the snooze length so we can start the timer after disconnect completes
@@ -3984,7 +3960,7 @@ void SnoozeTimer::stopSnooze()
     // (all other connections reset snooze - note that this calls
     // forceStopSnooze(), which also stops the snooze timer)
     auto snoozeEndTime = g_state.snoozeEndTime();
-    Error err = _daemon->connectVPN(ServiceQuality::ConnectionSource::Automatic);
+    Error err = _daemon->connectVPN("Automatic");
     if(err)
     {
         // Can't resume from snooze, connect was not possible.  (Should rarely

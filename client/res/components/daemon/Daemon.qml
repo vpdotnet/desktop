@@ -141,9 +141,7 @@ QtObject {
   function refreshMetadata() {
     call("refreshMetadata", arguments)
   }
-  function sendServiceQualityEvents() {
-    call("sendServiceQualityEvents", arguments)
-  }
+  // Service quality events have been removed
   function emailLogin(email) {
     call("emailLogin", arguments);
   }

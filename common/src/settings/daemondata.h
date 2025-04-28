@@ -155,31 +155,7 @@ public:
     // In-app communication message
     JsonField(AppMessage, appMessage, {})
 
-    // Service quality events - only used if the user has opted in to providing
-    // service quality information back to us (see
-    // DaemonSettings::sendServiceQualityEvents).  If that setting is not
-    // enabled, these are all empty.
-
-    // Current aggregation ID - needed so we can differentiate a large number of
-    // errors from a few users vs. a few errors from a lot of users.  Rotated
-    // every 24 hours for privacy (see qualityAggIdRotateTime).
-    JsonField(QString, qualityAggId, {})
-    // The next time we should rotate serviceAggId (UTC Unix time, ms)
-    JsonField(qint64, qualityAggIdRotateTime, 0)
-    // Events that have been generated but not sent yet.  We try to send the
-    // events when 20 have been batched, but this could have more than 20 events
-    // if we weren't able to send them at that time (we'll try again later).
-    //
-    // This is a deque because we add to the back and remove from the front;
-    // events are removed once they're sent, but more events might already have
-    // been generated.
-    JsonField(std::deque<ServiceQualityEvent>, qualityEventsQueued, {})
-    // Events that have been generated and sent in the last 24 hours.  These are
-    // retained just so the UI can display them.
-    //
-    // Deque for the same reason - we add sent events to the back and remove
-    // from the front as they roll off.
-    JsonField(std::deque<ServiceQualityEvent>, qualityEventsSent, {})
+    // Service quality events have been removed
 
     // Check if a single flag exists on the list of flags
     bool hasFlag (const QString &flag) const;
