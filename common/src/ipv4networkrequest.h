@@ -1,6 +1,8 @@
 #ifndef IPV4NETWORKREQUEST_H
 #define IPV4NETWORKREQUEST_H
 
+#include "common.h"
+
 #include <QObject>
 #include <QUrl>
 #include <QNetworkAccessManager>
@@ -13,7 +15,7 @@
 
 // This class provides a way to make HTTP/HTTPS requests that explicitly use IPv4,
 // even on systems that might prefer IPv6 by default.
-class IPv4NetworkRequest : public QObject
+class COMMON_EXPORT IPv4NetworkRequest : public QObject
 {
     Q_OBJECT
 
@@ -36,5 +38,8 @@ private:
     QNetworkAccessManager *manager;
     QUrl originalUrl;
 };
+
+// Register our class for Q_DECLARE_METATYPE
+Q_DECLARE_METATYPE(IPv4NetworkRequest*)
 
 #endif // IPV4NETWORKREQUEST_H

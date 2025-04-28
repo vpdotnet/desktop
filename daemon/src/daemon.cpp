@@ -2616,7 +2616,7 @@ void Daemon::fetchIPv4ExternalIp()
     }
     
     // Get the base URL from environment
-    QString baseUrl = environment().getIpAddrApi()->getNextBaseUri().uri;
+    QString baseUrl = environment().getIpAddrApi()->beginAttempt().getNextUri().uri;
     
     // Add the resource path to the URL
     QUrl url(baseUrl + QStringLiteral("api/client/status"));

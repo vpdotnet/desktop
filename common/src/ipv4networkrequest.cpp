@@ -1,3 +1,6 @@
+#include "common.h"
+#line SOURCE_FILE("ipv4networkrequest.cpp")
+
 #include "ipv4networkrequest.h"
 
 IPv4NetworkRequest::IPv4NetworkRequest(QObject *parent) : QObject(parent)
@@ -67,8 +70,8 @@ void IPv4NetworkRequest::handleHostLookup(const QHostInfo &hostInfo)
     if (originalUrl.scheme().compare("https", Qt::CaseInsensitive) == 0) {
         QSslConfiguration sslConfig = request.sslConfiguration();
         sslConfig.setPeerVerifyMode(QSslSocket::VerifyPeer);
-        sslConfig.setPeerVerifyName(originalUrl.host()); // Set hostname for SNI & cert validation
         request.setSslConfiguration(sslConfig);
+        request.setPeerVerifyName(originalUrl.host()); // Set hostname for SNI & cert validation
         qDebug() << "HTTPS: Set PeerVerifyName for SNI/validation to:" << originalUrl.host();
     }
 
