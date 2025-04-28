@@ -523,12 +523,12 @@ Item {
     id: surveyLink
     active: Daemon.settings.successfulSessionCount >= 15 && Daemon.settings.surveyRequestEnabled
     severity: severities.info
-    message: "Want to help make PIA better? Let us know how we can improve!"
+    message: "Want to help make VP.NET better? Let us know how we can improve!"
     dismissible: true
      links: [{
        text: "Take The Survey",
        clicked: function() {
-         Qt.openUrlExternally("https://privateinternetaccess.typeform.com/to/MtRzgnUB")
+         Qt.openUrlExternally("https://docs.google.com/forms/d/e/1FAIpQLSceNgGWDEGy1CbZVUaHLQO-AYdrlGLrHNIvg7O53FasEo_Pjw/viewform")
          dismiss()
        }
      }]
