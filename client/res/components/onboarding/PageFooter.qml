@@ -51,9 +51,8 @@ Item {
     }
   }
 
-  // Navigation dots.  The "0th" page (the welcome page) and the "4th" page
-  // ("help us improve") can't be reached via a navigation dot and do not
-  // display the footer.
+  // Navigation dots. The "0th" page (the welcome page) cannot be reached 
+  // via a navigation dot and does not display the footer.
   Item {
     width: 58
     height: 10
@@ -74,25 +73,13 @@ Item {
   }
 
   // The "Next" / "Log In" button
-  //
-  // The old flow (without the "Help us improve" page, still present if we
-  // unpublish the feature flag for service quality events) showed "Next" on
-  // every page until the last, which then showed "Log In".
-  //
-  // The new flow with the "Help us improve" page shows "Next" on ever page but
-  // the last, and the last page hides the button entirely (the
-  // "Help us improve" page has its own buttons that end the flow).
-  //
-  // So show "Log In" when on the last page, and when the "Help us improve" page
-  // is not being used.  (Even though the button is hidden, don't show "Log In"
-  // on the "Help us improve" page because it'd be briefly visible during the
-  // fade-out.)
+  // Show "Next" on every page until the last, which then shows "Log In".
   Item {
     anchors.right: parent.right
     width: 150
     height: 40
     property bool useLogInButton: {
-      return currentPage === (numPages - 1) && !pageFooter.showHelpImprove
+      return currentPage === (numPages - 1)
     }
 
     Image {

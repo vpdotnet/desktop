@@ -158,14 +158,20 @@ private:
     //
     // The result indicates whether an event was stored (used for "attempt"
     // events so we'll generate a subsequent established/canceled event).
-    bool storeEvent(EventType type, VpnProtocol protocol, ConnectionSource source);
+    bool storeEvent(EventType type, VpnProtocol protocol, ConnectionSource source) {
+        return false; // Always disabled
+    }
 
 public:
-    // Enable or disable service quality events
-    void enable(bool enabled, nullable_t<SemVersion> version);
+    // Service quality events are always disabled
+    void enable(bool enabled, nullable_t<SemVersion> version) { 
+        _enabled = false; 
+        _consentVersion = nullptr;
+    }
 
     // Send any queued events now (used by a dev tool to send events early)
-    void sendEventsNow();
+    // Always disabled
+    void sendEventsNow() {}
 
     // ServiceQuality generates three events:
     //
@@ -200,7 +206,7 @@ public:
     // became 'true').  Indicate whether this was a manual or automatic change.
     //
     // This generates a "connection attempt" event.
-    void vpnEnabled(VpnProtocol protocol, ConnectionSource source);
+    void vpnEnabled(VpnProtocol protocol, ConnectionSource source) {}
 
     // The VPN connection has been disabled (StateModel::vpnEnabled() just
     // became 'false').  If the VPN state had not reached 'connected' since the
@@ -211,12 +217,12 @@ public:
     // request.  It is not the source actually sent with the event, it
     // determines whether an event is sent at all.  (Even if no event is sent,
     // we still need to discard an unresolved attempt.)
-    void vpnDisabled(ConnectionSource source);
+    void vpnDisabled(ConnectionSource source) {}
 
     // The VPN has reached the "Connected" state.  If this is the first time
     // this has happened since the last call to vpnEnabled(), this generates a
     // "connection established" event.
-    void vpnConnected();
+    void vpnConnected() {}
 
     // The VPN has reached the "Disconnected" state.  If this is the first time
     // this has happened since the last call to vpnEnabled(), we forget about
@@ -224,7 +230,7 @@ public:
     // canceled event.  ("Cancel" specifically means that the user canceled,
     // in this case we reached Disconnected for some other reason, such as a
     // hard error.)
-    void vpnDisconnected();
+    void vpnDisconnected() {}
 
 private:
     ApiClient &_apiClient;

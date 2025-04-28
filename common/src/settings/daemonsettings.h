@@ -157,10 +157,7 @@ public:
     // Whether the user wants beta updates.
     JsonField(bool, offerBetaUpdates, false)
 
-    // Store the version where the user last opted in for service quality
-    // events. Storing the version instead of a boolean field enables
-    // the option to conditionally include or remove metrics depending on
-    // the version.
+    // Service quality events are completely disabled
     JsonField(QString, serviceQualityAcceptanceVersion, "")
 
     // Whether split tunnel is enabled
