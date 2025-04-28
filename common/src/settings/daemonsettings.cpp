@@ -73,8 +73,7 @@ bool DaemonSettings::validateDNSSetting(const DaemonSettings::DNSSetting& settin
 {
     static const QStringList validDNSSettings {
         "pia",
-        "local",
-        "hdns"
+        "local"
     };
     static const QRegularExpression validIP(QStringLiteral("^(\\d+)\\.(\\d+)\\.(\\d+)\\.(\\d+)$"));
     QString value;

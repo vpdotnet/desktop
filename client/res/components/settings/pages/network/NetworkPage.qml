@@ -30,8 +30,6 @@ import "../../../daemon"
 import "../../../theme"
 
 Page {
-  //: "Handshake" is a brand name, not translated.
-  readonly property string hdnsName: uiTr("Handshake DNS")
 
   function isStringValue(value, str) {
     return typeof value === 'string' && value === str
@@ -68,7 +66,7 @@ Page {
           if (currentValue === "custom") {
             customDNSDialog.setServers(Array.isArray(daemonSetting.currentValue) ? daemonSetting.currentValue : []);
           } else if (daemonSetting.currentValue !== currentValue) {
-            // When changing from a non-third-party value (pia/handshake) to a
+            // When changing from a non-third-party value (pia) to a
             // third-party value ("existing" since custom was already handled),
             // show the "use existing DNS" prompt.
             if (!isThirdPartyDNS(sourceValue) && isThirdPartyDNS(currentValue)) {
@@ -80,15 +78,11 @@ Page {
         }
       }
       warning: {
-        if(setting.isThirdPartyDNS(setting.sourceValue) && !isStringValue(setting.sourceValue, "hdns"))
+        if(setting.isThirdPartyDNS(setting.sourceValue))
           return uiTr("Warning: Using a third party DNS could compromise your privacy.")
         return ""
       }
       info: {
-        if(setting.sourceValue === "hdns") {
-          //: "Handshake" is a brand name and should not be translated.
-          return uiTr("Handshake is a decentralized naming protocol.  For more information, visit handshake.org.")
-        }
         return ""
       }
       model: {
@@ -97,7 +91,6 @@ Page {
               //: Indicates that we will run a built-in DNS resolver locally
               //: on the user's computer.
               { name: uiTr("Built-in Resolver"), value: "local" },
-              { name: hdnsName, value: "hdns" },
               { name: uiTr("Use Existing DNS"), value: "" }
             ];
 
@@ -259,12 +252,7 @@ Page {
       open()
     }
     function setExisting() {
-      if(isStringValue(customDNSSetting.currentValue, "hdns")) {
-        title = uiTr("Handshake DNS")
-      } else {
-        title = customDNSSetting.currentValue ? uiTr("Use Custom DNS") : uiTr(
-              "Use Existing DNS")
-      }
+      title = customDNSSetting.currentValue ? uiTr("Use Custom DNS") : uiTr("Use Existing DNS")
 
       customPrimaryDNS.visible = false
       customSecondaryDNS.visible = false
