@@ -53,7 +53,6 @@ QtObject {
             // removed dedicated-ip
             'automation',
             'split-tunnel',
-            'multihop',
             'account',
             'help'
       ];

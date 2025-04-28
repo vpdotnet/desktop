@@ -84,7 +84,6 @@ SecondaryWindow {
     //'dedicated-ip': QT_TR_NOOP("Dedicated IP", 'setting-title'),
     'automation': QT_TR_NOOP("Automation", 'setting-title'),
     'split-tunnel': QT_TR_NOOP("Split Tunnel", 'setting-title'),
-    'multihop': QT_TR_NOOP("Multi-Hop", 'setting-title'),
     'account': QT_TR_NOOP("Account", 'setting-title'),
     'help': QT_TR_NOOP("Help", 'setting-title'),
   }
@@ -111,10 +110,6 @@ SecondaryWindow {
       {
         name: 'split-tunnel',
         component: "split-tunnel/SplitTunnelPage.qml"
-      },
-      {
-        name: 'multihop',
-        component: "multihop/MultihopPage.qml"
       },
       {
         name: 'account',
@@ -278,9 +273,7 @@ SecondaryWindow {
     function onShowConnectionPage() {
       settings.showPage('general')
     }
-    function onShowMultihopPage() {
-      settings.showPage('multihop')
-    }
+    // Multi-hop page removed
     function onShowHelpPage() {
       settings.showPage('help')
     }

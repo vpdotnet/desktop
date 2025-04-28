@@ -358,7 +358,7 @@ Item {
     severity: severities.warning
     links: [{
       text: uiTr("Settings"),
-      clicked: function() {showMultihopPage()}
+      clicked: function() {showConnectionPage()}
     }]
     dismissible: false
     timestampValue: Daemon.state.proxyUnreachable
