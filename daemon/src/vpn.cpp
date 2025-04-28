@@ -714,7 +714,7 @@ ConnectionConfig::ConnectionConfig(DaemonSettings &settings, StateModel &state,
     // and the daemon allows PortForwarder to track the real setting as it's
     // updated to toggle between Inactive/Unavailable.
     if(_pVpnLocation && _pVpnLocation->portForward())
-        _requestPortForward = settings.portForward();
+        _requestPortForward = false; // Port forwarding has been removed
 }
 
 bool ConnectionConfig::canConnect() const

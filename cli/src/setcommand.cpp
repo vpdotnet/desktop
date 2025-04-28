@@ -75,11 +75,9 @@ namespace
         }
         else if(params[1] == GetSetType::requestPortForward)
         {
-            bool enabled = GetSetValue::parseBooleanParam(params[2]);
-            QJsonValue newValue = enabled;
-            QJsonObject newSettings;
-            newSettings.insert(QStringLiteral("portForward"), newValue);
-            return {newSettings};
+            // Port forwarding has been removed
+            errln() << "Port forwarding feature has been removed";
+            throw Error{HERE, Error::Code::CliInvalidArgs};
         }
         else if (params[1] == GetSetType::allowLAN)
         {
