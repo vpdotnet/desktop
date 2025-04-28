@@ -3338,8 +3338,9 @@ void Daemon::upgradeSettings(bool existingSettingsFile)
             _settings.killswitch(value.toBool() ? QStringLiteral("on") : QStringLiteral("auto"));
         if ((value = legacy.take(QStringLiteral("mssfix"))).isBool())
             _settings.mtu(value.toBool() ? 1250 : 0);
+        // Port forwarding has been removed
         if ((value = legacy.take(QStringLiteral("portforward"))).isBool())
-            _settings.portForward(value.toBool());
+            ; // Ignore port forwarding setting
         if ((value = legacy.take(QStringLiteral("rport"))).isString()) // note: before "proto"
             legacy.value(QStringLiteral("proto")) == QStringLiteral("tcp") ? _settings.remotePortTCP(value.toString().toUShort()) : _settings.remotePortUDP(value.toString().toUShort());
         if ((value = legacy.take(QStringLiteral("proto"))).isString())
@@ -3466,7 +3467,7 @@ void Daemon::calculateLocationPreferences()
     // Pick the best location
     NearestLocations nearest{_state.availableLocations()};
 
-    QSharedPointer<const Location> pVpnBest{nearest.getNearestSafeVpnLocation(_settings.portForward())};
+    QSharedPointer<const Location> pVpnBest{nearest.getNearestSafeVpnLocation(false)}; // Port forwarding has been removed
 
     // Find the user's chosen location (nullptr if it's 'auto' or doesn't exist)
     const auto &locationId = _settings.location();
@@ -3662,7 +3663,7 @@ void Daemon::applyCurrentAutomationRule()
             qInfo() << "Connect now due to automation rule:" << currentRule;
             // connectVPN() can fail if no account is logged in, etc. - in that
             // case, trace that the trigger failed.
-            err = connectVPN(ServiceQuality::ConnectionSource::Automatic);
+            err = connectVPN("Automation");
         }
         else
         {

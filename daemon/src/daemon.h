@@ -36,7 +36,6 @@
 #include "portforwarder.h"
 #include "socksserverthread.h"
 #include "updatedownloader.h"
-#include "servicequality.h"
 #include "vpn.h"
 #include "apiclient.h"
 #include "automation.h"

@@ -317,8 +317,8 @@ namespace
         }
         else if(type == GetSetType::requestPortForward)
         {
-            bool enabled = client.connection().settings.portForward();
-            return GetSetValue::getBooleanText(enabled);
+            // Port forwarding has been removed
+            return QStringLiteral("false");
         }
         else if(type == GetSetType::protocol)
         {
@@ -415,7 +415,9 @@ namespace
         }
         else if(_type == GetSetType::requestPortForward)
         {
-            QObject::connect(&client.connection().settings, &DaemonSettings::portForwardChanged,
+            // Port forwarding has been removed, no signal to connect
+            // Just connect to a stable signal that won't emit unless reconnection happens
+            QObject::connect(&client.connection().settings, &DaemonSettings::lastUsedVersionChanged,
                              this, func);
         }
         else if(_type  == GetSetType::region)
