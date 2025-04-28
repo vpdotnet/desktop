@@ -269,6 +269,7 @@ Daemon::Daemon(QObject* parent)
                             ipLookupResource,
                             publicIpLoadInterval, publicIpRefreshInterval}
     , _snoozeTimer(this)
+    , _ipv4Request(new IPv4NetworkRequest(this))
     , _pendingSerializations(0)
 {
 #ifdef PIA_CRASH_REPORTING
@@ -535,6 +536,32 @@ Daemon::Daemon(QObject* parent)
             [this](){Daemon::setOverrideFailed(QStringLiteral("modern regions meta"));});
     connect(&_publicIpRefresher, &JsonRefresher::contentLoaded, this,
             &Daemon::publicIpLoaded);
+            
+    // Connect IPv4NetworkRequest signals
+    connect(_ipv4Request, &IPv4NetworkRequest::finished, this, 
+            [this](QNetworkReply *reply) {
+                QByteArray data = reply->readAll();
+                QJsonParseError parseError;
+                QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
+                
+                if (parseError.error == QJsonParseError::NoError && !doc.isNull()) {
+                    if(doc[QStringLiteral("connected")].isBool() && 
+                       !doc[QStringLiteral("connected")].toBool(true)) {
+                        QString ip = doc["ip"].toString();
+                        if (!ip.isEmpty()) {
+                            qDebug() << "Loaded public IPv4 address:" << ip;
+                            _state.externalIp(ip);
+                        }
+                    }
+                }
+                
+                reply->deleteLater();
+            });
+            
+    connect(_ipv4Request, &IPv4NetworkRequest::error, this,
+            [](const QString& errorMsg) {
+                qWarning() << "IPv4 network request error:" << errorMsg;
+            });
 
     connect(this, &Daemon::daemonActivated, this, [this]() {
         // Reset override states since we are (re)activating
@@ -2578,31 +2605,73 @@ void Daemon::modernRegionsMetaLoaded(const QJsonDocument &modernRegionsMetaJsonD
     _modernRegionMetaRefresher.loadSucceeded();
 }
 
+void Daemon::fetchIPv4ExternalIp()
+{
+    qDebug() << "Fetching external IP using IPv4-only request";
+    
+    // Check if we have a valid IPv4 request handler
+    if (!_ipv4Request) {
+        qWarning() << "IPv4NetworkRequest handler is null";
+        return;
+    }
+    
+    // Get the base URL from environment
+    QString baseUrl = environment().getIpAddrApi()->getNextBaseUri().uri;
+    
+    // Add the resource path to the URL
+    QUrl url(baseUrl + QStringLiteral("api/client/status"));
+    if (!url.isValid()) {
+        qWarning() << "Invalid URL for IPv4 IP lookup:" << url.toString();
+        return;
+    }
+    
+    // Make the IPv4-only request
+    _ipv4Request->get(url);
+}
+
 void Daemon::publicIpLoaded(const QJsonDocument &publicIpDoc)
 {
-    qDebug () << "Loaded public IP";
-    if(publicIpDoc[QStringLiteral("connected")].isBool()  // Check to see if there is a "connected" key
-      && !publicIpDoc[QStringLiteral("connected")].toBool(true)) { // and that it is indeed "false"
-        _state.externalIp(publicIpDoc["ip"].toString());
-        _publicIpRefresher.loadSucceeded();
+    qDebug() << "Regular IP refresh completed, now forcing IPv4-only request";
+    
+    // Try to process the data if it's valid
+    if (publicIpDoc[QStringLiteral("connected")].isBool() && 
+        !publicIpDoc[QStringLiteral("connected")].toBool(true)) {
+        
+        QString ip = publicIpDoc["ip"].toString();
+        
+        // Only set the IP if it's an IPv4 address (simple check)
+        if (!ip.isEmpty() && !ip.contains(':')) {
+            qDebug() << "Setting IPv4 address from regular API:" << ip;
+            _state.externalIp(ip);
+        } else {
+            qDebug() << "Received non-IPv4 address, forcing IPv4-only lookup";
+        }
     }
+    
+    // Mark the regular refresh as successful
+    _publicIpRefresher.loadSucceeded();
+    
+    // Force an IPv4-only request to ensure we get an IPv4 address
+    fetchIPv4ExternalIp();
 }
 
 void Daemon::updatePublicIpRefresher (VPNConnection::State state)
 {
     if((state == VPNConnection::State::Disconnected || state == VPNConnection::State::Connecting) && isActive())
     {
-         _publicIpRefresher.start(environment().getIpAddrApi());
+        // Start the standard refresher (which will use IPv4-only method via fetchIPv4ExternalIp)
+        _publicIpRefresher.start(environment().getIpAddrApi());
     }
     else
     {
-         _publicIpRefresher.stop();
+        _publicIpRefresher.stop();
     }
 }
 
 void Daemon::forcePublicIpRefresh ()
 {
-     _publicIpRefresher.refresh();
+    // Use standard refresher (which will use IPv4-only method via fetchIPv4ExternalIp)
+    _publicIpRefresher.refresh();
 }
 
 void Daemon::onNetworksChanged(const std::vector<NetworkConnection> &networks)

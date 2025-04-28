@@ -30,6 +30,7 @@
 #include <common/src/async.h>
 #include "environment.h"
 #include <common/src/jsonrpc.h>
+#include <common/src/ipv4networkrequest.h>
 #include "latencytracker.h"
 #include "networkmonitor.h"
 #include "portforwarder.h"
@@ -221,6 +222,9 @@ public:
     OriginalNetworkScan originalNetwork() const;
 
     void forcePublicIpRefresh();
+    
+    // Fetch external IP address using IPv4-only requests
+    void fetchIPv4ExternalIp();
 
 protected:
     virtual void applyFirewallRules(kapps::net::FirewallParams params) {}
@@ -563,6 +567,9 @@ protected:
     std::unique_ptr<NetworkMonitor> _pNetworkMonitor;
     Automation _automation;
     // ServiceQuality has been removed
+    
+    // IPv4-only network request for IP lookup
+    IPv4NetworkRequest *_ipv4Request;
 
     QSet<QString> _dataChanges;
     QSet<QString> _accountChanges;
