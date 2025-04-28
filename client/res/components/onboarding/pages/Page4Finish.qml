@@ -33,7 +33,7 @@ Item {
 
     section: uiTr("GOOD TO GO")
     headline: uiTr("VPN Protection Everywhere You Need It")
-    paragraph: uiTr("Your Private Internet Access account can protect up to 10 different devices.")
+    paragraph: uiTr("Your Private Internet Access account can protect up to 5 different devices.")
   }
 
   StaticImage {
