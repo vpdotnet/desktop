@@ -44,7 +44,7 @@ FocusScope {
     anchors.bottomMargin: Theme.dashboard.windowRadius
 
     serviceLocations: Daemon.state.vpnLocations
-    portForwardEnabled: Daemon.settings.portForward
+    portForwardEnabled: false
     canFavorite: true
     collapsedCountriesSettingName: "vpnCollapsedCountries"
     scrollStateGroupName: "dashboard"

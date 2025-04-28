@@ -86,7 +86,7 @@ public:
     JsonField(bool, blockIPv6, true) // block IPv6 traffic
     JsonField(DNSSetting, overrideDNS, QStringLiteral("pia"), validateDNSSetting) // use PIA DNS servers (symbolic name, array with 1-2 IPs, or empty string to use existing DNS)
     JsonField(bool, allowLAN, true) // permits LAN traffic when connected/killswitched
-    JsonField(bool, portForward, false) // forward a port through the VPN tunnel, see DaemonState::forwardedPort
+    // Port forwarding removed
     JsonField(bool, enableMACE, false) // Enable MACE Ad tracker
     JsonField(uint, remotePortUDP, 0) // 0 == auto
     JsonField(uint, remotePortTCP, 0) // 0 == auto

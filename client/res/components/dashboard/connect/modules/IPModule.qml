@@ -32,7 +32,7 @@ MovableModule {
   id: ipModule
   moduleKey: 'ip'
 
-  implicitHeight: portForward.showPf ? (portForward.y + portForward.height + 20) : 80
+  implicitHeight: 80
 
   //: Screen reader annotation for the tile displaying the IP addresses.
   tileName: uiTr("IP tile")
@@ -121,78 +121,4 @@ MovableModule {
     opacity: vpnElementsOpacity
   }
 
-  StaticImage {
-    id: portForwardImg
-
-    opacity: portForward.opacity
-    visible: portForward.visible
-    anchors.verticalCenter: portForward.verticalCenter
-    x: 170
-    width: sourceSize.width / 2
-    height: sourceSize.height / 2
-
-    //: Screen reader annotation for the arrow graphic that represents the
-    //: "port forward" status, which is enabled by the "Port Forwarding"
-    //: setting.
-    label: uiTr("Port forward")
-
-    source: {
-      switch(Daemon.state.forwardedPort) {
-      default:
-      case Daemon.state.portForward.inactive:
-      case Daemon.state.portForward.attempting:
-        return Theme.dashboard.ipPortForwardImage
-      case Daemon.state.portForward.failed:
-      case Daemon.state.portForward.unavailable:
-        return Theme.dashboard.ipPortForwardSlashImage
-      }
-    }
-  }
-
-  CopiableValueText {
-    id: portForward
-    copiable: Daemon.state.forwardedPort > 0
-
-    anchors.left: portForwardImg.right
-    anchors.leftMargin: 3
-    y: 65
-
-    // PF is "active" when the setting is enabled or if the port forward
-    // is anything other than "inactive" (it could be active, but not enabled
-    // if it was turned off after a port was already forwarded).
-    readonly property bool pfActive: (Daemon.settings.portForward || Daemon.state.forwardedPort !== Daemon.state.portForward.inactive)
-    readonly property bool showPf: pfActive
-
-    opacity: showPf ? vpnElementsOpacityTarget : 0.0
-    visible: opacity > 0.0
-    text: {
-      if(!showPf)
-        return ""
-
-      switch(Daemon.state.forwardedPort) {
-        default:
-          return Daemon.state.forwardedPort // Port was forwarded, show the number
-        case Daemon.state.portForward.inactive:
-        case Daemon.state.portForward.attempting:
-          return "---"
-        case Daemon.state.portForward.failed:
-          //(comments with "//:" are translator comments for the text)
-          //: Port forward - label used in IP widget when request fails
-          return uiTr("Failed")
-        case Daemon.state.portForward.unavailable:
-          //: Port forward - label used in IP widget when not available for this region
-          return uiTr("Not Available")
-      }
-    }
-    label: portForwardImg.label
-    color: Theme.dashboard.moduleTextColor
-    font.pixelSize: Theme.dashboard.moduleValueTextPx
-
-    Behavior on opacity {
-      NumberAnimation {
-        easing.type: Easing.InOutQuad
-        duration: 300
-      }
-    }
-  }
 }

@@ -182,25 +182,6 @@ Page {
       }
     }
 
-    CheckboxInput {
-      Layout.topMargin: 10
-      Layout.columnSpan: 2
-      //: Label for the setting that controls whether the application tries to
-      //: forward a port from the public VPN IP to the user's computer. This
-      //: feature is not guaranteed to work or be available, therefore we label
-      //: it as "requesting" port forwarding.
-      label: uiTr("Request Port Forwarding")
-      //: Tooltip for the port forwarding setting. The user can not choose which
-      //: port to forward; a port will be automatically assigned by our servers.
-      //: The user should further be made aware that only some of our servers
-      //: support forwarding. The string contains embedded linebreaks to prevent
-      //: it from being displayed too wide on the user's screen - such breaks
-      //: should be preserved at roughly the same intervals.
-      desc: uiTr("Forwards a port from the VPN IP to your computer. The port will be selected for you. Not all locations support port forwarding.")
-      setting: DaemonSetting {
-        name: "portForward"
-      }
-    }
 
     CheckboxInput {
       Layout.columnSpan: 2

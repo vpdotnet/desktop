@@ -81,6 +81,8 @@ namespace
     // use a JsonRefresher since DIP info comes from an authenticated API POST.
     const std::chrono::minutes dipRefreshFastInterval{10};
     const std::chrono::hours dipRefreshSlowInterval{24};
+    
+    // Port forwarding is disabled in this version
 
     // Resource paths for various regions-related resource (relative to the API
     // base)
@@ -241,7 +243,7 @@ ConnectionInfo populateConnection(const ConnectionConfig &config)
         config.methodForcedByAuth(), std::move(dnsType), config.openvpnCipher(),
         config.otherAppsUseVpn(), std::move(proxy), std::move(proxyCustom),
         std::move(pProxyShadowsocks), std::move(proxyShadowsocksLocationAuto),
-        config.requestPortForward()};
+        false}; // Port forwarding is disabled
 };
 
 Daemon::Daemon(QObject* parent)
@@ -510,12 +512,8 @@ Daemon::Daemon(QObject* parent)
             &Daemon::newLatencyMeasurements);
     // No locations are loaded yet - they're loaded when the daemon activates
 
-    connect(&_portForwarder, &PortForwarder::portForwardUpdated, this,
-            &Daemon::portForwardUpdated);
-
-    connect(&_settings, &DaemonSettings::portForwardChanged, this,
-            &Daemon::updatePortForwarder);
-    updatePortForwarder();
+    // Port forwarding is disabled
+    _state.forwardedPort(VpnState::PortForwardState::Inactive);
 
     connect(&_environment, &Environment::overrideActive, this,
             &Daemon::setOverrideActive);
@@ -2404,8 +2402,9 @@ void Daemon::newLatencyMeasurements(const LatencyTracker::Latencies &measurement
 
 void Daemon::portForwardUpdated(int port)
 {
-    qInfo() << "Forwarded port updated to" << port;
-    _state.forwardedPort(port);
+    // Port forwarding is disabled in this version
+    Q_UNUSED(port);
+    _state.forwardedPort(VpnState::PortForwardState::Inactive);
 }
 
 void Daemon::applyBuiltLocations(LocationsById newLocations,
@@ -3179,25 +3178,8 @@ void Daemon::reapplyFirewallRules()
 
 void Daemon::updatePortForwarder()
 {
-    bool pfEnabled = false;
-    // If we're currently connected, and the connected region supports PF, keep
-    // the setting that we connected with.
-    //
-    // Enabling PF would require a reconnect to request a port.  Disabling PF
-    // has no effect until reconnecting either, we keep the forwarded port.
-    if(_connection->state() == VPNConnection::State::Connected &&
-       _state.connectedConfig().vpnLocation() &&
-       _state.connectedConfig().vpnLocation()->portForward())
-    {
-        pfEnabled = _state.connectedConfig().portForward();
-    }
-    // Otherwise, use the current setting.  If we're connected to a region that
-    // lacks PF, the setting _can_ be updated on the fly, because that just
-    // toggles between the Inactive/Unavailable states.
-    else
-        pfEnabled = _settings.portForward();
-
-    _portForwarder.enablePortForwarding(pfEnabled);
+    // Port forwarding is disabled in this version
+    _state.forwardedPort(VpnState::PortForwardState::Inactive);
 }
 
 void Daemon::setOverrideActive(const QString &resourceName)

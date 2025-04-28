@@ -227,22 +227,6 @@ Item {
       addMenuItem(uiTr("Copy Public IP"), 'copy-public-ip', false)
     }
 
-    if (Daemon.settings.portForward) {
-      if (Daemon.state.forwardedPort > 0) {
-        //: Menu command to copy the port number that is currently being forwarded
-        //: (from the VPN to the user's computer) to the clipboard. The %1 placeholder
-        //: contains the port number, e.g. "47650".
-        addMenuItem(uiTr("Copy Forwarded Port (%1)").arg(Daemon.state.forwardedPort) , 'copy-forwarded-port', true)
-      }
-      else {
-        //: Menu command to copy the port number that is currently being forwarded
-        //: (from the VPN to the user's computer) to the clipboard. This variation
-        //: should match the "Copy Forwarded Port (%1)" string, but omits the
-        //: parenthesis and is shown grayed out, used when port forwarding is not
-        //: available.
-        addMenuItem(uiTr("Copy Forwarded Port") , 'copy-forwarded-port', false)
-      }
-    }
     addSeparator()
 
     //: Menu command to quit the application.
@@ -322,9 +306,6 @@ Item {
       break;
     case 'copy-public-ip':
       Clipboard.setText(Daemon.state.externalVpnIp)
-      break
-    case 'copy-forwarded-port':
-      Clipboard.setText(Daemon.state.forwardedPort.toString())
       break
     }
   }
