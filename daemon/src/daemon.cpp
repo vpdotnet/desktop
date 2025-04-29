@@ -617,9 +617,6 @@ Daemon::Daemon(QObject* parent)
     connect(&_settings, &DaemonSettings::allowLANChanged, this, &Daemon::queueApplyFirewallRules);
     connect(&_settings, &DaemonSettings::overrideDNSChanged, this, &Daemon::queueApplyFirewallRules);
     // Split tunnel feature removed
-    // connect(&_settings, &DaemonSettings::bypassSubnetsChanged, this, &Daemon::queueApplyFirewallRules);
-    // connect(&_settings, &DaemonSettings::splitTunnelEnabledChanged, this, &Daemon::queueApplyFirewallRules);
-    // connect(&_settings, &DaemonSettings::splitTunnelRulesChanged, this, &Daemon::queueApplyFirewallRules);
     connect(&_settings, &DaemonSettings::routedPacketsOnVPNChanged, this, &Daemon::queueApplyFirewallRules);
     connect(&_settings, &DaemonSettings::connectOnWakeChanged, this, &Daemon::queueApplyFirewallRules);
     _state.existingDNSServers.changed = [this]{queueApplyFirewallRules();};
