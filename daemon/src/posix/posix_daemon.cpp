@@ -215,7 +215,6 @@ void PosixDaemon::setUpMacosSTMonitoring()
                 _state.netExtensionState(qEnumToString(StateModel::NetExtensionState::NotInstalled));
             });
 }
-}
 
 #endif
 
