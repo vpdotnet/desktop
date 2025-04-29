@@ -8,12 +8,14 @@ module PiaWindows
     extend BuildDSL
 
     SignCertFile = ENV['PIA_SIGNTOOL_CERTFILE']
+    SignPassword = ENV['PIA_SIGNTOOL_PASSWORD']
+    SignThumbprint = ENV['PIA_SIGNTOOL_THUMBPRINT']
     GCloudKeyId = ENV['GOOGLE_CLOUD_KEY_ID']
     SkipSigning = !ENV['PIA_SKIP_SIGNING'].nil?
-    CanSign = Build::release? && (SignCertFile != nil) && !SkipSigning
+    CanSign = Build::release? && ((SignCertFile != nil) || (SignThumbprint != nil)) && !SkipSigning
     # Override this value manually if you need to test signing locally with a 
-    # dev cert
-    UseGCloudSigning = true
+    # dev cert or hardware token
+    UseGCloudSigning = (GCloudKeyId != nil)
 
     # Base setup for uninstaller/installer; these are built from the same source
     # with either INSTALLER or UNINSTALLER defined
@@ -169,6 +171,19 @@ module PiaWindows
             args << 'Google Cloud KMS Provider'
             args << '/kc'
             args << GCloudKeyId
+        elsif(SignThumbprint != nil)
+            # Sign using hardware token or certificate from Windows certificate store
+            args << '/sha1'
+            args << SignThumbprint
+            # Additional options for hardware tokens if needed
+            if ENV['PIA_SIGNTOOL_CSP'] != nil
+                args << '/csp'
+                args << ENV['PIA_SIGNTOOL_CSP']
+            end
+            if ENV['PIA_SIGNTOOL_KEYCONTAINER'] != nil
+                args << '/kc'
+                args << ENV['PIA_SIGNTOOL_KEYCONTAINER']
+            end
         elsif(SignCertFile != nil)
             args << '/f'
             args << SignCertFile
@@ -176,9 +191,6 @@ module PiaWindows
                 args << '/p'
                 args << SignPassword
             end
-        else
-            args << '/sha1'
-            args << SignThumbprint
         end
         # File description
         if(description != nil)
