@@ -16,28 +16,13 @@
 // along with the Private Internet Access Desktop Client.  If not, see
 // <https://www.gnu.org/licenses/>.
 
-#pragma once
-#include <set>
-#include <cstdint>
-#include <string>
-
-enum IPVersion 
-{
-    IPv4,
-    IPv6
-};
-
-using PortSet = std::set<std::uint16_t>;
-
-// Utility functions needed by dependent code
-inline std::string ipToString(IPVersion ipVersion) {
-    return ipVersion == IPv4 ? "IPv4" : "IPv6";
-}
+#include "split_tunnel_types.h"
+#include <kapps_core/src/stringslice.h>
 
 // PF rules for split tunnel network paths
-extern const kapps::core::StringSlice kVpnOnlyApps4;
-extern const kapps::core::StringSlice kVpnOnlyApps6;
-extern const kapps::core::StringSlice kBypassApps4;
-extern const kapps::core::StringSlice kBypassApps6;
-extern const kapps::core::StringSlice kDefaultApps4;
-extern const kapps::core::StringSlice kDefaultApps6;
+const kapps::core::StringSlice kVpnOnlyApps4{"vpnonly4"};
+const kapps::core::StringSlice kVpnOnlyApps6{"vpnonly6"};
+const kapps::core::StringSlice kBypassApps4{"bypass4"};
+const kapps::core::StringSlice kBypassApps6{"bypass6"};
+const kapps::core::StringSlice kDefaultApps4{"default4"};
+const kapps::core::StringSlice kDefaultApps6{"default6"};
