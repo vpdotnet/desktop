@@ -23,7 +23,7 @@
 #include "win/win_firewall.h"
 #elif defined(KAPPS_CORE_OS_MACOS)
 #include "mac/mac_firewall.h"
-#include "mac/transparent_proxy.h"
+// Split tunnel feature removed
 #elif defined(KAPPS_CORE_OS_LINUX)
 #include "linux/linux_firewall.h"
 #endif
