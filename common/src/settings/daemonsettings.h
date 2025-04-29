@@ -24,7 +24,8 @@
 #include <unordered_set>
 #include <vector>
 #include <QVector>
-#include "splittunnel.h"
+// Split tunnel feature removed
+// #include "splittunnel.h"
 #include "automation.h"
 #include "connection.h"
 
@@ -160,15 +161,11 @@ public:
     // Service quality events are completely disabled
     JsonField(QString, serviceQualityAcceptanceVersion, "")
 
-    // Whether split tunnel is enabled
-    JsonField(bool, splitTunnelEnabled, false)
-    // Whether to also split DNS traffic
-    JsonField(bool, splitTunnelDNS, true)
-    // Rules for excluding/including apps from VPN
-    JsonField(QVector<SplitTunnelRule>, splitTunnelRules, {})
-
-    // Subnets (both ipv4 and ipv6) to exclude from VPN
-    JsonField(QVector<SplitTunnelSubnetRule>, bypassSubnets, {})
+    // Split tunnel feature removed
+    // JsonField(bool, splitTunnelEnabled, false)
+    // JsonField(bool, splitTunnelDNS, true)
+    // JsonField(QVector<SplitTunnelRule>, splitTunnelRules, {})
+    // JsonField(QVector<SplitTunnelSubnetRule>, bypassSubnets, {})
 
     // Whether automation rules are enabled or not.
     JsonField(bool, automationEnabled, {})

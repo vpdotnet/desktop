@@ -52,7 +52,7 @@ QtObject {
             'privacy',
             // removed dedicated-ip
             'automation',
-            'split-tunnel',
+            // removed split-tunnel
             'account',
             'help'
       ];
@@ -83,13 +83,8 @@ QtObject {
       'ssid': Theme.imagePath + "/settings/automation-rule-types/ssid.png",
     })
 
-    readonly property var splitTunnelRuleTypeImages: ({
-                                                        'ip-address': Theme.imagePath + "/settings/split-tunnel/ip-address.png",
-                                                        'name-servers': Theme.imagePath + "/settings/split-tunnel/name-servers.png",
-                                                        'no-icon': Theme.imagePath + "/settings/split-tunnel/no-icon.png",
-                                                        'other-apps': Theme.imagePath + "/settings/split-tunnel/other-apps.png",
-                                                        'routed-packets': Theme.imagePath + "/settings/split-tunnel/routed-packets.png",
-                                                      })
+    // Split tunnel feature removed
+    readonly property var splitTunnelRuleTypeImages: ({})
     readonly property color pageIconBgInactiveColor: Theme.dark ? "#323642" : "#9a9da5"
     readonly property color pageIconBgActiveColor: "#4cb649"
 
@@ -185,17 +180,7 @@ QtObject {
     readonly property color inputDescLinkColor: Theme.dark ? '#5ddf5a' : '#4cb649'
     readonly property color inputDescLinkHoverColor: Theme.dark ? '#7afa78' : '#5ddf5a'
 
-    readonly property color splitTunnelInputBackgroundColor: hbarBackgroundColor
-    readonly property color splitTunnelInputBorderColor: hbarBottomBorderColor
-    readonly property color splitTunnelInputTextColor: hbarTextColor
-
-    readonly property string splitTunnelAddApplicationButton: Theme.imagePath + "/settings/app-add.png"
-    readonly property string splitTunnelAddApplicationButtonHover: Theme.imagePath + "/settings/app-add-hover.png"
-    readonly property string splitTunnelRemoveApplicationButton: Theme.imagePath + "/settings/app-delete.png"
-    readonly property string splitTunnelRemoveApplicationButtonHover: Theme.imagePath + "/settings/app-delete-hover.png"
-
-
-    readonly property color splitTunnelItemSeparatorColor: Theme.dark ? hbarBottomBorderColor : "#999da6"
+    // Split tunnel feature removed
 
     readonly property string spinnerImage: Theme.imagePath + "/settings/spinner.png"
 
