@@ -207,27 +207,18 @@ WinDaemon::WinDaemon(QObject* parent)
                                   Qt::QueuedConnection);
     };
 
-    connect(&_settings, &DaemonSettings::splitTunnelRulesChanged, this,
-            &WinDaemon::updateSplitTunnelRules);
+    // Split tunnel feature removed
     updateSplitTunnelRules();
 
-    connect(&_settings, &DaemonSettings::splitTunnelEnabledChanged, this, [this]()
-    {
-        _wfpCalloutMonitor.doManualCheck();
-    });
+    // Split tunnel feature removed - but still perform callout monitor checks
+    _wfpCalloutMonitor.doManualCheck();
 
     // Split tunnel support errors are platform-dependent, nothing else adds
     // them (otherwise we'd have to do a proper get-append-set below)
     Q_ASSERT(_state.splitTunnelSupportErrors().empty());
-    // WFP has serious issues in Windows 7 RTM.  Though we still support the
-    // client on Win 7 RTM, the split tunnel feature requires SP1 or newer.
-    //
-    // Some of the issues:
-    // https://support.microsoft.com/en-us/help/981889/a-windows-filtering-platform-wfp-driver-hotfix-rollup-package-is-avail
-    if(!::IsWindows7SP1OrGreater())
-    {
-        _state.splitTunnelSupportErrors({QStringLiteral("win_version_invalid")});
-    }
+    
+    // We're marking split tunnel as unsupported since the feature is removed
+    _state.splitTunnelSupportErrors({QStringLiteral("feature_removed")});
 }
 
 WinDaemon::~WinDaemon()
@@ -700,65 +691,10 @@ void WinDaemon::updateSplitTunnelRules()
         // Eat error and continue
     }
 
-    // Extract actual executable paths from all the split tunnel rules - resolve
-    // UWP apps, links, etc.  Use an AppExecutables for each so we can
-    // accumulate all calls to inspectUwpAppManifest() as well as normal apps.
-    // We don't care about usesWwa here, that is handled when rules are created.
+    // Split tunnel feature removed - this is a no-op method now
+    // We still create the AppExecutables structures but they remain empty
     AppExecutables excludedExes;
     AppExecutables vpnOnlyExes;
-    // Guess that there will usually not be more executables than total rules
-    excludedExes.executables.reserve(_settings.splitTunnelRules().size());
-    vpnOnlyExes.executables.reserve(_settings.splitTunnelRules().size());
-
-    for(const auto &rule : _settings.splitTunnelRules())
-    {
-        AppExecutables *pExes{};
-        if(rule.mode() == QStringLiteral("exclude"))
-            pExes = &excludedExes;
-        else if(rule.mode() == QStringLiteral("include"))
-            pExes = &vpnOnlyExes;
-        else
-            continue;   // Ignore any future rule types
-
-        Q_ASSERT(pExes);    // Postcondition of above
-
-        // UWP apps can have more than one target
-        if(rule.path().startsWith(uwpPathPrefix))
-        {
-            auto installDirs = getWinRtLoader().adminGetInstallDirs(rule.path().mid(uwpPathPrefix.size()));
-            // Inspect all of the install directories.  It's too late for us to
-            // do anything if this fails, just grab all the executables we can
-            // find.
-            for(const auto &dir : installDirs)
-                inspectUwpAppManifest(dir, *pExes);
-        }
-        else
-        {
-            // If the client gave us a link target, use that.
-            if(!rule.linkTarget().isEmpty())
-                pExes->executables.insert(rule.linkTarget().toStdWString());
-            // Otherwise, if the rule path is a link, still try to resolve it.
-            // This may not work if we are not in the correct user session
-            // though.
-            else if(rule.path().endsWith(QStringLiteral(".lnk"), Qt::CaseSensitivity::CaseInsensitive))
-            {
-                auto pathWStr = rule.path().toStdWString();
-                std::wstring linkTarget;
-                if(linkReader && linkReader->loadLink(pathWStr))
-                    linkTarget = linkReader->getLinkTarget(pathWStr);
-                if(linkTarget.empty())
-                    qWarning() << "Can't find link target for" << pathWStr;
-                else
-                {
-                    qInfo() << "Resolved app link" << pathWStr << "->"
-                        << linkTarget;
-                    pExes->executables.insert(linkTarget);
-                }
-            }
-            else
-                pExes->executables.insert(rule.path().toStdWString());
-        }
-    }
 
     _appMonitor.setSplitTunnelRules(excludedExes.executables, vpnOnlyExes.executables);
 }
