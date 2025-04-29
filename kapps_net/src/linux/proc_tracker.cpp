@@ -370,7 +370,7 @@ void ProcTracker::teardownReversePathFiltering()
 
 void ProcTracker::updateApps(std::vector<std::string> excludedApps, std::vector<std::string> vpnOnlyApps)
 {
-    KAPPS_CORE_INFO() << "ExcludedApps:" << excludedApps << "VPN Only Apps:" << vpnOnlyApps;
+    KAPPS_CORE_INFO() << "Split tunnel feature removed";
     // If we're not tracking excluded apps, remove everything
     if(!_previousNetScan.ipv4Valid())
         excludedApps = {};

@@ -200,10 +200,7 @@ namespace kapps { namespace net {
                                  const std::shared_ptr<const AppIdKey> &pAppId, bool rewriteDns);
             void createBlockAppFilters(SplitAppFilterMap &apps,
                                const std::shared_ptr<const AppIdKey> &pAppId);
-            void reapplySplitTunnelFirewall(const SplitTunnelFirewallParams &params,
-                                    const AppIdSet &newExcludedApps,
-                                    const AppIdSet &newVpnOnlyApps,
-                                    const AppIdSet &newVpnOnlyResolvers);
+            // Split tunnel feature removed
 
         private:
             const FirewallConfig _config{};
