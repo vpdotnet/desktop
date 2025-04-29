@@ -131,12 +131,8 @@ PosixDaemon::PosixDaemon()
 #endif
 
 #if defined(Q_OS_MAC)
-    // Force Split tunnel off for unsupported versions of macOS.
-    // We do this as early as possible, before firewall rules are applied
-    if(QOperatingSystemVersion::current().majorVersion() < 11)
-    {
-        _settings.splitTunnelEnabled(false);
-    }
+    // Split tunnel feature removed
+    // On older macOS versions we used to disable split tunnel, but that's no longer needed
 #endif
 
     KAPPS_CORE_INFO() << "Configuring firewall";
@@ -200,61 +196,25 @@ PosixDaemon::PosixDaemon()
 #ifdef Q_OS_MAC
 void PosixDaemon::setUpMacosSTMonitoring()
 {
+    // Split tunnel feature removed
     _pNetExtensionChecker = std::make_unique<NetExtensionChecker>(
         Path::TransparentProxyCliExecutable,
         netExtensionCheckerShortInterval,
         netExtensionCheckerLongInterval);
 
-    if(_settings.splitTunnelEnabled())
-    {
-        // Check and set the sysext's state, this will update the tooltip
-        const auto NEState = _pNetExtensionChecker->checkInstallationState();
-        _state.netExtensionState(qEnumToString(NEState));
-        _pNetExtensionChecker->start(NEState);
-    }
-    else
-    {
-        // We do not check the sysext installation state if Split Tunnel is disabled.
-        // We might also be on an unsupported os version, but we lack a specific tooltip for that case
-        _state.netExtensionState(qEnumToString(StateModel::NetExtensionState::NotInstalled));
-    }
+    // Split tunnel feature removed - always set state to NotInstalled
+    _state.netExtensionState(qEnumToString(StateModel::NetExtensionState::NotInstalled));
 
-    // React to Split tunnel state changes: start or stop monitoring
-    connect(&_settings, &DaemonSettings::splitTunnelEnabledChanged,
-            this, [&]()
-            {
-                if(_settings.splitTunnelEnabled())
-                {
-                    const auto NEState = _pNetExtensionChecker->checkInstallationState();
-                    _state.netExtensionState(qEnumToString(NEState));
-                    _pNetExtensionChecker->start(NEState);
-                }
-                else
-                {
-                    _pNetExtensionChecker->stop();
-                }
-            });
-
+    // Split tunnel feature removed - no need to monitor state
+        
     // React to sysext installation state change: adjust timer
     connect(_pNetExtensionChecker.get(), &NetExtensionChecker::stateChanged,
             this, [this](StateModel::NetExtensionState NEState)
             {
-                if(_settings.splitTunnelEnabled())
-                {
-                    _state.netExtensionState(qEnumToString(NEState));
-                    _pNetExtensionChecker->updateTimer(NEState);
-                    if(NEState == StateModel::NetExtensionState::NotInstalled)
-                    {
-                        // Very weird state:
-                        // - Split tunnel is enabled (so monitoring of the extension is running)
-                        // - User removes the proxy
-                        // It's better if we disable the feature, since the proxy has been removed anyway.
-                        // Users will have to enable the feature again (instead of having to manually disable it first)
-                        qInfo() << "MacOS Network Extension has been uninstalled by the user. Disabling Split tunnel";
-                        _settings.splitTunnelEnabled(false);
-                    }
-                }
+                // Split tunnel feature removed - always keep state as NotInstalled
+                _state.netExtensionState(qEnumToString(StateModel::NetExtensionState::NotInstalled));
             });
+}
 }
 
 #endif
@@ -450,22 +410,8 @@ void PosixDaemon::updateExistingDNS()
 
 void PosixDaemon::applyFirewallRules(kapps::net::FirewallParams params)
 {
-    // On POSIX, use the rule paths directly in excludeApps/vpnOnlyApps.
-    // macOS rules apply to bundle folders.   Linux rules apply to exact
-    // executables, and child processes are addressed by inheriting their
-    // parent's cgroup.
-    params.excludeApps.reserve(_settings.splitTunnelRules().size());
-    params.vpnOnlyApps.reserve(_settings.splitTunnelRules().size());
-
-    for(const auto &rule : _settings.splitTunnelRules())
-    {
-        qInfo() << "split tunnel rule:" << rule.path() << rule.mode();
-        // Ignore anything with a rule type we don't recognize
-        if(rule.mode() == QStringLiteral("exclude"))
-            params.excludeApps.push_back(rule.path().toStdString());
-        else if(rule.mode() == QStringLiteral("include"))
-            params.vpnOnlyApps.push_back(rule.path().toStdString());
-    }
+    // Split tunnel feature removed
+    // No apps to exclude or include with VPN
 
     // When bypassing by default, force Handshake and Unbound into the VPN with
     // an "include" rule.  (Just routing the Handshake seeds into the VPN is not
