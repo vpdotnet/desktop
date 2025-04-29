@@ -24,7 +24,7 @@
 #include <kapps_core/core.h>
 #include <kapps_core/src/logger.h>
 #include "../originalnetworkscan.h"      // For OriginalNetworkScan
-#include "mac_splittunnel_types.h"
+#include "split_tunnel_types.h"
 
 namespace kapps { namespace net {
 class KAPPS_NET_EXPORT AddressAndPort

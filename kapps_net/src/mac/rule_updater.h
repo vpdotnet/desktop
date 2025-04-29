@@ -25,7 +25,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include "mac_splittunnel_types.h"
+#include "split_tunnel_types.h"
 #include "utun.h"
 #include "../originalnetworkscan.h"
 #include "../firewallparams.h"

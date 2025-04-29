@@ -17,19 +17,13 @@
 // <https://www.gnu.org/licenses/>.
 
 #pragma once
-#include "../firewallparams.h"
-#include <kapps_net/net.h>
-#include <kapps_core/core.h>
+#include <set>
+#include <cstdint>
 
-// Split tunnel feature removed
-// Dummy header to satisfy build dependencies
-
-namespace kapps::net {
-class KAPPS_NET_EXPORT TransparentProxy
+enum IPVersion 
 {
-public:
-    TransparentProxy(const net::FirewallParams&, const net::FirewallConfig&) {}
-    ~TransparentProxy() = default;
-    void update(const net::FirewallParams&) {}
+    IPv4,
+    IPv6
 };
-}
+
+using PortSet = std::set<std::uint16_t>;
