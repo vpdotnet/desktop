@@ -39,7 +39,7 @@
 #include "brand.h"
 #include "product.h"
 #include "nativeacc/nativeacc.h"
-#include "splittunnelmanager.h"
+// Split tunnel feature removed
 #include <common/src/appsingleton.h>
 #include <common/src/apiretry.h>
 
@@ -594,8 +594,7 @@ Client::Client(bool hasExistingSettingsFile, const QJsonObject &initialSettings,
         [](auto, auto) -> QObject* {return new PathInterface;});
     qmlRegisterSingletonType<BrandHelper>("PIA.BrandHelper", 1, 0, "BrandHelper",
         [](auto, auto) -> QObject* {return new BrandHelper;});
-    qmlRegisterSingletonType<SplitTunnelManager>("PIA.SplitTunnelManager", 1, 0, "SplitTunnelManager",
-        [](auto, auto) -> QObject* {return new SplitTunnelManager;});
+    // Split tunnel feature removed
 
     qmlRegisterType<WindowClipper>("PIA.WindowClipper", 1, 0, "WindowClipper");
     qmlRegisterUncreatableType<WindowFormat>("PIA.WindowFormat", 1, 0, "WindowFormat", "WindowFormat is an attaching type only");
@@ -824,7 +823,7 @@ void Client::createSplashScreen()
 
 void Client::createMainWindow()
 {
-    SplitTunnelManager::installImageHandler(&_engine);
+    // Split tunnel feature removed
 #ifdef QML_RELOAD_ENTRY
     qDebug () << "Setting QML Reload Entry Point: " << QML_RELOAD_ENTRY;
     loadQml(QStringLiteral("qrc:/components/reloader.qml"));

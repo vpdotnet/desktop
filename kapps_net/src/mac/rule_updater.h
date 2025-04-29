@@ -32,8 +32,6 @@
 #include "pf_firewall.h"
 #include <kapps_core/src/stringslice.h>
 
-using namespace kapps::net;
-
 class UpdateStrategy;
 
 class RuleUpdater
@@ -44,18 +42,18 @@ private:
     std::set<std::string> _bypassIpv4Subnets;
     std::set<std::string> _bypassIpv6Subnets;
     std::unique_ptr<UpdateStrategy> _strategy;
-    PFFirewall &_filter;
+    kapps::net::PFFirewall &_filter;
 
 public:
-    RuleUpdater(std::unique_ptr<UpdateStrategy> strategy, PFFirewall &filter)
+    RuleUpdater(std::unique_ptr<UpdateStrategy> strategy, kapps::net::PFFirewall &filter)
         : _strategy{std::move(strategy)},
           _filter{filter}
     {}
 
     void update(IPVersion ipVersion, const PortSet &ports,
-                const FirewallParams &params);
+                const kapps::net::FirewallParams &params);
     void forceUpdate(IPVersion ipVersion, const PortSet &ports,
-                     const FirewallParams &params) const;
+                     const kapps::net::FirewallParams &params) const;
     void clearRules(IPVersion ipVersion);
     void clearAllRules();
 };
@@ -66,27 +64,27 @@ public:
     using StringVector = std::vector<std::string>;
 
 public:
-    UpdateStrategy(PFFirewall &filter)
+    UpdateStrategy(kapps::net::PFFirewall &filter)
     : _filter{filter}
     {}
     virtual ~UpdateStrategy() = default;
     virtual StringVector rules(IPVersion ipVersion, const PortSet &ports,
-                               const FirewallParams &params) const;
+                               const kapps::net::FirewallParams &params) const;
     virtual StringVector routingRule(IPVersion ipVersion,
-                                     const FirewallParams &params) const = 0;
+                                     const kapps::net::FirewallParams &params) const = 0;
     virtual kapps::core::StringSlice anchorNameFor(IPVersion ipVersion) const = 0;
     virtual kapps::core::StringSlice tagNameFor(IPVersion ipVersion) const = 0;
 
 protected:
     kapps::core::StringSlice protocolFor(IPVersion ipVersion) const { return ipVersion == IPv4 ? ("inet") : ("inet6"); }
     kapps::core::StringSlice icmpVersion(IPVersion ipVersion) const { return (ipVersion == IPv4 ? "icmp" : "icmp6"); }
-    const std::string &gatewayIp(IPVersion ipVersion, const FirewallParams &params) const
+    const std::string &gatewayIp(IPVersion ipVersion, const kapps::net::FirewallParams &params) const
     {
         return (ipVersion == IPv4 ? params.netScan.gatewayIp() : params.netScan.gatewayIp6());
     }
 
 protected:
-    PFFirewall &_filter;
+    kapps::net::PFFirewall &_filter;
 };
 
 class BypassStrategy : public UpdateStrategy
@@ -97,7 +95,7 @@ protected:
     virtual kapps::core::StringSlice tagNameFor(IPVersion ipVersion) const override;
     virtual kapps::core::StringSlice anchorNameFor(IPVersion ipVersion) const override;
     virtual StringVector routingRule(IPVersion ipVersion,
-                                     const FirewallParams &params) const override;
+                                     const kapps::net::FirewallParams &params) const override;
 };
 
 class VpnOnlyStrategy : public UpdateStrategy
@@ -108,7 +106,7 @@ protected:
     virtual kapps::core::StringSlice tagNameFor(IPVersion ipVersion) const override;
     virtual kapps::core::StringSlice anchorNameFor(IPVersion ipVersion) const override;
     virtual StringVector routingRule(IPVersion ipVersion,
-                                     const FirewallParams &params) const override;
+                                     const kapps::net::FirewallParams &params) const override;
 };
 
 class DefaultStrategy : public UpdateStrategy
@@ -117,14 +115,14 @@ public:
     using UpdateStrategy::UpdateStrategy;
 protected:
     virtual StringVector rules(IPVersion ipVersion, const PortSet &ports,
-                               const FirewallParams &params) const override;
+                               const kapps::net::FirewallParams &params) const override;
     virtual kapps::core::StringSlice tagNameFor(IPVersion ipVersion) const override;
     virtual kapps::core::StringSlice anchorNameFor(IPVersion ipVersion) const override;
     virtual StringVector routingRule(IPVersion ipVersion,
-                                     const FirewallParams &params) const override;
+                                     const kapps::net::FirewallParams &params) const override;
 protected:
     std::set<std::string> bypassSubnetsFor(IPVersion ipVersion,
-                                           const FirewallParams &params) const;
+                                           const kapps::net::FirewallParams &params) const;
     std::set<std::string> lanSubnetsFor(IPVersion ipVersion,
-                                        const FirewallParams &params) const;
+                                        const kapps::net::FirewallParams &params) const;
 };

@@ -37,8 +37,6 @@ namespace
     using StringVector = UpdateStrategy::StringVector;
 }
 
-using namespace kapps::net;
-
 void RuleUpdater::clearRules(IPVersion ipVersion)
 {
     _filter.setFilterWithRules(_strategy->anchorNameFor(ipVersion), false, {});
@@ -52,7 +50,7 @@ void RuleUpdater::clearAllRules()
 }
 
 void RuleUpdater::forceUpdate(IPVersion ipVersion, const PortSet &ports,
-                              const FirewallParams &params) const
+                              const kapps::net::FirewallParams &params) const
 {
     StringVector vec;
 
@@ -66,7 +64,7 @@ void RuleUpdater::forceUpdate(IPVersion ipVersion, const PortSet &ports,
 }
 
 void RuleUpdater::update(IPVersion ipVersion, const PortSet &ports,
-                         const FirewallParams &params)
+                         const kapps::net::FirewallParams &params)
 {
     // Update the rules if the ports change OR the network has changed
     // (since our rules make use of interface and gateway ips)
@@ -84,7 +82,7 @@ void RuleUpdater::update(IPVersion ipVersion, const PortSet &ports,
 }
 
 StringVector UpdateStrategy::rules(IPVersion ipVersion, const PortSet &ports,
-                                   const FirewallParams &) const
+                                   const kapps::net::FirewallParams &) const
 {
     std::vector<std::string> ruleList;
 
@@ -110,7 +108,7 @@ kapps::core::StringSlice BypassStrategy::anchorNameFor(IPVersion ipVersion) cons
 }
 
 StringVector BypassStrategy::routingRule(IPVersion ipVersion,
-                                         const FirewallParams &params) const
+                                         const kapps::net::FirewallParams &params) const
 {
     const auto &netScan = params.netScan;
 
@@ -139,7 +137,7 @@ kapps::core::StringSlice VpnOnlyStrategy::anchorNameFor(IPVersion ipVersion) con
 }
 
 StringVector VpnOnlyStrategy::routingRule(IPVersion ipVersion,
-                                          const FirewallParams &params) const
+                                          const kapps::net::FirewallParams &params) const
 {
     // If tunnel is up - route all vpn-only apps out the tunnel
     if(!params.tunnelDeviceName.empty())
@@ -165,14 +163,14 @@ kapps::core::StringSlice DefaultStrategy::anchorNameFor(IPVersion ipVersion) con
 }
 
 StringVector DefaultStrategy::routingRule(IPVersion ipVersion,
-                                          const FirewallParams &params) const
+                                          const kapps::net::FirewallParams &params) const
 {
     StringVector ruleList;
 
-    // Send all default traffic out the tunnel interface if;
-    // - All Other apps == Use VPN
+    // Split tunnel feature removed
+    // Send all default traffic out the tunnel interface if:
     // - We actually have a tunnel interface up (i.e we're connected)
-    if(!params.bypassDefaultApps && !params.tunnelDeviceName.empty())
+    if(!params.tunnelDeviceName.empty())
     {
         ruleList.push_back(qs::format("pass out route-to % flags any no state tagged %",
                            params.tunnelDeviceName, tagNameFor(ipVersion)));
@@ -200,7 +198,7 @@ StringVector DefaultStrategy::routingRule(IPVersion ipVersion,
 }
 
 std::set<std::string> DefaultStrategy::lanSubnetsFor(IPVersion ipVersion,
-                                                     const FirewallParams &params) const
+                                                     const kapps::net::FirewallParams &params) const
 {
     if(ipVersion == IPv4)
     {
@@ -220,7 +218,7 @@ std::set<std::string> DefaultStrategy::lanSubnetsFor(IPVersion ipVersion,
 }
 
 std::set<std::string> DefaultStrategy::bypassSubnetsFor(IPVersion ipVersion,
-                                                        const FirewallParams &params) const
+                                                        const kapps::net::FirewallParams &params) const
 {
     if(ipVersion == IPv4)
         return params.bypassIpv4Subnets;
@@ -229,7 +227,7 @@ std::set<std::string> DefaultStrategy::bypassSubnetsFor(IPVersion ipVersion,
 }
 
 StringVector DefaultStrategy::rules(IPVersion ipVersion, const PortSet &ports,
-                                    const FirewallParams &params) const
+                                    const kapps::net::FirewallParams &params) const
 {
     // Add LAN ips to the lanips table. Each table is unique to each anchor - so lanips in kDefaultApps4 is
     // different to the lanips table in kDefaultApps6.

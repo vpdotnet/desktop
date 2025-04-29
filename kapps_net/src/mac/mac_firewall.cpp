@@ -272,15 +272,13 @@ void MacFirewall::dnsCacheFlush() const
 
 void BoundRouteUpdater::update(const FirewallParams &params)
 {
-    // We may need a bound route for the physical interface:
+    // We need a bound route for the physical interface:
     // - When we have connected (even if currently reconnecting) - we need this
     //   for DNS leak protection.  Apps can try to send DNS packets out the
     //   physical interface toward the configured DNS servers, but PIA forces it
     //   it into the tunnel anyway.  (mDNSResponder does this in 10.15.4+.)
-    // - Split tunnel (even if disconnected) - needed to allow bypass apps to
-    //   bind to the physical interface, and needed for OpenVPN itself to bind
-    //   to the physical interface to bypass split tunnel.
-    if(params.enableSplitTunnel || params.hasConnected)
+    // - Split tunnel feature has been removed
+    if(params.hasConnected)
     {
         // Remove the previous bound route if it's present and different
         if(_netScan.ipv4Valid() && (_netScan.gatewayIp() != params.netScan.gatewayIp() ||

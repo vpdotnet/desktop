@@ -412,19 +412,12 @@ void PosixDaemon::applyFirewallRules(kapps::net::FirewallParams params)
     // Split tunnel feature removed
     // No apps to exclude or include with VPN
 
-    // When bypassing by default, force Handshake and Unbound into the VPN with
-    // an "include" rule.  (Just routing the Handshake seeds into the VPN is not
-    // sufficient; hnsd uses a local recursive DNS resolver that will query
-    // authoritative DNS servers, and we want that to go through the VPN.)
-    if(params.bypassDefaultApps)
-    {
-        params.vpnOnlyApps.push_back(Path::HnsdExecutable);
-        params.vpnOnlyApps.push_back(Path::UnboundExecutable);
-    }
+    // Split tunnel feature removed - no longer need to handle bypass apps or VPN-only apps
 
 #ifdef Q_OS_MAC
+        // Split tunnel feature removed
         const auto& daemonDebugLogEnabled = _settings.debugLogging();
-        params.transparentProxyLogEnabled = (daemonDebugLogEnabled != nullptr) ? true : false;
+        // params.transparentProxyLogEnabled removed
 #endif
 
     if(_pFirewall)
@@ -682,8 +675,7 @@ void PosixDaemon::writePlatformDiagnostics(DiagnosticsFile &file)
 void PosixDaemon::checkFeatureSupport()
 {
     // Split tunnel feature is fully removed
-    // Mark split tunnel as permanently unsupported
-    _state.splitTunnelSupportErrors({QStringLiteral("feature_removed")});
+    // Split tunnel support errors have been removed from the state model
 
 #ifdef Q_OS_LINUX
     // iptables 1.6.1 is required.

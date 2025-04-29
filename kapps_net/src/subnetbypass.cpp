@@ -77,18 +77,13 @@ std::string SubnetBypass::stateChangeString(bool oldValue, bool newValue)
 
 void SubnetBypass::updateRoutes(const FirewallParams &params)
 {
+    // Split tunnel feature removed
     // We only need to create routes if:
-    // - split tunnel is enabled
     // - we've connected since enabling the VPN
-    // - bypassing isn't already the default behavior
     // - the netScan is valid
-    bool shouldBeEnabled = params.enableSplitTunnel &&
-// We want bypass routes to continue to exist on macos even when disconnected - this is so
-// they override the split tunnel routes.
-// Also bypassDefaultApps doesn't prevent the split tunnel routes existing on macos, so we ignore that too.
+    bool shouldBeEnabled = 
 #ifndef KAPPS_CORE_OS_MACOS
                            params.hasConnected &&
-                           !params.bypassDefaultApps &&
 #endif
                            params.netScan.ipv4Valid();
 

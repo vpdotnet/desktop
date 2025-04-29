@@ -75,10 +75,10 @@ struct KAPPS_NET_EXPORT FirewallParams
     bool setDefaultRoute;
 
     // Split tunnel feature removed
-    bool bypassDefaultApps;
-    bool enableSplitTunnel;
+    // bool bypassDefaultApps; - removed
+    // bool enableSplitTunnel; - removed
     OriginalNetworkScan netScan;
-    bool splitTunnelDnsEnabled;
+    // bool splitTunnelDnsEnabled; - removed
 
     // Mtu of the tunnel interface
     int mtu;
@@ -88,12 +88,12 @@ struct KAPPS_NET_EXPORT FirewallParams
 
 #if defined(KAPPS_CORE_OS_POSIX)
     // Split tunnel feature removed
-    std::vector<std::string> excludeApps;
-    std::vector<std::string> vpnOnlyApps;
+    // std::vector<std::string> excludeApps; - removed
+    // std::vector<std::string> vpnOnlyApps; - removed
 #elif defined(KAPPS_CORE_OS_WINDOWS)
     // Split tunnel feature removed
-    AppIdSet excludeApps;
-    AppIdSet vpnOnlyApps;
+    // AppIdSet excludeApps; - removed
+    // AppIdSet vpnOnlyApps; - removed
 #endif
 
     std::set<std::string> bypassIpv4Subnets; // IPv4 subnets to bypass VPN
@@ -105,7 +105,7 @@ struct KAPPS_NET_EXPORT FirewallParams
     std::vector<uint32_t> existingDNSServers;
 #if defined(KAPPS_CORE_OS_MACOS)
     // Split tunnel feature removed
-    bool transparentProxyLogEnabled;
+    // bool transparentProxyLogEnabled; - removed
 #endif
 };
 

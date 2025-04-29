@@ -16,14 +16,15 @@
 // along with the Private Internet Access Desktop Client.  If not, see
 // <https://www.gnu.org/licenses/>.
 
+// This file provides the minimal set of split tunnel types needed by dependent code
+// after the split tunnel feature was removed
+
 #pragma once
 #include <set>
 #include <cstdint>
 #include <string>
-#include <kapps_core/src/stringslice.h>
 
-namespace kapps { namespace net {
-
+// Re-defining the original types needed by the firewall code
 enum IPVersion 
 {
     IPv4,
@@ -36,13 +37,3 @@ using PortSet = std::set<std::uint16_t>;
 inline std::string ipToString(IPVersion ipVersion) {
     return ipVersion == IPv4 ? "IPv4" : "IPv6";
 }
-
-}} // namespace kapps::net
-
-// PF rules for split tunnel network paths
-extern const kapps::core::StringSlice kVpnOnlyApps4;
-extern const kapps::core::StringSlice kVpnOnlyApps6;
-extern const kapps::core::StringSlice kBypassApps4;
-extern const kapps::core::StringSlice kBypassApps6;
-extern const kapps::core::StringSlice kDefaultApps4;
-extern const kapps::core::StringSlice kDefaultApps6;
