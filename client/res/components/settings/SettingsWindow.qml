@@ -285,9 +285,7 @@ SecondaryWindow {
     function onReinstallTapAdapter() {
       startDriverReinstall('tap')
     }
-    function onReinstallSplitTunnel() {
-      startDriverReinstall('callout')
-    }
+    // Split tunnel feature removed
     function onShowHelpAlert(msg, title, level) {
       settings.showPage('help')
       alert(msg, title, level)
