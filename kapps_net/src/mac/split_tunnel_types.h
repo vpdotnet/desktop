@@ -20,6 +20,9 @@
 #include <set>
 #include <cstdint>
 #include <string>
+#include <kapps_core/src/stringslice.h>
+
+namespace kapps { namespace net {
 
 enum IPVersion 
 {
@@ -33,6 +36,8 @@ using PortSet = std::set<std::uint16_t>;
 inline std::string ipToString(IPVersion ipVersion) {
     return ipVersion == IPv4 ? "IPv4" : "IPv6";
 }
+
+}} // namespace kapps::net
 
 // PF rules for split tunnel network paths
 extern const kapps::core::StringSlice kVpnOnlyApps4;
