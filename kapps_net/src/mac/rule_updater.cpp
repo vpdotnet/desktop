@@ -35,10 +35,11 @@ namespace
 namespace
 {
     using StringVector = UpdateStrategy::StringVector;
-    using namespace kapps::net;
 }
 
-void RuleUpdater::clearRules(kapps::net::IPVersion ipVersion)
+using namespace kapps::net;
+
+void RuleUpdater::clearRules(IPVersion ipVersion)
 {
     _filter.setFilterWithRules(_strategy->anchorNameFor(ipVersion), false, {});
     _ports[ipVersion].clear();
@@ -46,12 +47,12 @@ void RuleUpdater::clearRules(kapps::net::IPVersion ipVersion)
 
 void RuleUpdater::clearAllRules()
 {
-    clearRules(kapps::net::IPv4);
-    clearRules(kapps::net::IPv6);
+    clearRules(IPv4);
+    clearRules(IPv6);
 }
 
-void RuleUpdater::forceUpdate(kapps::net::IPVersion ipVersion, const kapps::net::PortSet &ports,
-                              const kapps::net::FirewallParams &params) const
+void RuleUpdater::forceUpdate(IPVersion ipVersion, const PortSet &ports,
+                              const FirewallParams &params) const
 {
     StringVector vec;
 
@@ -64,8 +65,8 @@ void RuleUpdater::forceUpdate(kapps::net::IPVersion ipVersion, const kapps::net:
     _filter.setFilterWithRules(_strategy->anchorNameFor(ipVersion), true, vec);
 }
 
-void RuleUpdater::update(kapps::net::IPVersion ipVersion, const kapps::net::PortSet &ports,
-                         const kapps::net::FirewallParams &params)
+void RuleUpdater::update(IPVersion ipVersion, const PortSet &ports,
+                         const FirewallParams &params)
 {
     // Update the rules if the ports change OR the network has changed
     // (since our rules make use of interface and gateway ips)
@@ -82,8 +83,8 @@ void RuleUpdater::update(kapps::net::IPVersion ipVersion, const kapps::net::Port
     }
 }
 
-StringVector UpdateStrategy::rules(kapps::net::IPVersion ipVersion, const kapps::net::PortSet &ports,
-                                   const kapps::net::FirewallParams &) const
+StringVector UpdateStrategy::rules(IPVersion ipVersion, const PortSet &ports,
+                                   const FirewallParams &) const
 {
     std::vector<std::string> ruleList;
 
@@ -98,18 +99,18 @@ StringVector UpdateStrategy::rules(kapps::net::IPVersion ipVersion, const kapps:
     return ruleList;
 }
 
-kapps::core::StringSlice BypassStrategy::tagNameFor(kapps::net::IPVersion ipVersion) const
+kapps::core::StringSlice BypassStrategy::tagNameFor(IPVersion ipVersion) const
 {
-    return ipVersion == kapps::net::IPv4 ? "BYPASS4" : "BYPASS6";
+    return ipVersion == IPv4 ? "BYPASS4" : "BYPASS6";
 }
 
-kapps::core::StringSlice BypassStrategy::anchorNameFor(kapps::net::IPVersion ipVersion) const
+kapps::core::StringSlice BypassStrategy::anchorNameFor(IPVersion ipVersion) const
 {
-    return ipVersion == kapps::net::IPv4 ? kBypassApps4 : kBypassApps6;
+    return ipVersion == IPv4 ? kBypassApps4 : kBypassApps6;
 }
 
-StringVector BypassStrategy::routingRule(kapps::net::IPVersion ipVersion,
-                                         const kapps::net::FirewallParams &params) const
+StringVector BypassStrategy::routingRule(IPVersion ipVersion,
+                                         const FirewallParams &params) const
 {
     const auto &netScan = params.netScan;
 
@@ -122,23 +123,23 @@ StringVector BypassStrategy::routingRule(kapps::net::IPVersion ipVersion,
     else
     {
         KAPPS_CORE_INFO() << "Can't create bypass route-to rule for"
-                << kapps::net::ipToString(ipVersion) << "- interface or gateway not known";
+                << ipToString(ipVersion) << "- interface or gateway not known";
         return {};
     }
 }
 
-kapps::core::StringSlice VpnOnlyStrategy::tagNameFor(kapps::net::IPVersion ipVersion) const
+kapps::core::StringSlice VpnOnlyStrategy::tagNameFor(IPVersion ipVersion) const
 {
-    return ipVersion == kapps::net::IPv4 ? "VPNONLY4" : "VPNONLY6";
+    return ipVersion == IPv4 ? "VPNONLY4" : "VPNONLY6";
 }
 
-kapps::core::StringSlice VpnOnlyStrategy::anchorNameFor(kapps::net::IPVersion ipVersion) const
+kapps::core::StringSlice VpnOnlyStrategy::anchorNameFor(IPVersion ipVersion) const
 {
-    return ipVersion == kapps::net::IPv4 ? kVpnOnlyApps4 : kVpnOnlyApps6;
+    return ipVersion == IPv4 ? kVpnOnlyApps4 : kVpnOnlyApps6;
 }
 
-StringVector VpnOnlyStrategy::routingRule(kapps::net::IPVersion ipVersion,
-                                          const kapps::net::FirewallParams &params) const
+StringVector VpnOnlyStrategy::routingRule(IPVersion ipVersion,
+                                          const FirewallParams &params) const
 {
     // If tunnel is up - route all vpn-only apps out the tunnel
     if(!params.tunnelDeviceName.empty())
@@ -148,23 +149,23 @@ StringVector VpnOnlyStrategy::routingRule(kapps::net::IPVersion ipVersion,
     }
     else
     {
-        KAPPS_CORE_INFO() << "Can't create VPN-only route-to rule for" << kapps::net::ipToString(ipVersion)
+        KAPPS_CORE_INFO() << "Can't create VPN-only route-to rule for" << ipToString(ipVersion)
             << "- tunnel interface not known";
         return {};
     }
 }
 
-kapps::core::StringSlice DefaultStrategy::tagNameFor(kapps::net::IPVersion ipVersion) const
+kapps::core::StringSlice DefaultStrategy::tagNameFor(IPVersion ipVersion) const
 {
-    return ipVersion == kapps::net::IPv4 ? "DEFAULT4" : "DEFAULT6";
+    return ipVersion == IPv4 ? "DEFAULT4" : "DEFAULT6";
 }
-kapps::core::StringSlice DefaultStrategy::anchorNameFor(kapps::net::IPVersion ipVersion) const
+kapps::core::StringSlice DefaultStrategy::anchorNameFor(IPVersion ipVersion) const
 {
-    return ipVersion == kapps::net::IPv4 ? kDefaultApps4 : kDefaultApps6;
+    return ipVersion == IPv4 ? kDefaultApps4 : kDefaultApps6;
 }
 
-StringVector DefaultStrategy::routingRule(kapps::net::IPVersion ipVersion,
-                                          const kapps::net::FirewallParams &params) const
+StringVector DefaultStrategy::routingRule(IPVersion ipVersion,
+                                          const FirewallParams &params) const
 {
     StringVector ruleList;
 
@@ -190,7 +191,7 @@ StringVector DefaultStrategy::routingRule(kapps::net::IPVersion ipVersion,
         else
         {
             KAPPS_CORE_INFO() << "Can't create default route-to rule for"
-                << kapps::net::ipToString(ipVersion) << "- interface or gateway not known"
+                << ipToString(ipVersion) << "- interface or gateway not known"
                 << netScan;
         }
     }
@@ -198,10 +199,10 @@ StringVector DefaultStrategy::routingRule(kapps::net::IPVersion ipVersion,
     return ruleList;
 }
 
-std::set<std::string> DefaultStrategy::lanSubnetsFor(kapps::net::IPVersion ipVersion,
-                                                     const kapps::net::FirewallParams &params) const
+std::set<std::string> DefaultStrategy::lanSubnetsFor(IPVersion ipVersion,
+                                                     const FirewallParams &params) const
 {
-    if(ipVersion == kapps::net::IPv4)
+    if(ipVersion == IPv4)
     {
         return std::set<std::string>{"127.0.0.0/8", "10.0.0.0/8", "169.254.0.0/16",
                                      "172.16.0.0/12", "192.168.0.0/16", "224.0.0.0/4",
@@ -218,17 +219,17 @@ std::set<std::string> DefaultStrategy::lanSubnetsFor(kapps::net::IPVersion ipVer
     }
 }
 
-std::set<std::string> DefaultStrategy::bypassSubnetsFor(kapps::net::IPVersion ipVersion,
-                                                        const kapps::net::FirewallParams &params) const
+std::set<std::string> DefaultStrategy::bypassSubnetsFor(IPVersion ipVersion,
+                                                        const FirewallParams &params) const
 {
-    if(ipVersion == kapps::net::IPv4)
+    if(ipVersion == IPv4)
         return params.bypassIpv4Subnets;
     else
         return params.bypassIpv6Subnets;
 }
 
-StringVector DefaultStrategy::rules(kapps::net::IPVersion ipVersion, const kapps::net::PortSet &ports,
-                                    const kapps::net::FirewallParams &params) const
+StringVector DefaultStrategy::rules(IPVersion ipVersion, const PortSet &ports,
+                                    const FirewallParams &params) const
 {
     // Add LAN ips to the lanips table. Each table is unique to each anchor - so lanips in kDefaultApps4 is
     // different to the lanips table in kDefaultApps6.
