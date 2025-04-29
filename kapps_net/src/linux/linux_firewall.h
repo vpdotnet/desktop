@@ -93,7 +93,7 @@ private:
     void enableRouteLocalNet();
     void disableRouteLocalNet();
     bool updateVpnTunOnlyAnchor(bool hasConnected, std::string tunnelDeviceName, std::string tunnelDeviceLocalAddress);
-    void updateForwardedRoutes(const FirewallParams &params, bool shouldBypassVpn);
+    void updateForwardedRoutes(const FirewallParams &params);
     void updateBypassSubnets(IpTablesFirewall::IPVersion ipVersion, const std::set<std::string> &bypassSubnets, std::set<std::string> &oldBypassSubnets);
 
 protected:

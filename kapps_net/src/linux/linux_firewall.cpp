@@ -75,7 +75,7 @@ void LinuxFirewall::applyRules(const FirewallParams &params)
     if(!_pFilter->isInstalled())
         _pFilter->install();
 
-    const auto &netScan{params.netScan};
+    const auto &netScan = params.netScan;
 
     _pFilter->ensureRootAnchorPriority();
 
@@ -91,21 +91,23 @@ void LinuxFirewall::applyRules(const FirewallParams &params)
     _pFilter->setAnchorEnabled(TableEnum::Filter, IPVersion::Both, "290.allowDHCP", params.allowDHCP);
     _pFilter->setAnchorEnabled(TableEnum::Filter, IPVersion::IPv6, "299.allowIPv6Prefix", netScan.hasIpv6() && params.allowLAN);
     _pFilter->setAnchorEnabled(TableEnum::Filter, IPVersion::Both, "300.allowLAN", params.allowLAN);
-    _pFilter->setAnchorEnabled(TableEnum::Filter, IPVersion::Both, "305.allowSubnets", params.enableSplitTunnel);
+    _pFilter->setAnchorEnabled(TableEnum::Filter, IPVersion::Both, "305.allowSubnets", !params.bypassIpv4Subnets.empty() || !params.bypassIpv6Subnets.empty());
     _pFilter->setAnchorEnabled(TableEnum::Filter, IPVersion::Both, "310.blockDNS", params.blockDNS);
     _pFilter->setAnchorEnabled(TableEnum::Filter, IPVersion::IPv4, "320.allowDNS", params.hasConnected);
     _pFilter->setAnchorEnabled(TableEnum::Filter, IPVersion::IPv4, "100.protectLoopback", true);
 
     // Nat table
-    _pFilter->setAnchorEnabled(TableEnum::Nat, IPVersion::IPv4, ("80.splitDNS"), params.hasConnected && params.enableSplitTunnel);
-    _pFilter->setAnchorEnabled(TableEnum::Nat, IPVersion::IPv4, ("90.snatDNS"), params.hasConnected && params.enableSplitTunnel);
-    _pFilter->setAnchorEnabled(TableEnum::Nat, IPVersion::IPv4, ("80.fwdSplitDNS"), params.hasConnected && params.enableSplitTunnel);
-    _pFilter->setAnchorEnabled(TableEnum::Nat, IPVersion::IPv4, ("90.fwdSnatDNS"), params.hasConnected && params.enableSplitTunnel);
+    // Split DNS NAT rules disabled since split tunnel has been removed
+    _pFilter->setAnchorEnabled(TableEnum::Nat, IPVersion::IPv4, ("80.splitDNS"), false);
+    _pFilter->setAnchorEnabled(TableEnum::Nat, IPVersion::IPv4, ("90.snatDNS"), false);
+    _pFilter->setAnchorEnabled(TableEnum::Nat, IPVersion::IPv4, ("80.fwdSplitDNS"), false);
+    _pFilter->setAnchorEnabled(TableEnum::Nat, IPVersion::IPv4, ("90.fwdSnatDNS"), false);
 
     // block VpnOnly packets when the VPN is not connected
     _pFilter->setAnchorEnabled(TableEnum::Filter, IPVersion::Both, ("340.blockVpnOnly"), params.tunnelDeviceName.empty());
-    _pFilter->setAnchorEnabled(TableEnum::Filter, IPVersion::Both, ("350.allowHnsd"), params.allowResolver && !params.bypassDefaultApps);
-    _pFilter->setAnchorEnabled(TableEnum::Filter, IPVersion::Both, ("350.cgAllowHnsd"), params.allowResolver && params.bypassDefaultApps);
+    // Split tunnel removed, so no bypass apps
+    _pFilter->setAnchorEnabled(TableEnum::Filter, IPVersion::Both, ("350.allowHnsd"), params.allowResolver);
+    _pFilter->setAnchorEnabled(TableEnum::Filter, IPVersion::Both, ("350.cgAllowHnsd"), false);
 
     // Allow PIA Wireguard packets when PIA is allowed.  These come from the
     // kernel when using the kernel module method, so they aren't covered by the
@@ -125,7 +127,7 @@ void LinuxFirewall::applyRules(const FirewallParams &params)
 
     updateRules(params);
 
-    updateForwardedRoutes(params, params.enableSplitTunnel && !params.routedPacketsOnVPN);
+    updateForwardedRoutes(params);
 
     // Split tunnel feature removed
 }
@@ -181,11 +183,7 @@ void LinuxFirewall::updateRules(const FirewallParams &params)
     // Manage DNS for forwarded packets
     SplitDNSInfo::SplitDNSType routedDns = SplitDNSInfo::SplitDNSType::VpnOnly;
 
-    // We only want to use bypass DNS for routed packets if:
-    // - Routed packets are set to bypass
-    // - Split tunnel Name Servers are set to "Follow App Rules"
-    if(params.enableSplitTunnel && !params.routedPacketsOnVPN && params.splitTunnelDnsEnabled)
-        routedDns = SplitDNSInfo::SplitDNSType::Bypass;
+    // Split tunnel removed, always use VPN DNS for routed packets
     SplitDNSInfo routedDnsInfo = SplitDNSInfo::infoFor(params, routedDns, *_pCgroup);
 
     // Since we can't control where routed DNS is addressed, always create rules
@@ -224,29 +222,8 @@ void LinuxFirewall::updateRules(const FirewallParams &params)
         _routedDnsInfo = routedDnsInfo;
     }
 
-    // Manage split tunnel DNS.
+    // Split tunnel DNS has been removed
     SplitDNSInfo appDnsInfo;
-    // If we have to force either bypass or VPN-only apps to the correct DNS,
-    // set up appDnsInfo appropriately so we can update the rules.
-    if(params.splitTunnelDnsEnabled && params.isConnected)
-    {
-        // If connected and VPN does not have default route - then all apps
-        // should use existing DNS by default - except vpn-only, which we force
-        // to use the VPN DNS
-        if(params.bypassDefaultApps)
-        {
-            KAPPS_CORE_INFO() << "Forcing VPN-only apps to our DNS";
-            appDnsInfo = SplitDNSInfo::infoFor(params, SplitDNSInfo::SplitDNSType::VpnOnly, *_pCgroup);
-        }
-        // If connected and VPN DOES have default route - then all apps
-        // should use VPN DNS by default - except bypass apps, which we force
-        // to use existind DNS
-        else
-        {
-            KAPPS_CORE_INFO() << "Forcing bypass apps to existing DNS";
-            appDnsInfo = SplitDNSInfo::infoFor(params, SplitDNSInfo::SplitDNSType::Bypass, *_pCgroup);
-        }
-    }
 
     // To implement split tunnel DNS, create SNAT/DNAT rules to force UDP/TCP 53
     // packets to the proper DNS server.
@@ -289,26 +266,14 @@ void LinuxFirewall::updateRules(const FirewallParams &params)
 
         std::vector<std::string> ruleList;
 
-        // When DNS rules are being applied, and split tunnel DNS is enabled,
-        // create rules to permit forced apps to use the forced DNS.
-        // Also create leak protection rules to ensure apps do not leak to the
-        // wrong DNS.
-        //
-        // Without the leak protection rules, it is possible for apps to reuse a
-        // local port for a DNS request that was recently used by an app of a
-        // different type (within the conntrack timeout), which could allow an
-        // app to leak to the wrong DNS.
-        //
-        // (DNS rules are not applied when not connected, or when the DNS type
-        // is "use existing" - ST DNS has no effect with "use existing" since
-        // both VPN and non-VPN DNS are the same.)
-        if(!effectiveDnsRules.empty() && params.splitTunnelDnsEnabled)
+        // Split tunnel has been removed, no special DNS handling needed
+        if(false)
         {
-            // Only one server is used
-            const auto &forcedDnsServer = appDnsInfo.dnsServer();
-            const auto &forcedDnsCgroup = appDnsInfo.cGroupId();
+            // This code is disabled as split tunnel has been removed
+            std::string forcedDnsServer;
+            std::string forcedDnsCgroup;
 
-            if(!forcedDnsCgroup.empty())
+            if(false)
             {
                 // Permit forced apps to reach the forced DNS.
                 if(!forcedDnsServer.empty())
@@ -356,14 +321,8 @@ void LinuxFirewall::updateRules(const FirewallParams &params)
         _pFilter->replaceAnchor(TableEnum::Filter, IPVersion::IPv4, "320.allowDNS", ruleList);
     }
 
-    // Enable localhost routing
-    // Without this option we cannot route our DNS packet if the source IP was
-    // originally localhost, this is because the routing decision
-    // i.e localhost vs routable ip is made BEFORE we rewrite the source IP in POSTROUTING
-    if(params.enableSplitTunnel)
-        enableRouteLocalNet();
-    else
-        disableRouteLocalNet();
+    // Split tunnel removed, no need to enable localhost routing
+    disableRouteLocalNet();
 
     _appDnsInfo = appDnsInfo;
     _adapterName = adapterName;
@@ -396,22 +355,13 @@ bool LinuxFirewall::updateVpnTunOnlyAnchor(bool hasConnected, std::string tunnel
     return false;
 }
 
-void LinuxFirewall::updateForwardedRoutes(const FirewallParams &params, bool shouldBypassVpn)
+void LinuxFirewall::updateForwardedRoutes(const FirewallParams &params)
 {
-    const auto &netScan = params.netScan;
-
-    // If routed traffic is configured to bypass, create the default gateway
-    // route in this table all the time, which ensures that it isn't briefly
-    // routed into the VPN while the connection is coming up.
-    if(shouldBypassVpn)
-        kapps::core::Exec::bash(qs::format("ip route replace default via % dev % table %", netScan.gatewayIp(), netScan.interfaceName(), _pFilter->routing().forwardedTable()));
-    // Otherwise, create the VPN route for this traffic once connected.  This
-    // doesn't need to be active while disconnected - the "use VPN" mode of
-    // routed traffic intentionally permits traffic when disconnected, setting
-    // KS=Always blocks it correctly with the blackhole route if desired.
-    else if(params.hasConnected)
+    // Split tunnel removed - routed traffic always goes through VPN
+    // Create the VPN route for this traffic once connected
+    if(params.hasConnected)
         kapps::core::Exec::bash(qs::format("ip route replace default dev % table %", params.tunnelDeviceName, _pFilter->routing().forwardedTable()));
-    // Routed = Use VPN, and not connected
+    // Not connected
     else
         kapps::core::Exec::bash(qs::format("ip route delete default table %", _pFilter->routing().forwardedTable()));
 

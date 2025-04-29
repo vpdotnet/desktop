@@ -53,7 +53,7 @@ class ClangToolchain
         @clangMajorVersion = getClangVersion(clangVersionOutput)
         # Get the toolchain installation directory - needed by unit tests for
         # llvm-profdata, etc.
-        @toolchainPath = clangVersionOutput.match(/^InstalledDir: (.*)$/m)[1].strip
+        @toolchainPath = clangVersionOutput.match(/^InstalledDir: ([^\n]*)$/m)[1].strip
         # On some systems (Debian), clang --version reports the toolchain path as
         # /usr/bin, but /usr/bin/clang is actually a symlink to a versioned LLVM
         # directory, which is where the rest of the LLVM tools are, like llvm-profdata.

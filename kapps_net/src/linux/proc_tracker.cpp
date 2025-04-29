@@ -75,7 +75,8 @@ void ProcTracker::updateSplitTunnel(const FirewallParams &params, std::string tu
     // Update network first, then updateApps() can add/remove all excluded apps
     // when we gain/lose a valid network scan
     updateNetwork(params, tunnelDeviceName, tunnelDeviceLocalAddress);
-    updateApps(params.excludeApps, params.vpnOnlyApps);
+    // Split tunnel feature removed, passing empty vectors
+    updateApps({}, {});
 }
 
 void ProcTracker::removeAllApps()
@@ -139,9 +140,8 @@ void ProcTracker::updateFirewall(const FirewallParams &params)
     // Setup the packet tagging rule (this rule is unaffected by network changes)
     _firewall.setAnchorEnabled(TableEnum::Mangle, IPVersion::Both, ("100.tagBypass"), true);
 
-    // Only create the vpnOnly tagging rule if bypassing is the default
-    // (otherwise the packets will go through VPN anyway)
-    _firewall.setAnchorEnabled(TableEnum::Mangle, IPVersion::Both, ("100.tagVpnOnly"), params.bypassDefaultApps);
+    // Split tunnel removed - no vpnOnly tagging needed
+    _firewall.setAnchorEnabled(TableEnum::Mangle, IPVersion::Both, ("100.tagVpnOnly"), false);
 
     // Enable the masquerading rule - this gets updated with interface changes via replaceAnchor()
     _firewall.setAnchorEnabled(TableEnum::Nat, IPVersion::Both, ("100.transIp"), true);
@@ -370,18 +370,9 @@ void ProcTracker::teardownReversePathFiltering()
 
 void ProcTracker::updateApps(std::vector<std::string> excludedApps, std::vector<std::string> vpnOnlyApps)
 {
-    KAPPS_CORE_INFO() << "Split tunnel feature removed";
-    // If we're not tracking excluded apps, remove everything
-    if(!_previousNetScan.ipv4Valid())
-        excludedApps = {};
-    // Update excluded apps
-    removeApps(excludedApps, _exclusionsMap, "bypass");
-    addApps(excludedApps, _exclusionsMap, _bypassFile, "bypass");
-
-    // Update vpnOnly
-    removeApps(vpnOnlyApps, _vpnOnlyMap, "VPN only");
-    addApps(vpnOnlyApps, _vpnOnlyMap, _vpnOnlyFile, "VPN only");
-
+    KAPPS_CORE_INFO() << "Split tunnel feature removed - no updates needed";
+    // Split tunnel has been removed, nothing to do
+    
     // Indicate that we're done; if any filesystem errors were traced we want
     // to know whether they were associated with this update or something else
     // happening on this thread

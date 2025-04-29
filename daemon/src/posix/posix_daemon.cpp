@@ -720,6 +720,7 @@ void PosixDaemon::checkFeatureSupport()
     // SemVersion implements a suitable operator<(), we don't use it to parse
     // the version because we're not sure that iptables will always return three
     // parts in its version number though.
+    QStringList errors;
     if(SemVersion{major, minor, patch} < SemVersion{1, 6, 1})
         errors.push_back(QStringLiteral("iptables_invalid"));
 

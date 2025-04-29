@@ -35,24 +35,24 @@ namespace
     // Explicitly specify struct alignment
     typedef struct __attribute__((aligned(NLMSG_ALIGNTO)))
     {
-        nlmsghdr header;
+        struct nlmsghdr header;
 
         // Insert no padding as we want the members contiguous
         struct __attribute__((__packed__))
         {
-            cn_msg body;
-            proc_cn_mcast_op subscription_type;
+            struct cn_msg body;
+            enum proc_cn_mcast_op subscription_type;
         };
     } NetlinkRequest;
 
     typedef struct __attribute__((aligned(NLMSG_ALIGNTO)))
     {
-        nlmsghdr header;
+        struct nlmsghdr header;
 
         struct __attribute__((__packed__))
         {
-            cn_msg body;
-            proc_event event;
+            struct cn_msg body;
+            struct proc_event event;
         };
     } NetlinkResponse;
 }
@@ -180,14 +180,14 @@ void CnProc::readFromSocket()
 
     switch(message.event.what)
     {
-    case proc_event::PROC_EVENT_NONE:
+    case PROC_EVENT_NONE:
         KAPPS_CORE_INFO() << "Listening to process events";
         connected();
         break;
-    case proc_event::PROC_EVENT_EXEC:
+    case PROC_EVENT_EXEC:
         exec(eventData.exec.process_pid);
         break;
-    case proc_event::PROC_EVENT_EXIT:
+    case PROC_EVENT_EXIT:
         exit(eventData.exit.process_pid);
         break;
     default:
