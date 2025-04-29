@@ -20,13 +20,27 @@
 #include <libproc.h>  // for proc_pidpath()
 #include <set>
 #include <vector>
+#include <string>
 #include <kapps_net/net.h>
 #include <kapps_core/core.h>
 #include <kapps_core/src/logger.h>
 #include "../originalnetworkscan.h"      // For OriginalNetworkScan
-#include "split_tunnel_types.h"
 
 namespace kapps { namespace net {
+
+// Replaced split tunnel types with minimal definitions
+enum IPVersion 
+{
+    IPv4,
+    IPv6
+};
+
+using PortSet = std::set<std::uint16_t>;
+
+// Utility function needed by dependent code
+inline std::string ipToString(IPVersion ipVersion) {
+    return ipVersion == IPv4 ? "IPv4" : "IPv6";
+}
 class KAPPS_NET_EXPORT AddressAndPort
 {
 public:
