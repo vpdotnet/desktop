@@ -97,9 +97,7 @@ private:
     void updateBypassSubnets(IpTablesFirewall::IPVersion ipVersion, const std::set<std::string> &bypassSubnets, std::set<std::string> &oldBypassSubnets);
 
 protected:
-    virtual void startSplitTunnel(const FirewallParams& params) override;
-    virtual void updateSplitTunnel(const FirewallParams &params) override;
-    virtual void stopSplitTunnel() override;
+    // Split tunnel feature removed
 
 private:
     FirewallConfig _config;

@@ -64,6 +64,4 @@ void Firewall::aboutToConnectToVpn()
 }
 #endif
 
-// Split tunnel feature removed
-
 }}

@@ -169,10 +169,7 @@ namespace kapps { namespace net {
             void applyRules(const FirewallParams &params) override;
 
         protected:
-            // Not used in win
-            virtual void startSplitTunnel(const FirewallParams &params) override {}
-            virtual void updateSplitTunnel(const FirewallParams &params) override {}
-            virtual void stopSplitTunnel() override {}
+            // Split tunnel feature removed
 
         private:
             bool areAppsUnchanged(const AppIdSet &newApps,

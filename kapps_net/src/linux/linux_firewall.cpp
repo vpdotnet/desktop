@@ -127,57 +127,10 @@ void LinuxFirewall::applyRules(const FirewallParams &params)
 
     updateForwardedRoutes(params, params.enableSplitTunnel && !params.routedPacketsOnVPN);
 
-    toggleSplitTunnel(params);
+    // Split tunnel feature removed
 }
 
-void LinuxFirewall::startSplitTunnel(const FirewallParams &params)
-{
-    if(_pSplitTunnelTracker)
-        return;
-
-    assert(!_pSplitTunnelWorker);  // Class invariant - exists only when _pSplitTunnelTracker exists
-
-    // Create a worker thread to pump the netlink socket  We don't use any work
-    // items (we use syncInvoke() to update firewall params), so the handler is
-    // empty.
-    _pSplitTunnelWorker.emplace([](core::Any){});
-
-    // Create the split tunnel tracker on the worker thread.
-    _pSplitTunnelWorker->syncInvoke([&]
-    {
-        _pSplitTunnelTracker.emplace(params, *_pFilter, *_pCgroup, _config.bypassFile,
-            _config.vpnOnlyFile, _config.defaultFile);
-    });
-}
-
-void LinuxFirewall::stopSplitTunnel()
-{
-    // Shut down the worker thread
-    _pSplitTunnelWorker.clear();
-    // Then, disconnect from Netlink and clean up
-    _pSplitTunnelTracker.clear();
-}
-
-void LinuxFirewall::updateSplitTunnel(const FirewallParams &params)
-{
-    if(!_pSplitTunnelTracker)
-        return;
-
-    assert(_pSplitTunnelWorker);  // Class invariant - exists only when _pSplitTunnelTracker exists
-
-    // Synchronize with the worker thread to reconfigure the split tunnel
-    // tracker.  Alternatively, we could copy the FirewallParams and queue an
-    // event to update it, but the worker thread won't block us for long, and
-    // we want to be sure the changes have applied before the app goes on to do
-    // other things (don't risk leaking apps because the changes were applied
-    // async, etc.)
-    _pSplitTunnelWorker->syncInvoke([&]()
-        {
-            KAPPS_CORE_INFO() << "Updating split tunnel configuration";
-            _pSplitTunnelTracker->updateSplitTunnel(params,
-                params.tunnelDeviceName, params.tunnelDeviceLocalAddress);
-        });
-}
+// Split tunnel feature removed
 
 void LinuxFirewall::updateRules(const FirewallParams &params)
 {
