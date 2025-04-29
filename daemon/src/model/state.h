@@ -411,11 +411,8 @@ public:
     JsonProperty(bool, wintunMissing);
     // State of the network extension - the WFP callout on Windows, the
     // transparent proxy system extension on Mac.  See Daemon::NetExtensionState.
-    // This extension is currently used for the split tunnel feature but may
-    // have other functionality in the future.
-    // This causes the client to try to install the driver before enabling the
-    // split tunnel setting if necessary, or show warnings if the driver is not
-    // installed and the setting is already enabled.
+    // The split tunnel feature which previously used this has been removed, but the
+    // extension may still be needed for other functionality in the future.
     JsonProperty(QString, netExtensionState, QStringLiteral("NotInstalled"));
     // Result of the connection test performed after connecting to the VPN.  If
     // the connection is not working, this will be set, and the client will show
@@ -476,11 +473,8 @@ public:
     // transitions from "VPN Disconnected" to "VPN Connected" once the snooze ends
     JsonProperty(qint64, snoozeEndTime, -1);
 
-    // If split tunnel is not available, this is set to a list of reasons.
-    // The reasons are listed in SettingsMessages.qml along with their UI text.
-    // (For example - "libnl_invalid" is set if the libnl libraries can't be
-    // loaded on Linux.)
-    JsonProperty(std::vector<QString>, splitTunnelSupportErrors);
+    // Split tunnel feature removed
+    // JsonProperty(std::vector<QString>, splitTunnelSupportErrors);
 
     // A key component for the VPN is not available, all connections must be
     // prevented the user should be warned and the daemon should not start in

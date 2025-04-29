@@ -23,9 +23,8 @@
 namespace kapps { namespace net {
 
 // Get the subject names from signatures in an executable.
-// This does _not_ verify the signatures, it's used by WinAppMonitor to try to
-// figure out if executables might belong to the same app - the executables are
-// already running, so there's no point in actually verifying the signatures.
+// This does _not_ verify the signatures.
+// Split tunnel feature removed - was previously used by WinAppMonitor
 std::set<std::wstring> winGetExecutableSigners(const std::wstring &path);
 
 }}

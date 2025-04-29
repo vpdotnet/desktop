@@ -595,8 +595,7 @@ Item {
     // functionality
     tapAdapterMissing,
     installationRestart,
-    splitTunnelUninstalled,
-    splitTunnelReboot,
+    // Split tunnel feature removed
     vpnMissingIptables,
     authFailure,
     dnsConfigFailed,
@@ -664,8 +663,7 @@ Item {
   signal showChangelog()
   // Show help page & trigger TAP reinstall (for the TAP adapter notification)
   signal reinstallTapAdapter()
-  // Show help page & trigger split tunnel filter reinstall
-  signal reinstallSplitTunnel()
+  // Split tunnel feature removed
   // Emitted when a notification needs to show an alert on the Settings Help
   // page (due to an error handling a user action)
   signal showHelpAlert(string msg, string title, string level)

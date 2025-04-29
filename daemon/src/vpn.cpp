@@ -621,23 +621,11 @@ ConnectionConfig::ConnectionConfig(DaemonSettings &settings, StateModel &state,
     {
         _otherAppsUseVpn = true;
         _setDefaultRoute = true;
-
-        // Split tunnel DNS removed
-#if !defined(Q_OS_MAC)
-        if(false) // Split tunnel feature removed
-        {
-            // Yes - set the default DNS only if the VPN has the default route
-            _setDefaultDns = _setDefaultRoute;
-            // Force VPN-only apps to use PIA's configured DNS if the VPN does
-            // not have the default route
-            _forceVpnOnlyDns = !_setDefaultRoute;
-            // Force bypass apps to use existing DNS if the VPN has the default
-            // route
-            _forceBypassDns = _setDefaultRoute;
-        }
-#endif
-        // Otherwise, not splitting DNS - either split tunnel DNS is disabled,
-        // or we're using existing DNS anyway.
+        
+        // DNS settings - split tunnel feature removed
+        _setDefaultDns = true;
+        _forceVpnOnlyDns = false;
+        _forceBypassDns = false;
     }
 
     // Capture OpenVPN-specific settings.

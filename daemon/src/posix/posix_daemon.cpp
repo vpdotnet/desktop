@@ -412,19 +412,12 @@ void PosixDaemon::applyFirewallRules(kapps::net::FirewallParams params)
     // Split tunnel feature removed
     // No apps to exclude or include with VPN
 
-    // When bypassing by default, force Handshake and Unbound into the VPN with
-    // an "include" rule.  (Just routing the Handshake seeds into the VPN is not
-    // sufficient; hnsd uses a local recursive DNS resolver that will query
-    // authoritative DNS servers, and we want that to go through the VPN.)
-    if(params.bypassDefaultApps)
-    {
-        params.vpnOnlyApps.push_back(Path::HnsdExecutable);
-        params.vpnOnlyApps.push_back(Path::UnboundExecutable);
-    }
+    // Split tunnel feature removed - no longer need to handle bypass apps or VPN-only apps
 
 #ifdef Q_OS_MAC
+        // Split tunnel feature removed
         const auto& daemonDebugLogEnabled = _settings.debugLogging();
-        params.transparentProxyLogEnabled = (daemonDebugLogEnabled != nullptr) ? true : false;
+        // params.transparentProxyLogEnabled removed
 #endif
 
     if(_pFirewall)
@@ -681,9 +674,8 @@ void PosixDaemon::writePlatformDiagnostics(DiagnosticsFile &file)
 
 void PosixDaemon::checkFeatureSupport()
 {
-    // Probably needs to be refactored since wrong errors can end up in
-    // the splitTunnelSupportErrors JsonProperty.
-    std::vector<QString> errors;
+    // Split tunnel feature is fully removed
+    // Split tunnel support errors have been removed from the state model
 
 #ifdef Q_OS_LINUX
     // iptables 1.6.1 is required.
@@ -784,25 +776,12 @@ void PosixDaemon::checkFeatureSupport()
     // Try to connect and see if we get an initial message.  This is async, so
     // we'll assume the kernel does not support it initially until we get the
     // initial message.
-    errors.push_back(QStringLiteral("cn_proc_invalid"));
-    qInfo() << "Checking proc event support by connecting to Netlink connector";
-    _pCnProcTest.emplace();
-    _pCnProcTest->connected = [this]()
-    {
-        qInfo() << "Proc event received, kernel supports proc events";
-        auto errors = _state.splitTunnelSupportErrors();
-        auto itNewEnd = std::remove(errors.begin(), errors.end(),
-                                    QStringLiteral("cn_proc_invalid"));
-        errors.erase(itNewEnd, errors.end());
-        _state.splitTunnelSupportErrors(errors);
-        // Don't need the netlink connection any more
-        _pCnProcTest.clear();
-    };
+    // We no longer need to check for CN_PROC support since split tunnel is removed
+    qInfo() << "Split tunnel removed - skipping proc event check";
 
 #endif
 
-    if(!errors.empty())
-        _state.splitTunnelSupportErrors(errors);
+    // Split tunnel feature is removed, so we've already set a fixed error state
 }
 
 #ifdef Q_OS_LINUX

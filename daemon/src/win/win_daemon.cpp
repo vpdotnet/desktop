@@ -198,14 +198,7 @@ WinDaemon::WinDaemon(QObject* parent)
 
     connect(this, &Daemon::aboutToConnect, this, &WinDaemon::onAboutToConnect);
 
-    // _appMonitor.appIdsChanged() can be invoked on several different threads.
-    // queueApplyFirewallRules() isn't thread safe, dispatch back to the main
-    // thread.
-    _appMonitor.appIdsChanged = [this]()
-    {
-        QMetaObject::invokeMethod(this, &Daemon::queueApplyFirewallRules,
-                                  Qt::QueuedConnection);
-    };
+    // Split tunnel feature removed
 
     // Split tunnel feature removed
     updateSplitTunnelRules();
@@ -428,8 +421,7 @@ LRESULT WinDaemon::proc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 void WinDaemon::applyFirewallRules(kapps::net::FirewallParams params)
 {
     Q_ASSERT(_pFirewall);   // Class invariant
-    params.excludeApps = _appMonitor.getExcludedAppIds();
-    params.vpnOnlyApps = _appMonitor.getVpnOnlyAppIds();
+    // Split tunnel feature removed
     _pFirewall->applyRules(params);
 }
 
@@ -576,37 +568,10 @@ void WinDaemon::writePlatformDiagnostics(DiagnosticsFile &file)
         QStringLiteral(R"(/C Get-Content -Tail 10000 "$env:WINDIR\INF\setupapi.dev.log")"),
         &filterSetupapiDevLog);
 
-    // Raw WFP filter dump, important to identify app rules (and other rules
-    // that may affect the same apps) for split tunnel on Windows
+    // Raw WFP filter dump
     file.writeCommand("WFP filters (raw)", "netsh", QStringLiteral("wfp show filters dir = out verbose = on file = -"));
 
-    // WFP events dumps for each excluded app.  Can diagnose issues with split
-    // tunnel app rules.
-    _appMonitor.dump();
-    const auto &excludedApps = _appMonitor.getExcludedAppIds();
-    int i=0;
-    for(const auto &pAppId : excludedApps)
-    {
-        Q_ASSERT(pAppId);   // Guarantee of WinAppMonitor::getAppIds()
-
-        const auto &appId = qs::toQString(pAppId->printableString());
-        auto title = QStringLiteral("WFP events (bypass %1 - %2)").arg(i).arg(appId);
-        auto cmdParams = QStringLiteral("wfp show netevents appid = \"%1\" file = -").arg(appId);
-        file.writeCommand(title, "netsh", cmdParams);
-        ++i;
-    }
-    const auto &vpnOnlyApps = _appMonitor.getVpnOnlyAppIds();
-    i=0;
-    for(const auto &pAppId : vpnOnlyApps)
-    {
-        Q_ASSERT(pAppId);   // Guarantee of WinAppMonitor::getAppIds()
-
-        const auto &appId = qs::toQString(pAppId->printableString());
-        auto title = QStringLiteral("WFP events (VPN-only %1 - %2)").arg(i).arg(appId);
-        auto cmdParams = QStringLiteral("wfp show netevents appid = \"%1\" file = -").arg(appId);
-        file.writeCommand(title, "netsh", cmdParams);
-        ++i;
-    }
+    // Split tunnel feature removed
 
     // Wireguard logs
     file.writeCommand("WireGuard Logs", Path::WireguardServiceExecutable,
@@ -692,11 +657,6 @@ void WinDaemon::updateSplitTunnelRules()
     }
 
     // Split tunnel feature removed - this is a no-op method now
-    // We still create the AppExecutables structures but they remain empty
-    AppExecutables excludedExes;
-    AppExecutables vpnOnlyExes;
-
-    _appMonitor.setSplitTunnelRules(excludedExes.executables, vpnOnlyExes.executables);
 }
 
 class TraceMemSize : public kapps::core::OStreamInsertable<TraceMemSize>

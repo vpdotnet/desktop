@@ -25,7 +25,7 @@ class Build
         end
 
     # The major-minor-patch parts of this version
-    VersionMMP = version_mmp || [3, 6, 2]
+    VersionMMP = version_mmp || [3, 6, 3]
     # The base major-minor-patch version, as a string
     VersionBase = "#{VersionMMP[0]}.#{VersionMMP[1]}.#{VersionMMP[2]}"
     # The prerelease tags for this build (dot-separated, excluding leading

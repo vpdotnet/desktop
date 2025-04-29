@@ -617,9 +617,6 @@ Daemon::Daemon(QObject* parent)
     connect(&_settings, &DaemonSettings::allowLANChanged, this, &Daemon::queueApplyFirewallRules);
     connect(&_settings, &DaemonSettings::overrideDNSChanged, this, &Daemon::queueApplyFirewallRules);
     // Split tunnel feature removed
-    // connect(&_settings, &DaemonSettings::bypassSubnetsChanged, this, &Daemon::queueApplyFirewallRules);
-    // connect(&_settings, &DaemonSettings::splitTunnelEnabledChanged, this, &Daemon::queueApplyFirewallRules);
-    // connect(&_settings, &DaemonSettings::splitTunnelRulesChanged, this, &Daemon::queueApplyFirewallRules);
     connect(&_settings, &DaemonSettings::routedPacketsOnVPNChanged, this, &Daemon::queueApplyFirewallRules);
     connect(&_settings, &DaemonSettings::connectOnWakeChanged, this, &Daemon::queueApplyFirewallRules);
     _state.existingDNSServers.changed = [this]{queueApplyFirewallRules();};
@@ -1308,18 +1305,10 @@ QString Daemon::diagnosticsOverview() const
             return killswitchState;
     };
 
-    // Split tunnel feature removed
-    QStringList bypassRules;
-    QStringList vpnOnlyRules;
-
     auto commonDiagnostics = [&] {
         auto strings = QStringList {
             QStringLiteral("Connected: %1").arg(boolToString(isConnected)),
-            QStringLiteral("Split Tunnel enabled: %1").arg("false"), // Split tunnel feature removed
-            QStringLiteral("Split Tunnel DNS enabled: %1").arg("N/A"), // Split tunnel feature removed
-            QStringLiteral("Split Tunnel Bypass Apps: %1").arg("N/A"), // Split tunnel feature removed
-            QStringLiteral("Split Tunnel VpnOnly Apps: %1").arg("N/A"), // Split tunnel feature removed
-            QStringLiteral("VPN has default route: %1").arg("true"), // Split tunnel feature removed
+            // Split tunnel feature removed
             QStringLiteral("Killswitch: %1").arg(killswitchText(_settings.killswitch())),
             QStringLiteral("Allow LAN: %1").arg(boolToString(_settings.allowLAN())),
 #ifdef Q_OS_WIN
@@ -3135,28 +3124,17 @@ void Daemon::reapplyFirewallRules()
     params.tunnelDeviceLocalAddress = _state.tunnelDeviceLocalAddress().toStdString();
     params.tunnelDeviceRemoteAddress = _state.tunnelDeviceRemoteAddress().toStdString();
 
-    params.enableSplitTunnel = false; // Split tunnel feature removed
+    // Split tunnel feature removed
 
     // For convenience we expose the netScan in params.
-    // This way we can use it in code that takes a FirewallParams argument
-    // - such as the split tunnel code
     params.netScan = originalNetwork();
 
-    // vpnOnlyApps and excludedApps are set up by applyFirewallRules(), this
-    // differs between Windows and POSIX
+    // Split tunnel feature removed
 
-    // Split tunnel feature removed - no bypass subnets
-
-    // Though split tunnel in general can be toggled while connected,
-    // defaultRoute can't.  The user can toggle split tunnel as long as the
-    // effective value for params.bypassDefaultApps doesn't change.  If it does,
-    // we'll still update split tunnel, but this change will require a
-    // reconnect.
     if(connectionSettings)
     {
-        params.bypassDefaultApps = !connectionSettings->otherAppsUseVpn();
+        // Split tunnel feature removed - defaultApps always false, defaultRoute always true
         params.setDefaultRoute = connectionSettings->setDefaultRoute();
-        params.splitTunnelDnsEnabled = false; // Split tunnel feature removed
         params.mtu = connectionSettings->mtu();
 
         // Convert dns from QStringList to std::vector<std::string>
@@ -3166,8 +3144,8 @@ void Daemon::reapplyFirewallRules()
     // Set existing DNS servers
     params.existingDNSServers = _state.existingDNSServers();
 
-    // We can't block everything when the default behavior is to bypass.
-    params.blockAll = params.leakProtectionEnabled && !params.bypassDefaultApps;
+    // Split tunnel feature removed - always false since bypassDefaultApps was removed
+    params.blockAll = params.leakProtectionEnabled; // No bypass behavior with split tunnel removed
     params.allowVPN = params.allowDHCP = params.blockAll;
     params.blockIPv6 = (vpnActive || params.leakProtectionEnabled) && _settings.blockIPv6();
     params.allowLAN = _settings.allowLAN() && (params.blockAll || params.blockIPv6);
@@ -3178,7 +3156,7 @@ void Daemon::reapplyFirewallRules()
     params.blockDNS = connectionSettings && connectionSettings->setDefaultDns() && vpnActive && params.hasConnected;
 
     params.allowPIA = (params.blockAll || params.blockIPv6 || params.blockDNS);
-    params.allowLoopback = params.allowPIA || params.enableSplitTunnel;
+    params.allowLoopback = params.allowPIA; // Split tunnel removed
     params.allowResolver = params.blockDNS && connectionSettings &&
         connectionSettings->dnsType() == ConnectionConfig::DnsType::Local;
 

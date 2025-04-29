@@ -24,8 +24,7 @@
 #include "../firewall.h"
 #include "pf_firewall.h"
 #include "../originalnetworkscan.h"
-#include "mac_splittunnel.h"
-#include "transparent_proxy.h"
+// Split tunnel feature removed
 #include <kapps_core/src/posix/pollthread.h>
 #include <kapps_core/src/util.h>
 #include <kapps_core/src/processrunner.h>
@@ -90,9 +89,7 @@ public:
     void dnsCacheFlush() const;
 
 protected:
-    virtual void startSplitTunnel(const FirewallParams& params) override;
-    virtual void updateSplitTunnel(const FirewallParams &params) override;
-    virtual void stopSplitTunnel() override;
+    // Split tunnel feature removed
 
 private:
     FirewallConfig _config;
@@ -100,16 +97,8 @@ private:
     kapps::core::nullable_t<PFFirewall> _pFilter;
     SubnetBypass _subnetBypass;
     std::string _executableDir;
-    // The split tunnel implementation - keeps track of the TCP/UDP flows routed
-    // to either the VPN or physical interface, detects and handles new flows
-    // from the split tunnel interface, etc.  This runs on _pSplitTunnelWorker,
-    // so we can only manipulate it by synchronizing with that thread.
-    core::nullable_t<MacSplitTunnel> _pSplitTunnel;
-    // Thread used to run the split tunnel implementation asynchronously.
-    core::nullable_t<core::PollThread> _pSplitTunnelWorker;
     BoundRouteUpdater _boundRouteUpdater;
-    // Split tunnel implementation based on Apple's transparent proxy APIs
-    core::nullable_t<TransparentProxy> _pTransparentProxy;
+    // Split tunnel feature removed
 };
 
 }}

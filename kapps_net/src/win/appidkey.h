@@ -83,9 +83,9 @@ private:
     FWP_BYTE_BLOB *_pBlob;
 };
 
-// Set of AppIdKey values owned by WinAppMonitor / WinAppTracker.  Since the
-// AppIdKeys are not owned by the caller, the caller should not hang on to
-// these values after modifying WinAppMonitor; instead use
+// Set of AppIdKey values used by the firewall system.
+// Split tunnel feature removed - previously owned by WinAppMonitor
+// AppIdKeys are not owned by the caller, so the caller should use
 // AppIdKey::copyData() to get an owned copy of the AppIdKey data.
 using AppIdSet = std::set<std::shared_ptr<const AppIdKey>, core::PtrValueLess>;
 

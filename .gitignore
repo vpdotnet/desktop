@@ -39,3 +39,14 @@ Gemfile.lock
 
 # Ruby coverage results from simplecov
 coverage
+
+# Ruby bundle directory
+.bundle/
+vendor/
+
+# Claude-related files
+CLAUDE.md
+default.profraw
+
+# Extra mac files
+extras/mac/

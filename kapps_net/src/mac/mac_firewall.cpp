@@ -155,15 +155,16 @@ void MacFirewall::applyRules(const FirewallParams &params)
     // default and bypass apps can operate as if there's no VPN when in this mode.
     // vpnOnly apps will have their IPv6 blocked - but this blocking is done in the transparent proxy,
     // we don't need a firewall rule for it.
-    _pFilter->setFilterEnabled("250.blockIPv6", params.blockIPv6 && !params.bypassDefaultApps);
+    _pFilter->setFilterEnabled("250.blockIPv6", params.blockIPv6);
 
     _pFilter->setFilterEnabled("290.allowDHCP", params.allowDHCP);
     _pFilter->setFilterEnabled("299.allowIPv6Prefix", netScan.hasIpv6() && params.allowLAN);
     _pFilter->setAnchorTable("299.allowIPv6Prefix", netScan.hasIpv6() && params.allowLAN, "ipv6prefix", {
         // First 64 bits is the IPv6 Network Prefix
         qs::format("%/64", netScan.ipAddress6())});
-    _pFilter->setFilterEnabled("305.allowSubnets", params.enableSplitTunnel);
-    _pFilter->setAnchorTable("305.allowSubnets", params.enableSplitTunnel, "subnets", subnetsToBypass(params));
+    
+    // Split tunnel feature removed
+    _pFilter->setFilterEnabled("305.allowSubnets", false);
     _pFilter->setFilterEnabled("490.allowLAN", params.allowLAN);
     // Get data for setting up our DNS leak protection rules
     const auto dnsLeakProtection = getDnsLeakProtectionInfo(params);
@@ -184,61 +185,12 @@ void MacFirewall::applyRules(const FirewallParams &params)
 
     _subnetBypass.updateRoutes(params);
     _boundRouteUpdater.update(params);
-    toggleSplitTunnel(params);
+    // Split tunnel feature removed
 }
 
 void MacFirewall::aboutToConnectToVpn()
 {
-    if(!_pTransparentProxy)
-        return;
-
-    assert(_pSplitTunnelWorker);   // Class invariant - exists only when _pSplitTunnel exists
-}
-
-void MacFirewall::startSplitTunnel(const FirewallParams &params)
-{
-    if(_pTransparentProxy)
-        return;
-    assert(!_pSplitTunnelWorker);   // Class invariant - exists only when _pSplitTunnel exists
-
-    // Create a worker thread to operate the split tunnel device from userspace.
-    // We don't use any work items (we use syncInvoke() to update firewall
-    // params and signal the "about-to-connect" condition), so the handler is
-    // empty.
-    _pSplitTunnelWorker.emplace([](core::Any){});
-
-    _pSplitTunnelWorker->syncInvoke([&]
-    {
-        _pTransparentProxy.emplace(params, _config);
-    });
-}
-
-void MacFirewall::stopSplitTunnel()
-{
-    // Shut down the worker thread
-    _pSplitTunnelWorker.clear();
-    // Shutdown the proxy
-    _pTransparentProxy.clear();
-}
-
-void MacFirewall::updateSplitTunnel(const FirewallParams &params)
-{
-    if(!_pTransparentProxy)
-        return;
-
-    assert(_pSplitTunnelWorker);   // Class invariant - exists only when _pSplitTunnel exists
-
-    // Reconfigure the firewall synchronously on the worker thread.
-    // Alternatively, we could copy the params and then queue it to the worker
-    // thread, but the worker shouldn't block us for long, and we should not
-    // risk proceeding with a VPN connection/disconnection (etc.) if the split
-    // tunnel rules have changed (don't risk briefly leaking an app while the
-    // update is queued.)
-    _pSplitTunnelWorker->syncInvoke([&]()
-        {
-            KAPPS_CORE_INFO() << "Updating split tunnel configuration";
-            _pTransparentProxy->update(params);
-        });
+    // Split tunnel feature removed
 }
 
 std::vector<std::string> MacFirewall::subnetsToBypass(const FirewallParams &params)
@@ -320,15 +272,13 @@ void MacFirewall::dnsCacheFlush() const
 
 void BoundRouteUpdater::update(const FirewallParams &params)
 {
-    // We may need a bound route for the physical interface:
+    // We need a bound route for the physical interface:
     // - When we have connected (even if currently reconnecting) - we need this
     //   for DNS leak protection.  Apps can try to send DNS packets out the
     //   physical interface toward the configured DNS servers, but PIA forces it
     //   it into the tunnel anyway.  (mDNSResponder does this in 10.15.4+.)
-    // - Split tunnel (even if disconnected) - needed to allow bypass apps to
-    //   bind to the physical interface, and needed for OpenVPN itself to bind
-    //   to the physical interface to bypass split tunnel.
-    if(params.enableSplitTunnel || params.hasConnected)
+    // - Split tunnel feature has been removed
+    if(params.hasConnected)
     {
         // Remove the previous bound route if it's present and different
         if(_netScan.ipv4Valid() && (_netScan.gatewayIp() != params.netScan.gatewayIp() ||

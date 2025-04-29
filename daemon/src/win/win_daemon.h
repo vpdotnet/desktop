@@ -25,7 +25,7 @@
 
 #include "../daemon.h"
 #include "../networkmonitor.h"
-#include <kapps_net/src/win/win_appmonitor.h>
+// Split tunnel feature removed
 #include "win_interfacemonitor.h"
 #include "win_dnscachecontrol.h"
 #include "win_wintun.h"
@@ -105,7 +105,7 @@ protected:
     WinUnbiasedDeadline _resumeGracePeriod;
     ServiceMonitor _wfpCalloutMonitor;
     std::unique_ptr<WinServiceState> _pMsiServiceState;
-    kapps::net::WinAppMonitor _appMonitor;
+    // Split tunnel feature removed - _appMonitor removed
     WintunModule _wintun;
     std::shared_ptr<WintunAdapter> _wintunAdapter = nullptr;
 };

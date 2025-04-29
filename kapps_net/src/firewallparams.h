@@ -70,51 +70,15 @@ struct KAPPS_NET_EXPORT FirewallParams
     // activated once we successfully connect, but remain active even if we lose
     // the connection while reconnecting.)
     bool hasConnected;
-    // Whether to bypass the VPN for apps with no split tunnel rules.
-    // When split tunnel is enabled, or when not connecting/connected, this is
-    // false.
-    bool bypassDefaultApps;
     // Whether the default route has or will be set to the VPN (false when not
-    // connected or connecting).  Note that this _really_ refers to the routing
-    // table itself, not the intended default app behavior (which is indicated
-    // by bypassDefaultApps, and may not be the same on Mac).
+    // connected or connecting).
     bool setDefaultRoute;
 
-    // Whether to enable split tunnel.  Split tunnel is enabled whenever the
-    // setting is enabled, even if the PIA client is not logged in.  This is
-    // important to block Only VPN apps - otherwise, they may leak even after
-    // PIA is started/connected, because they could have existing connections
-    // that were permitted.
-    //
-    // Bypass VPN apps though are only affected when we connect
-    // - persistent connections from those apps would be
-    // fine since they bypass the VPN anyway.
-    bool enableSplitTunnel;
-    // Original network information used (among other things) to manage apps for split
-    // tunnel.
+    // Split tunnel feature removed
+    // bool bypassDefaultApps; - removed
+    // bool enableSplitTunnel; - removed
     OriginalNetworkScan netScan;
-
-    // Whether to enable split tunnel DNS.  When enabled, 'bypass' applications
-    // will use the system's existing DNS, while 'VPN only' applications will
-    // use the VPN DNS.
-    //
-    // This is mainly important when the VPN DNS redirects some hostnames to
-    // proxies only reachable through the VPN - this would break bypass apps
-    // attempting to use those same services.
-    //
-    // This necessitates disabling or avoiding any system-wide DNS cache,
-    // because DNS responses for a particular hostname may vary by application.
-    //
-    // Support for this feature varies by platform:
-    // - Linux: Fully supported; app DNS requests are redirected to the
-    //   appropriate DNS server (and interface) using iptables.  This also
-    //   bypasses any local caching DNS resolver, if present.
-    // - macOS: Not supported.  There is no way to disable the system-wide DNS
-    //   cache.
-    // - Windows: Supported, but there are caveats.  WinFirewall disables the
-    //   Dnscache service when connected with this feature enable;
-    //   BrandInfo::enableDnscache must be provided.
-    bool splitTunnelDnsEnabled;
+    // bool splitTunnelDnsEnabled; - removed
 
     // Mtu of the tunnel interface
     int mtu;
@@ -123,20 +87,13 @@ struct KAPPS_NET_EXPORT FirewallParams
     std::vector<std::string> effectiveDnsServers;
 
 #if defined(KAPPS_CORE_OS_POSIX)
-    // On POSIX, split tunnel apps are defined with ordinary file paths.  On
-    // macOS, they are folders (normally app bundles, but they can be any
-    // folder - executables are matched using path prefixes).  On Linux, they
-    // are exact executable paths - child processes inherit the parent's cgroup
-    // assignments by default.
-    std::vector<std::string> excludeApps;
-    std::vector<std::string> vpnOnlyApps;
+    // Split tunnel feature removed
+    // std::vector<std::string> excludeApps; - removed
+    // std::vector<std::string> vpnOnlyApps; - removed
 #elif defined(KAPPS_CORE_OS_WINDOWS)
-    // On Windows split tunnel apps are defined using AppIdKeys, which are
-    // normally provided by WinAppMonitor.  It monitors app executions using the
-    // current split tunnel rules to identify child processes and include them
-    // in the app ID set.
-    AppIdSet excludeApps;
-    AppIdSet vpnOnlyApps;
+    // Split tunnel feature removed
+    // AppIdSet excludeApps; - removed
+    // AppIdSet vpnOnlyApps; - removed
 #endif
 
     std::set<std::string> bypassIpv4Subnets; // IPv4 subnets to bypass VPN
@@ -147,9 +104,8 @@ struct KAPPS_NET_EXPORT FirewallParams
     // The DNS servers prior to connecting
     std::vector<uint32_t> existingDNSServers;
 #if defined(KAPPS_CORE_OS_MACOS)
-    // This parameter controls if Split Tunnel transparent proxy logs
-    // are saved in the same folder as pia-daemon 
-    bool transparentProxyLogEnabled;
+    // Split tunnel feature removed
+    // bool transparentProxyLogEnabled; - removed
 #endif
 };
 
