@@ -64,35 +64,6 @@ void Firewall::aboutToConnectToVpn()
 }
 #endif
 
-void PlatformFirewall::toggleSplitTunnel(const FirewallParams &params)
-{
-    KAPPS_CORE_INFO() << "Tunnel device is:" << params.tunnelDeviceName;
-    KAPPS_CORE_INFO() <<  "Updated split tunnel - enabled:" << params.enableSplitTunnel
-        << "-" << params.netScan;
-
-    // Activate split tunnel if it's supposed to be active and currently isn't
-    if(params.enableSplitTunnel && !_enableSplitTunnel)
-    {
-        KAPPS_CORE_INFO() << "Starting Split Tunnel";
-        startSplitTunnel(params);
-    }
-    // Deactivate if it's supposed to be inactive but is currently active
-    else if(!params.enableSplitTunnel && _enableSplitTunnel)
-    {
-        KAPPS_CORE_INFO() << "Stopping Split Tunnel";
-        stopSplitTunnel();
-    }
-    // Otherwise, the current active state is correct, but if we are currently
-    // active, update the configuration
-    else if(params.enableSplitTunnel)
-    {
-        // Inform of Network changes
-        // Note we do not check first for _splitTunnelNetScan != params.netScan as
-        // it's possible a user connected to a new network with the same gateway and interface and IP (i.e switching from 5g to 2.4g)
-        updateSplitTunnel(params);
-    }
-
-    _enableSplitTunnel = params.enableSplitTunnel;
-}
+// Split tunnel feature removed
 
 }}

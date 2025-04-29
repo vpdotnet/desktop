@@ -37,15 +37,12 @@
 // brand-specific parameters, such as layer identifiers, cgroups, etc.
 //
 // The firewall engine also does some routing where it is very closely related
-// to other functionality provided by the firewall, such as for subnet-based
-// split tunneling.
+// to other functionality provided by the firewall.
 //
 // The Firewall module implements a lot of VPN-related functionality, including:
 // - IPv4 leak protection
 // - IPv6 leak protection
 // - DNS leak protection
-// - Application-based split tunneling
-// - Subnet-based split tunneling
 //
 // "Killswitch" application features can be implemented by enabling leak
 // protection rules even when not connected.  Note that this approach avoids any
@@ -92,18 +89,11 @@ public:
 
 public:
     virtual void applyRules(const FirewallParams &params) = 0;
-    void toggleSplitTunnel(const FirewallParams &params);
-    virtual void startSplitTunnel(const FirewallParams& params) = 0;
-    virtual void updateSplitTunnel(const FirewallParams &params) = 0;
-    virtual void stopSplitTunnel() = 0;
-
+    
 #if defined(KAPPS_CORE_OS_MACOS)
     // macOS only - see Firewall::aboutToConnectToVpn()
     virtual void aboutToConnectToVpn() = 0;
 #endif
-
-public:
-    bool _enableSplitTunnel{false};
 };
 
 class KAPPS_NET_EXPORT Firewall
@@ -115,21 +105,7 @@ public:
     void applyRules(const FirewallParams &params);
 
 #if defined(KAPPS_CORE_OS_MACOS)
-    // On macOS only, this API should be called just before attempting to
-    // connect to the VPN.  This is used when split tunnel is active to cycle
-    // the split tunnel device.
-    //
-    // Unlike other platforms, macOS split tunnel must remain active even when
-    // not connected to implement "Only VPN" app blocks.  We still route all
-    // flows into the split tunnel device and block anything from "Only VPN"
-    // apps.  Other apps' flows are routed to the physical interface.
-    //
-    // This means we need to break those flows once a connection occurs, or they
-    // otherwise would continue to route around the VPN.
-    //
-    // (On Linux and Windows, Only VPN apps are implemented with app-specific
-    // firewall rules, so the regular split tunnel machinery is not active when
-    // not connected to the VPN.)
+    // macOS only connection pre-processing
     void aboutToConnectToVpn();
 #endif
 
