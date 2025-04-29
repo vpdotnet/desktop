@@ -27,7 +27,7 @@
 # modeled in CMake currently (but could be added if needed).
 
 cmake_minimum_required(VERSION 3.10)
-project(pia_desktop)
+project(vpnet_desktop)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_CXX_STANDARD 17)
@@ -47,7 +47,7 @@ endif()
 if(DEFINED ENV{BRAND})
     set(BRAND ENV{BRAND})
 else()
-    set(BRAND "pia")
+    set(BRAND "vpnet")
 endif()
 
 # The brand name is needed on Mac to define the staging root and client target.
@@ -210,7 +210,7 @@ target_link_libraries(client Qt6::Core Qt6::Network Qt6::Qml Qt6::Quick Qt6::Qui
 # so we don't have to repeat them all in the build script.
 # Use the generated QRC file, although this means a build must be performed for
 # Qt Creator to find QML sources.
-target_sources(client PRIVATE "${RAKE_OUT}/Private Internet Access/qrc_Private Internet Access.qrc")
+target_sources(client PRIVATE "${RAKE_OUT}/VP.NET/qrc_VP.NET.qrc")
 
 stage_target(daemon daemon "${BRAND}-service" "${BRAND}-daemon" "${BRAND}-daemon")
 target_link_libraries(daemon Qt6::Core Qt6::Network)
