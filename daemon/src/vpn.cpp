@@ -617,15 +617,14 @@ ConnectionConfig::ConnectionConfig(DaemonSettings &settings, StateModel &state,
 
     _requestMace = settings.enableMACE();
 
-    if(settings.splitTunnelEnabled())
+    // Split tunnel feature removed
     {
-        _otherAppsUseVpn = settings.defaultRoute();
-        _setDefaultRoute = _otherAppsUseVpn;
+        _otherAppsUseVpn = true;
+        _setDefaultRoute = true;
 
-        // Do we want to split DNS too?
-        // (Not currently available on Mac)
+        // Split tunnel DNS removed
 #if !defined(Q_OS_MAC)
-        if(_dnsType != DnsType::Existing && settings.splitTunnelDNS())
+        if(false) // Split tunnel feature removed
         {
             // Yes - set the default DNS only if the VPN has the default route
             _setDefaultDns = _setDefaultRoute;

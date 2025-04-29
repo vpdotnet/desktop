@@ -616,9 +616,10 @@ Daemon::Daemon(QObject* parent)
     connect(&_settings, &DaemonSettings::killswitchChanged, this, &Daemon::queueApplyFirewallRules);
     connect(&_settings, &DaemonSettings::allowLANChanged, this, &Daemon::queueApplyFirewallRules);
     connect(&_settings, &DaemonSettings::overrideDNSChanged, this, &Daemon::queueApplyFirewallRules);
-    connect(&_settings, &DaemonSettings::bypassSubnetsChanged, this, &Daemon::queueApplyFirewallRules);
-    connect(&_settings, &DaemonSettings::splitTunnelEnabledChanged, this, &Daemon::queueApplyFirewallRules);
-    connect(&_settings, &DaemonSettings::splitTunnelRulesChanged, this, &Daemon::queueApplyFirewallRules);
+    // Split tunnel feature removed
+    // connect(&_settings, &DaemonSettings::bypassSubnetsChanged, this, &Daemon::queueApplyFirewallRules);
+    // connect(&_settings, &DaemonSettings::splitTunnelEnabledChanged, this, &Daemon::queueApplyFirewallRules);
+    // connect(&_settings, &DaemonSettings::splitTunnelRulesChanged, this, &Daemon::queueApplyFirewallRules);
     connect(&_settings, &DaemonSettings::routedPacketsOnVPNChanged, this, &Daemon::queueApplyFirewallRules);
     connect(&_settings, &DaemonSettings::connectOnWakeChanged, this, &Daemon::queueApplyFirewallRules);
     _state.existingDNSServers.changed = [this]{queueApplyFirewallRules();};
@@ -1307,25 +1308,18 @@ QString Daemon::diagnosticsOverview() const
             return killswitchState;
     };
 
-    // Generate split tunnel app diagnostic string (show the apps in each ST mode)
+    // Split tunnel feature removed
     QStringList bypassRules;
     QStringList vpnOnlyRules;
-    for(const auto &rule : _settings.splitTunnelRules())
-    {
-        if(rule.mode() == "exclude")
-            bypassRules << rule.path();
-        else
-            vpnOnlyRules << rule.path();
-    }
 
     auto commonDiagnostics = [&] {
         auto strings = QStringList {
             QStringLiteral("Connected: %1").arg(boolToString(isConnected)),
-            QStringLiteral("Split Tunnel enabled: %1").arg(boolToString(_settings.splitTunnelEnabled())),
-            QStringLiteral("Split Tunnel DNS enabled: %1").arg(_settings.splitTunnelEnabled() ? boolToString(_settings.splitTunnelDNS()) : "N/A"),
-            QStringLiteral("Split Tunnel Bypass Apps: %1").arg(!_settings.splitTunnelEnabled() ? "N/A" : bypassRules.isEmpty() ?  "None" : bypassRules.join(", ")),
-            QStringLiteral("Split Tunnel VpnOnly Apps: %1").arg(!_settings.splitTunnelEnabled() ? "N/A" : vpnOnlyRules.isEmpty() ?  "None" : vpnOnlyRules.join(", ")),
-            QStringLiteral("VPN has default route: %1").arg(boolToString(_settings.splitTunnelEnabled() ?  _settings.defaultRoute() : true)),
+            QStringLiteral("Split Tunnel enabled: %1").arg("false"), // Split tunnel feature removed
+            QStringLiteral("Split Tunnel DNS enabled: %1").arg("N/A"), // Split tunnel feature removed
+            QStringLiteral("Split Tunnel Bypass Apps: %1").arg("N/A"), // Split tunnel feature removed
+            QStringLiteral("Split Tunnel VpnOnly Apps: %1").arg("N/A"), // Split tunnel feature removed
+            QStringLiteral("VPN has default route: %1").arg("true"), // Split tunnel feature removed
             QStringLiteral("Killswitch: %1").arg(killswitchText(_settings.killswitch())),
             QStringLiteral("Allow LAN: %1").arg(boolToString(_settings.allowLAN())),
 #ifdef Q_OS_WIN
@@ -3141,7 +3135,7 @@ void Daemon::reapplyFirewallRules()
     params.tunnelDeviceLocalAddress = _state.tunnelDeviceLocalAddress().toStdString();
     params.tunnelDeviceRemoteAddress = _state.tunnelDeviceRemoteAddress().toStdString();
 
-    params.enableSplitTunnel = _settings.splitTunnelEnabled();
+    params.enableSplitTunnel = false; // Split tunnel feature removed
 
     // For convenience we expose the netScan in params.
     // This way we can use it in code that takes a FirewallParams argument
@@ -3151,23 +3145,7 @@ void Daemon::reapplyFirewallRules()
     // vpnOnlyApps and excludedApps are set up by applyFirewallRules(), this
     // differs between Windows and POSIX
 
-    for(const auto &subnetRule : _settings.bypassSubnets())
-    {
-        // We only support bypass rule types for subnets
-        if(subnetRule.mode() != QStringLiteral("exclude"))
-            continue;
-
-        auto normalizedSubnet = subnetRule.normalizedSubnet();
-        auto protocol = subnetRule.protocol();
-
-        if(protocol == QAbstractSocket::IPv4Protocol)
-            params.bypassIpv4Subnets.insert(normalizedSubnet.toStdString());
-        else if(protocol == QAbstractSocket::IPv6Protocol)
-            params.bypassIpv6Subnets.insert(normalizedSubnet.toStdString());
-        else
-            // Invalid subnet results in QAbsractSocket::UnknownNetworkLayerProtocol
-            qWarning() << "Invalid bypass subnet:" << subnetRule.subnet() << "Skipping";
-    }
+    // Split tunnel feature removed - no bypass subnets
 
     // Though split tunnel in general can be toggled while connected,
     // defaultRoute can't.  The user can toggle split tunnel as long as the
@@ -3178,7 +3156,7 @@ void Daemon::reapplyFirewallRules()
     {
         params.bypassDefaultApps = !connectionSettings->otherAppsUseVpn();
         params.setDefaultRoute = connectionSettings->setDefaultRoute();
-        params.splitTunnelDnsEnabled = _settings.splitTunnelDNS();
+        params.splitTunnelDnsEnabled = false; // Split tunnel feature removed
         params.mtu = connectionSettings->mtu();
 
         // Convert dns from QStringList to std::vector<std::string>
