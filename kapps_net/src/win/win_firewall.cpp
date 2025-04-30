@@ -484,28 +484,7 @@ void WinFirewall::applyRules(const FirewallParams &params)
 
     // Split tunnel feature removed
 
-    if(params.splitTunnelDnsEnabled)
-    {
-        if(_config.brandInfo.enableDnscache)
-        {
-            // When _effectiveDnsServers is empty the user has likely selected "Use Existing DNS" in their DNS
-            // settings - in this case we disable split tunnel DNS. We do this because when "Use Existing DNS" is set
-            // it disables the blockDNS firewall rules and DNS will be blasted out all interfaces anyway.
-            if(!newSplitParams._effectiveDnsServers.empty())
-            {
-                newSplitParams._forceVpnOnlyDns = params.bypassDefaultApps;
-                newSplitParams._forceBypassDns = !params.bypassDefaultApps;
-            }
-            else
-            {
-                KAPPS_CORE_WARNING() << "Split tunnel DNS is disabled - there are no effective DNS servers - 'Use Existing DNS' is likely selected.";
-            }
-        }
-        else
-        {
-            KAPPS_CORE_WARNING() << "_config.brandInfo.enableDnscache must be provided to enable split tunnel DNS; ignoring splitTunnelDnsEnabled";
-        }
-    }
+    // Split tunnel feature removed
 
     // Split tunnel feature removed
 
@@ -517,22 +496,19 @@ void WinFirewall::applyRules(const FirewallParams &params)
 
 void WinFirewall::updateAllBypassSubnetFilters(const FirewallParams &params)
 {
-    if(params.enableSplitTunnel)
-    {
-        if(params.bypassIpv4Subnets != _bypassIpv4Subnets)
-            updateBypassSubnetFilters(params.bypassIpv4Subnets, _bypassIpv4Subnets, _subnetBypassFilters4, FWP_IP_VERSION_V4);
+    // Process subnet bypass rules without split tunnel check
+    if(params.bypassIpv4Subnets != _bypassIpv4Subnets)
+        updateBypassSubnetFilters(params.bypassIpv4Subnets, _bypassIpv4Subnets, _subnetBypassFilters4, FWP_IP_VERSION_V4);
 
-        if(params.bypassIpv6Subnets != _bypassIpv6Subnets)
-            updateBypassSubnetFilters(params.bypassIpv6Subnets, _bypassIpv6Subnets, _subnetBypassFilters6, FWP_IP_VERSION_V6);
-    }
-    else
-    {
-        if(!_bypassIpv4Subnets.empty())
-            updateBypassSubnetFilters({}, _bypassIpv4Subnets, _subnetBypassFilters4, FWP_IP_VERSION_V4);
+    if(params.bypassIpv6Subnets != _bypassIpv6Subnets)
+        updateBypassSubnetFilters(params.bypassIpv6Subnets, _bypassIpv6Subnets, _subnetBypassFilters6, FWP_IP_VERSION_V6);
 
-        if(!_bypassIpv6Subnets.empty())
-            updateBypassSubnetFilters({}, _bypassIpv6Subnets, _subnetBypassFilters6, FWP_IP_VERSION_V6);
-    }
+    // Clean up existing subnet filters if needed
+    if(params.bypassIpv4Subnets.empty() && !_bypassIpv4Subnets.empty())
+        updateBypassSubnetFilters({}, _bypassIpv4Subnets, _subnetBypassFilters4, FWP_IP_VERSION_V4);
+
+    if(params.bypassIpv6Subnets.empty() && !_bypassIpv6Subnets.empty())
+        updateBypassSubnetFilters({}, _bypassIpv6Subnets, _subnetBypassFilters6, FWP_IP_VERSION_V6);
 }
 
 void WinFirewall::updateBypassSubnetFilters(const std::set<std::string> &subnets, std::set<std::string> &oldSubnets, std::vector<WfpFilterObject> &subnetBypassFilters, FWP_IP_VERSION ipVersion)

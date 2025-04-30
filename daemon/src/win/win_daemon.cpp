@@ -644,18 +644,6 @@ void WinDaemon::applyPlatformInstallFeatureFlags()
 
 void WinDaemon::updateSplitTunnelRules()
 {
-    // Try to load the link reader; this can fail.
-    nullable_t<kapps::core::WinLinkReader> linkReader;
-    try
-    {
-        linkReader.emplace();
-    }
-    catch(const std::exception &ex)
-    {
-        qWarning() << "Unable to resolve shell links -" << ex.what();
-        // Eat error and continue
-    }
-
     // Split tunnel feature removed - this is a no-op method now
 }
 
