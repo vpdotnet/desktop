@@ -15,7 +15,7 @@ module PiaLinux
     Patchelf = File.exist?(QtPatchelf) ? QtPatchelf : 'patchelf'
 
     # list of binaries built with QT
-    QT_BINARIES = %w(pia-client pia-daemon piactl pia-support-tool)
+    QT_BINARIES = %w(vpnet-client vpnet-daemon vpnetctl vpnet-support-tool)
 
     # Version of libicu (needed to determine lib*.so.## file names in deployment)
     ICU_VERSION = FileList[File.join(Executable::Qt.targetQtRoot, 'lib', 'libicudata.so.*')]
@@ -143,7 +143,7 @@ module PiaLinux
             # unbound and hnsd run on different effective users, which disables RPATHs with $ORIGIN .
             # Here we hardcode the RPATH to the installation directory on linux. We currently cannot 
             # choose a different install directory, so hardcoding it here is okay.
-            FileList[File.join(piafiles, 'bin/pia-unbound'), File.join(piafiles, 'bin/pia-hnsd')].each do |f|
+            FileList[File.join(piafiles, 'bin/vpnet-unbound'), File.join(piafiles, 'bin/vpnet-hnsd')].each do |f|
                 Util.shellRun(Patchelf, '--force-rpath', '--set-rpath', "/opt/#{Build::Brand}vpn/lib", f)
             end
     
