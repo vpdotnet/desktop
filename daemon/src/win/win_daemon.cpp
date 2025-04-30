@@ -515,9 +515,35 @@ QByteArray filterSetupapiDevLog(const QByteArray &log)
     return filtered;
 }
 
+namespace
+{
+    // Helper function to try PowerShell command first and fall back to wmic if PowerShell fails
+    void writeCommandWithFallback(DiagnosticsFile &file, 
+                                 const QString &title, 
+                                 const QString &powershellCmd, 
+                                 const QString &wmicCmd, 
+                                 const QString &wmicArgs)
+    {
+        // First try with PowerShell (modern Windows)
+        int exitCode = QProcess::execute("powershell.exe", QStringList() << "-Command" << "Get-Command Get-CimInstance -ErrorAction SilentlyContinue");
+        if (exitCode == 0) {
+            // PowerShell with Get-CimInstance is available
+            file.writeCommand(title, "powershell.exe", powershellCmd);
+        } else {
+            // Fall back to wmic for older Windows versions
+            file.writeCommand(title, wmicCmd, wmicArgs);
+        }
+    }
+}
+
 void WinDaemon::writePlatformDiagnostics(DiagnosticsFile &file)
 {
-    file.writeCommand("OS Version", "wmic", QStringLiteral("os get Caption,CSDVersion,BuildNumber,Version /value"));
+    writeCommandWithFallback(file, 
+        "OS Version", 
+        QStringLiteral("-Command \"Get-CimInstance Win32_OperatingSystem | Select-Object Caption, CSDVersion, BuildNumber, Version | Format-List\""),
+        "wmic", 
+        QStringLiteral("os get Caption,CSDVersion,BuildNumber,Version /value"));
+        
     file.writeText("Overview", diagnosticsOverview());
     file.writeCommand("Interfaces (ipconfig)", "ipconfig", QStringLiteral("/all"));
     file.writeCommand("Routes (netstat -nr)", "netstat", QStringLiteral("-nr"));
@@ -535,9 +561,23 @@ void WinDaemon::writePlatformDiagnostics(DiagnosticsFile &file)
 
     // GPU and driver info - needed to attempt to reproduce graphical issues
     // on Windows (which are pretty common due to poor OpenGL support)
-    file.writeCommand("Graphics drivers", "wmic", QStringLiteral("path win32_VideoController get /format:list"));
-    file.writeCommand("Network adapters", "wmic", QStringLiteral("path win32_NetworkAdapter get /format:list"));
-    file.writeCommand("Network drivers", "wmic", QStringLiteral("path win32_PnPSignedDriver where 'DeviceClass=\"NET\"' get /format:list"));
+    writeCommandWithFallback(file,
+        "Graphics drivers", 
+        QStringLiteral("-Command \"Get-CimInstance Win32_VideoController | Format-List\""),
+        "wmic", 
+        QStringLiteral("path win32_VideoController get /format:list"));
+        
+    writeCommandWithFallback(file,
+        "Network adapters", 
+        QStringLiteral("-Command \"Get-CimInstance Win32_NetworkAdapter | Format-List\""),
+        "wmic", 
+        QStringLiteral("path win32_NetworkAdapter get /format:list"));
+        
+    writeCommandWithFallback(file,
+        "Network drivers", 
+        QStringLiteral("-Command \"Get-CimInstance Win32_PnPSignedDriver -Filter 'DeviceClass=\"NET\"' | Format-List\""),
+        "wmic", 
+        QStringLiteral("path win32_PnPSignedDriver where 'DeviceClass=\"NET\"' get /format:list"));
 
     // Collect relevant parts of setupapi.dev.log.  This is important for
     // troubleshooting driver installation errors, such as:
