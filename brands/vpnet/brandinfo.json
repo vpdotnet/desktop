@@ -16,7 +16,6 @@
     "deprecatedOpenVPNSettingsLink":"https://vp.net/dashboard/openvpn",
     "appExclusionsHelpLink":"https://vp.net/helpdesk/kb/articles/split-tunnel-app-examples",
     "automationHelpLink":"https://vp.net/helpdesk/kb/articles/understanding-the-desktop-network-automation-feature",
-    "referFriendLink":"https://vp.net/refer-a-friend",
     "getDedicatedIpLink":"https://vp.net/pages/client-control-panel/dedicated-ip",
     "subscriptionLink":"https://vp.net/pages/client-control-panel#subscription-overview",
     "windowsProductGuid": "{33023371-7761-4F81-BBB1-0E0D0D175ACF}",
