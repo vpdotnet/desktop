@@ -82,20 +82,7 @@ namespace kapps { namespace net {
             // Split tunnel feature removed
 
         private:
-            bool areAppsUnchanged(const AppIdSet &newApps,
-                                  const SplitAppFilterMap &oldAppMap)
-            {
-                // Compare these element-wise; valid because both containers are sorted
-                // lexically.
-                return std::equal(oldAppMap.begin(), oldAppMap.end(),
-                newApps.begin(), newApps.end(),
-                [](const auto &existing, const auto &pNewApp)
-                {
-                    if(!existing.first && !pNewApp)
-                        return true;
-                    return existing.first && pNewApp && *existing.first == *pNewApp;
-                });
-            }
+            // Split tunnel feature removed - areAppsUnchanged method removed
 
             void updateAllBypassSubnetFilters(const FirewallParams &params);
             void updateBypassSubnetFilters(const std::set<std::string> &subnets, std::set<std::string> &oldSubnets,
