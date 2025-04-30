@@ -31,8 +31,6 @@ MovableModule {
   implicitHeight: {
     if(proxyVia.visible)
       return proxyVia.y + 40
-    if(dipSubtitle.visible)
-      return dipSubtitle.y + 36 // This text is a little smaller
     return regionValue.y + 40
   }
   moduleKey: 'region'
@@ -118,26 +116,6 @@ MovableModule {
     elide: Text.ElideRight
   }
 
-  DedicatedIpSubtitle {
-    id: dipSubtitle
-    x: 20
-    y: 60
-    visible: {
-      if(regionModule.chosenLocation)
-        return !!regionModule.chosenLocation.dedicatedIp
-      return false
-    }
-    dedicatedIp: {
-      if(regionModule.chosenLocation)
-        return regionModule.chosenLocation.dedicatedIp
-      return ""
-    }
-    // Fill the DIP tag with the background color if it's shown, since it may
-    // otherwise allow part of the map to show though.  This ignores the
-    // background change when the module is moved, but that's fine, the result
-    // is that this looks like a label stuck on the module, which it is.
-    dipTagBackground: Theme.dashboard.backgroundColor
-  }
 
   function displayConnectionProxy(config) {
     // We don't need any complex logic for displaying the proxy setting
@@ -209,7 +187,7 @@ MovableModule {
     color: Theme.dashboard.moduleTitleColor
     font.pixelSize: Theme.dashboard.moduleLabelTextPx
     x: 20
-    y: (dipSubtitle.visible ? dipSubtitle.y : regionValue.y) + 30
+    y: regionValue.y + 30
     visible: proxyVia.visible
   }
 
