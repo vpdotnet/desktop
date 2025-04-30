@@ -90,8 +90,6 @@ protected:
     virtual void writePlatformDiagnostics(DiagnosticsFile &file) override;
     virtual void applyPlatformInstallFeatureFlags() override;
 
-    // Update split tunnel rules in WinAppMonitor
-    void updateSplitTunnelRules();
 
 protected:
     nullable_t<kapps::net::Firewall> _pFirewall;

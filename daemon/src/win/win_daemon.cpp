@@ -201,7 +201,6 @@ WinDaemon::WinDaemon(QObject* parent)
     // Split tunnel feature removed
 
     // Split tunnel feature removed
-    updateSplitTunnelRules();
 
     // Split tunnel feature removed - but still perform callout monitor checks
     _wfpCalloutMonitor.doManualCheck();
@@ -642,10 +641,6 @@ void WinDaemon::applyPlatformInstallFeatureFlags()
     }
 }
 
-void WinDaemon::updateSplitTunnelRules()
-{
-    // Split tunnel feature removed - this is a no-op method now
-}
 
 class TraceMemSize : public kapps::core::OStreamInsertable<TraceMemSize>
 {
