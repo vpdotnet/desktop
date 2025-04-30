@@ -463,7 +463,6 @@ public:
     JsonProperty(qint64, snoozeEndTime, -1);
 
     // Split tunnel feature removed
-    // JsonProperty(std::vector<QString>, splitTunnelSupportErrors);
 
     // A key component for the VPN is not available, all connections must be
     // prevented the user should be warned and the daemon should not start in
@@ -493,7 +492,7 @@ public:
 
     // If automation rules aren't available, this is set to a list of reasons.
     // The possible reasons are a subset of those used for
-    // splitTunnelSupportErrors; the same text from SettingsMessages is used in
+    // automation support errors; the same text from SettingsMessages is used in
     // the UI.
     JsonProperty(std::vector<QString>, automationSupportErrors);
 

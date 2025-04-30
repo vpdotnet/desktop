@@ -120,7 +120,7 @@ public:
     JsonField(QString, originalGatewayIp6, {})
     JsonField(QString, macosPrimaryServiceKey, {})
     JsonField(qint64, snoozeEndTime, -1)
-    JsonField(std::vector<QString>, splitTunnelSupportErrors, {})
+    // Split tunnel feature removed
     JsonField(std::vector<QString>, vpnSupportErrors, {})
     JsonField(QString, tunnelDeviceName, {})
     JsonField(QString, tunnelDeviceLocalAddress, {})

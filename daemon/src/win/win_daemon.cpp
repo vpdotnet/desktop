@@ -205,12 +205,7 @@ WinDaemon::WinDaemon(QObject* parent)
     // Split tunnel feature removed - but still perform callout monitor checks
     _wfpCalloutMonitor.doManualCheck();
 
-    // Split tunnel support errors are platform-dependent, nothing else adds
-    // them (otherwise we'd have to do a proper get-append-set below)
-    Q_ASSERT(_state.splitTunnelSupportErrors().empty());
-    
-    // We're marking split tunnel as unsupported since the feature is removed
-    _state.splitTunnelSupportErrors({QStringLiteral("feature_removed")});
+    // Split tunnel feature removed entirely
 }
 
 WinDaemon::~WinDaemon()
