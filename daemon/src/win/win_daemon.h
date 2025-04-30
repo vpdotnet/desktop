@@ -32,6 +32,7 @@
 #include <common/src/win/win_messagewnd.h>
 #include "servicemonitor.h"
 #include "win_servicestate.h"
+#include <kapps_net/src/firewall.h>
 
 // Deadline timer (like QDeadlineTimer) that does not count time when the system
 // is suspended.  (Both clock sources for QDeadlineTimer do count suspend time.)
