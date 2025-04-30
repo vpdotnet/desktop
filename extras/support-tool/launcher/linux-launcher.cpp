@@ -48,7 +48,9 @@ int fork_execv(gid_t gid, char *filename, char *const argv[])
     if(forkResult == 0)
     {
         // Apply gid as both real and effective
-        setregid(gid, gid);
+        if (setregid(gid, gid) != 0) {
+            std::cerr << "setregid error: " << errno << " - " << strerror(errno) << std::endl;
+        }
 
         int execErr = execv(filename, argv);
         std::cerr << "exec err: " << execErr << " / " << errno << " - "

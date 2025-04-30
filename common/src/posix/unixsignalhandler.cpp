@@ -130,8 +130,10 @@ void UnixSignalHandler::_signalHandler(int, siginfo_t *info, void *)
     // ::write() could theoretically fail, but there's nothing we could do even if
     // we checked it, we can't even log because the logger is not reentrant.
     auto pThis = instance();
-    if(pThis)
-        ::write(pThis->_sigFd[0], info, sizeof(siginfo_t));
+    if(pThis) {
+        ssize_t result = ::write(pThis->_sigFd[0], info, sizeof(siginfo_t));
+        (void)result; // Suppress unused result warning
+    }
 }
 template<int Signal>
 void UnixSignalHandler::setAbortAction()

@@ -657,7 +657,11 @@ LinuxNl::~LinuxNl()
     // thread is still starting, this blocks until it provides the kill socket.
     unsigned char term = 0;
     kapps::core::PosixFd killSocket = _workerKillSocket.get();
-    if(killSocket)
-        ::write(killSocket.get(), &term, sizeof(term));
+    if(killSocket) {
+        ssize_t result = ::write(killSocket.get(), &term, sizeof(term));
+        if (result < 0) {
+            qWarning() << "Failed to write to kill socket:" << errno;
+        }
+    }
     _workerThread.join();
 }

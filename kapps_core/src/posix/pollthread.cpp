@@ -274,7 +274,10 @@ void PollThread::enqueue(Any item)
     }
     // Write to the signal pipe to signal the worker thread
     unsigned char data{};
-    ::write(_itemSignalPipe.get(), &data, sizeof(data));
+    ssize_t result = ::write(_itemSignalPipe.get(), &data, sizeof(data));
+    if (result < 0) {
+        KAPPS_CORE_WARNING() << "Failed to write to signal pipe:" << ErrnoTracer{};
+    }
 }
 
 void PollThread::queueInvoke(std::function<void()> func)
