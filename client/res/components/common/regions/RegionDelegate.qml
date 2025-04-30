@@ -140,16 +140,7 @@ Item {
     }
     pfWarningTipText: hasSubRegions ? regionGroupPfWarning : singleRegionPfWarning
     offline: region ? region.offline : regionChildren.every(e => e.subregion.offline)
-    geoLocation: {
-      if(region)
-        return region.geoLocated
-      // For a group, show the geo indicator if all subregions are geo locations
-      for(var i=0; i<regionChildren.length; ++i) {
-        if(!regionChildren[i].subregion.geoLocated)
-          return false
-      }
-      return true // All regions are geo
-    }
+    geoLocation: false
     highlightColumn: {
       // If this row is currently highlighted, apply the highlighted column
       if(regionDelegate.highlightRow.country === regionCountry &&
@@ -240,7 +231,7 @@ Item {
         canFavorite: regionDelegate.canFavorite
         favoriteRegionId: subregionKey
         lacksPortForwarding: regionDelegate.portForwardEnabled && !subregion.portForward
-        geoLocation: subregion.geoLocated
+        geoLocation: false
         pfWarningTipText: singleRegionPfWarning
         offline: subregion.offline
         highlightColumn: {

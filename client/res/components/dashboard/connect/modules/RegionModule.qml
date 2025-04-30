@@ -90,18 +90,6 @@ MovableModule {
     y: 20
   }
 
-  GeoTip {
-    id: geoTip
-    x: 20
-    anchors.verticalCenter: regionValue.verticalCenter
-    visible: {
-      if(Daemon.state.vpnLocations.chosenLocation)
-        return Daemon.state.vpnLocations.chosenLocation.geoLocated
-      else if(regionModule.autoLocation)
-        return regionModule.autoLocation.geoLocated
-      return false
-    }
-  }
 
   Text {
     id: regionValue
@@ -110,7 +98,7 @@ MovableModule {
 
     color: Theme.dashboard.moduleTextColor
     font.pixelSize: Theme.dashboard.moduleValueTextPx
-    x: geoTip.visible ? (geoTip.x + geoTip.width + 6) : 20
+    x: 20
     y: 40
     width: rightChevron.x - 5 - x
     elide: Text.ElideRight

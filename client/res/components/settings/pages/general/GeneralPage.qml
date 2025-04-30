@@ -69,13 +69,7 @@ Page {
     setting: DaemonSetting { name: 'enableBackgroundLatencyChecks' }
   }
 
-  // Row 3: [ colSpan: 2 ]
-  CheckboxInput {
-    Layout.columnSpan: 2
-    label: uiTr("Show Geo-Located Regions")
-    setting: DaemonSetting { name: 'includeGeoOnly' }
-  }
-
+  // Spacer
   Item {
     Layout.columnSpan: 2
     Layout.preferredHeight: 10

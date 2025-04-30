@@ -45,10 +45,10 @@ Item {
   // Tip shown for the port forwarding warning (depends on whether this is a
   // single region or a group).
   property string pfWarningTipText
-  // Whether to show the "geo" location indicator
-  property bool geoLocation
   // Whether the region is unavailable (offline)
   property bool offline
+  // We no longer use geo-located regions
+  property bool geoLocation: false
   // Whether this region is currently a favorite
   property bool isFavorite
   // Whether to show the keyboard focus highlight for the favorite cell
