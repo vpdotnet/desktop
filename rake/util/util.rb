@@ -64,12 +64,22 @@ module Util
     def self.hostArchitecture
         if(hostPlatform == :windows)
             archProbe = `powershell -Command "(Get-CimInstance Win32_OperatingSystem).OSArchitecture"`.strip
-            if(archProbe.match?(/^64-bit$/i))
+            processorArch = `powershell -Command "(Get-CimInstance Win32_Processor).Architecture"`.strip
+            
+            # Architecture values from Win32_Processor: 
+            # 0 = x86, 5 = ARM, 9 = x64, 12 = ARM64
+            is_arm = processorArch == "5" || processorArch == "12"
+            
+            if(is_arm && archProbe.match?(/64-bit/i))
+                :arm64
+            elsif(is_arm)
+                :armhf
+            elsif(archProbe.match?(/64-bit/i))
                 :x86_64
-            elsif(archProbe.match(/^32-bit$/i))
+            elsif(archProbe.match?(/32-bit/i))
                 :x86
             else
-                puts "Architecture not known: #{archProbe.dump}"
+                puts "Architecture not known: #{archProbe.dump} (processor: #{processorArch})"
                 nil
             end
         elsif(hostPlatform == :linux || hostPlatform == :macos)
