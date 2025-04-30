@@ -24,6 +24,7 @@ import "../../daemon"
 import "../../theme"
 import "../../common"
 import "../../core"
+import "../../errors"
 import PIA.Error 1.0
 import PIA.FlexValidator 1.0
 import PIA.BrandHelper 1.0

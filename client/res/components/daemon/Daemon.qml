@@ -20,6 +20,7 @@ pragma Singleton
 import QtQuick 2.0
 import PIA.NativeDaemon 1.0
 import "../../javascript/util.js" as Util
+import "../errors"
 
 // This is a QML shim for DaemonInterface
 // Marshalling properties from C++ to QML is too slow
