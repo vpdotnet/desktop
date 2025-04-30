@@ -309,16 +309,7 @@ void WinDaemon::checkTapAdapter()
 
 void WinDaemon::onAboutToConnect()
 {
-    // Reapply split tunnel rules.  If an app updates, the executables found
-    // from the rules might change (likely for UWP apps because the package
-    // install paths are versioned, less likely for native apps but possible if
-    // the link target changes).
-    //
-    // If this does happen, this means the user may have to reconnect for the
-    // updated rules to apply, but this is much better than restarting the
-    // service or having to make a change to the rules just to force this
-    // update.
-    updateSplitTunnelRules();
+    // Split tunnel feature removed
 
     // If the WFP callout driver is installed but not loaded yet, load it now.
     // The driver is loaded this way for resiliency:
