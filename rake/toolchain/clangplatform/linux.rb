@@ -29,6 +29,7 @@ class ClangLinux
         # need other LLVM tools anyway (llvm-cov, etc.), so stick to
         # LLVM.
         @ar = File.join(toolchainPath, 'llvm-ar')
+        
         # On most distributions, clang packages only include clang,
         # make sure LLVM is installed too.
         if(!File.exist?(@ar))

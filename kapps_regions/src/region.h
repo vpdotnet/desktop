@@ -27,11 +27,9 @@ class KAPPS_REGIONS_EXPORT Region : public core::RetainSharedFromThis<Region>
 public:
     Region() = default;
     Region(std::string id, bool autoSafe, bool portForward, bool geoLocated,
-           core::Ipv4Address dipAddress,
            std::vector<std::shared_ptr<const Server>> servers)
         : _id{std::move(id)}, _autoSafe{autoSafe}, _portForward{portForward},
-          _geoLocated{geoLocated}, _dipAddress{dipAddress},
-          _servers{std::move(servers)}
+          _geoLocated{geoLocated}, _servers{std::move(servers)}
     {
         // There are no other invariants to check - a region _could_ have zero
         // servers, which makes it "offline"
@@ -50,7 +48,6 @@ public:
         _autoSafe = std::move(other._autoSafe);
         _portForward = std::move(other._portForward);
         _geoLocated = std::move(other._geoLocated);
-        _dipAddress = std::move(other._dipAddress);
         _servers = std::move(other._servers);
         _serversRaw = std::move(other._serversRaw);
 
@@ -74,8 +71,9 @@ public:
 
     bool offline() const {return _servers.empty();}
 
-    bool isDedicatedIp() const {return dipAddress() != core::Ipv4Address{};}
-    core::Ipv4Address dipAddress() const {return _dipAddress;}
+    // Dedicated IP functionality has been removed
+    bool isDedicatedIp() const {return false;}
+    core::Ipv4Address dipAddress() const {return core::Ipv4Address{};}
 
     bool hasService(Service service) const {return firstServerFor(service);}
     const Server *firstServerFor(Service service) const;
@@ -87,7 +85,7 @@ private:
     bool _autoSafe;
     bool _portForward;
     bool _geoLocated;
-    core::Ipv4Address _dipAddress;  // Zero if not a DIP region
+    // Dedicated IP functionality has been removed
     std::vector<std::shared_ptr<const Server>> _servers;
     // Raw pointer array to provide an array slice to API
     std::vector<const Server*> _serversRaw;

@@ -103,7 +103,6 @@ namespace
 }
 
 Metadata::Metadata(core::StringSlice metadataJson,
-                   core::ArraySlice<const DedicatedIp> dips,
                    core::ArraySlice<const ManualRegion> manual)
 {
     auto json = nlohmann::json::parse(metadataJson);
@@ -124,7 +123,7 @@ Metadata::Metadata(core::StringSlice metadataJson,
         [](const RegionDisplay &value){return value.id();},
         _regionDisplaysById);
 
-    copyDipRegionDisplays(dips);
+    copyDipRegionDisplays();
     buildManualRegionDisplays(manual);
 
     buildFlatVector(_dynamicGroupsById, _dynamicGroups);
@@ -133,7 +132,6 @@ Metadata::Metadata(core::StringSlice metadataJson,
 }
 
 Metadata::Metadata(core::StringSlice regionsv6Json, core::StringSlice metadatav2Json,
-                   core::ArraySlice<const DedicatedIp> dips,
                    core::ArraySlice<const ManualRegion> manual)
 {
     auto regions = nlohmann::json::parse(regionsv6Json);
@@ -235,7 +233,7 @@ Metadata::Metadata(core::StringSlice regionsv6Json, core::StringSlice metadatav2
         itCountryFirst = itCountryEnd;
     }
 
-    copyDipRegionDisplays(dips);
+    copyDipRegionDisplays();
     buildManualRegionDisplays(manual);
 
     buildFlatVector(_countryDisplaysById, _countryDisplays);
@@ -549,29 +547,10 @@ void Metadata::buildPiav2MultipleRegionDisplay(const nlohmann::json &metadata,
     }
 }
 
-void Metadata::copyDipRegionDisplays(core::ArraySlice<const DedicatedIp> dips)
+// Dedicated IP functionality has been removed
+void Metadata::copyDipRegionDisplays()
 {
-    for(const auto &dip : dips)
-    {
-        auto pCorrespondingRegion = getRegionDisplay(dip.correspondingRegionId);
-        if(!pCorrespondingRegion)
-        {
-            KAPPS_CORE_WARNING() << "Can't find corresponding region"
-                << dip.correspondingRegionId << "for DIP region"
-                << dip.dipRegionId;
-        }
-        else
-        {
-            auto pDipRegionDisplay = std::make_shared<RegionDisplay>(
-                dip.dipRegionId.to_string(),
-                pCorrespondingRegion->country().to_string(),
-                pCorrespondingRegion->geoLatitude(),
-                pCorrespondingRegion->geoLongitude(),
-                pCorrespondingRegion->name());
-            _regionDisplaysById.emplace(pDipRegionDisplay->id(),
-                std::move(pDipRegionDisplay));
-        }
-    }
+    // Dedicated IP functionality has been removed
 }
 
 // Build a region and country display for manual regions

@@ -303,10 +303,6 @@ public:
     // first).  Ties are broken by country code.
     JsonProperty(std::vector<CountryLocations>, groupedLocations);
 
-    // Dedicated IP locations sorted by latency with the same tie-breaking logic
-    // as groupedLocations().  This is used in display contexts alongside
-    // groupedLocations(), as dedicated IP regions are displayed differently.
-    JsonProperty(std::vector<QSharedPointer<const Location>>, dedicatedIpLocations);
 
     // All supported ports for the OpenVpnUdp and OpenVpnTcp services in the
     // active infrastructure (union of the supported ports among all advertised
@@ -418,13 +414,6 @@ public:
     // the connection is not working, this will be set, and the client will show
     // a warning.
     JsonProperty(bool, connectionProblem);
-    // A dedicated IP will expire soon.  When active, the number of days until
-    // the next expiration is also given.
-    JsonProperty(quint64, dedicatedIpExpiring);
-    JsonProperty(int, dedicatedIpDaysRemaining);
-    // A dedicated IP has changed (as observed by the daemon when refreshing
-    // DIP info).  Cleared if the notification is dismissed.
-    JsonProperty(quint64, dedicatedIpChanged);
 
     // We failed to configure DNS on linux
     JsonProperty(qint64, dnsConfigFailed);

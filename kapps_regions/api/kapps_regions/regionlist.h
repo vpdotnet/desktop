@@ -18,7 +18,6 @@
 
 #pragma once
 #include "regions.h"
-#include "dedicatedip.h"
 #include "manualregion.h"
 #include "region.h"
 #include <kapps_core/stringslice.h>
@@ -115,7 +114,6 @@ typedef struct KARRegionList KARRegionList;
 KAPPS_REGIONS_EXPORT
 const KARRegionList *KARRegionListCreate(KACStringSlice regionsJson,
                                          KACStringSlice shadowsocksJson,
-                                         const KARDedicatedIP *pDIPs, size_t dipCount,
                                          const KARManualRegion *pManualRegions, size_t manualCount);
 // Build a region list from legacy PIAv6 regions JSON.  As above, remove any
 // attached signature if present.  Dedicated IPs and manual servers can be
@@ -127,7 +125,6 @@ const KARRegionList *KARRegionListCreate(KACStringSlice regionsJson,
 KAPPS_REGIONS_EXPORT
 const KARRegionList *KARRegionListCreatePiav6(KACStringSlice regionsv6Json,
                                               KACStringSlice shadowsocksJson,
-                                              const KARDedicatedIP *pDIPs, size_t dipCount,
                                               const KARManualRegion *pManualRegions, size_t manualCount);
 // Destroy a region list.
 KAPPS_REGIONS_EXPORT

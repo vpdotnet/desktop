@@ -21,7 +21,6 @@
 #include "dynamicrole.h"
 #include "countrydisplay.h"
 #include "regiondisplay.h"
-#include "dedicatedip.h"
 #include "manualregion.h"
 #include <kapps_core/stringslice.h>
 #include <kapps_core/arrayslice.h>
@@ -48,7 +47,6 @@ typedef struct KARMetadata KARMetadata;
 // displays are not needed for DIP and manual regions, these can be omitted.
 KAPPS_REGIONS_EXPORT
 const KARMetadata *KARMetadataCreate(KACStringSlice metadataJson,
-                                     const KARDedicatedIP *pDIPs, size_t dipCount,
                                      const KARManualRegion *pManualRegions, size_t manualCount);
 // Build the metadata from legacy PIA regions v6 and metadata v2 JSON.  Regions
 // is required in addition to metadata, because some metadata fields were in
@@ -80,7 +78,6 @@ const KARMetadata *KARMetadataCreate(KACStringSlice metadataJson,
 KAPPS_REGIONS_EXPORT
 const KARMetadata *KARMetadataCreatePiav6v2(KACStringSlice regionsv6Json,
                                             KACStringSlice metadatav2Json,
-                                            const KARDedicatedIP *pDIPs, size_t dipCount,
                                             const KARManualRegion *pManualRegions, size_t manualCount);
 KAPPS_REGIONS_EXPORT
 void KARMetadataDestroy(const KARMetadata *pMetadata);

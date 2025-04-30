@@ -44,7 +44,6 @@ public:
     //   RegionDisplay.  There are no translations, but there is en-US display
     //   text filled in (for example, the region name becomes "<cn> - <ip>")
     Metadata(core::StringSlice metadataJson,
-             core::ArraySlice<const DedicatedIp> dips,
              core::ArraySlice<const ManualRegion> manual);
 
     // Like RegionList, the legacy PIA metadata v2 format can be loaded also.
@@ -52,7 +51,6 @@ public:
     // the regions list to metadata in v7, so the legacy support reads the
     // corresponding data from regions v6.
     Metadata(core::StringSlice regionsv6Json, core::StringSlice metadatav2Json,
-             core::ArraySlice<const DedicatedIp> dips,
              core::ArraySlice<const ManualRegion> manual);
 
     // Like RegionList, we need to implement moves to ensure the
@@ -193,9 +191,8 @@ private:
         core::StringSlice regionName,
         const std::unordered_map<Bcp47Tag, core::StringSlice> &prefixMap);
 
-    // Copy the region displays for DIP regions' corresponding regions, so the
-    // client doesn't have to fall back manually
-    void copyDipRegionDisplays(core::ArraySlice<const DedicatedIp> dips);
+    // Dedicated IP functionality has been removed
+    void copyDipRegionDisplays();
 
     // Build a region and country display for manual regions
     void buildManualRegionDisplays(core::ArraySlice<const ManualRegion> manualRegions);

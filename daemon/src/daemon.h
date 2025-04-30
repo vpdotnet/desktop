@@ -252,20 +252,6 @@ protected:
     // Settings
     void RPC_applySettings(const QJsonObject& settings, bool reconnectIfNeeded = false);
     void RPC_resetSettings();
-    // Dedicated IPs aren't actually stored in settings (due to the token being
-    // treated as a password), but they're used by the client in mostly the same
-    // way.
-    // Add a dedicated IP by specifying a dedicated IP token.  The request
-    // succeeds if the token is valid and not expired (and the API can be
-    // reached to confirm this).
-    Async<void> RPC_addDedicatedIp(const QString &token);
-    // Remove a dedicated IP by specifying the generated region ID for the DIP
-    // region (since the client can't see dedicated IP tokens).
-    void RPC_removeDedicatedIp(const QString &dipRegionId);
-    // If one or more dedicated IPs have changed IP address (triggering a client
-    // notification), clear that notification by dismissing the change.  This
-    // resets AccountDedicatedIp::lastIpChange() for all dedicated IPs.
-    void RPC_dismissDedicatedIpChange();
 
     // Connection
 
@@ -434,10 +420,6 @@ private:
     void onNetworksChanged(const std::vector<NetworkConnection> &networks);
 
     void refreshAccountInfo();
-    void applyDedicatedIpJson(const QJsonObject &tokenData, AccountDedicatedIp &dipInfo);
-    void applyRefreshedDedicatedIp(const QJsonObject &tokenData, int traceIdx,
-                                   std::vector<AccountDedicatedIp> &dedicatedIps);
-    void refreshDedicatedIps();
     void reapplyFirewallRules();
 
     // Handle system sleep by:
@@ -579,7 +561,6 @@ protected:
     QTimer _serializationTimer;
 
     QTimer _accountRefreshTimer;
-    QTimer _dedicatedIpRefreshTimer;
 
     QTimer _checkForAppMessagesTimer;
     QTimer _memTraceTimer;

@@ -81,9 +81,7 @@ SecondaryWindow {
     'protocol': QT_TR_NOOP("Protocols", 'setting-title'),
     'network': QT_TR_NOOP("Network", 'setting-title'),
     'privacy': QT_TR_NOOP("Privacy", 'setting-title'),
-    //'dedicated-ip': QT_TR_NOOP("Dedicated IP", 'setting-title'),
     'automation': QT_TR_NOOP("Automation", 'setting-title'),
-    // 'split-tunnel': QT_TR_NOOP("Split Tunnel", 'setting-title'),  // Split Tunnel feature removed
     'account': QT_TR_NOOP("Account", 'setting-title'),
     'help': QT_TR_NOOP("Help", 'setting-title'),
   }
@@ -102,12 +100,10 @@ SecondaryWindow {
         name: 'privacy',
         component: "privacy/PrivacyPage.qml"
       },
-      // Removed dedicated-ip page
       {
         name: 'automation',
         component: "automation/AutomationPage.qml"
       },
-      // Split Tunnel feature removed
       {
         name: 'account',
         component: "account/AccountPage.qml"

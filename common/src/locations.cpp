@@ -53,7 +53,6 @@ auto buildModernLocations(const LatencyMap &latencies,
                           const QJsonObject &regionsObj,
                           const QJsonArray &shadowsocksObj,
                           const QJsonObject &metadataObj,
-                          const std::vector<AccountDedicatedIp> &dedicatedIps,
                           const ManualServer &manualServer)
     -> std::pair<LocationsById, kapps::regions::Metadata>
 {
@@ -86,17 +85,6 @@ auto buildModernLocations(const LatencyMap &latencies,
             convertedServiceGroups.back().push_back(qstrSlice(groupName));
         return convertedServiceGroups.back();
     };
-    std::vector<kapps::regions::DedicatedIp> dips;
-    dips.reserve(dedicatedIps.size());
-    for(const auto &accountDip : dedicatedIps)
-    {
-        dips.push_back({qstrSlice(accountDip.id()),
-                        kapps::core::Ipv4Address{accountDip.ip().toStdString()},
-                        qstrSlice(accountDip.cn()),
-                        {}, // FQDN is not used in PIA
-                        serviceGroupsSlice(accountDip.serviceGroups()),
-                        qstrSlice(accountDip.regionId())});
-    }
 
     std::vector<kapps::regions::ManualRegion> manual;
     manual.reserve(1);
@@ -115,11 +103,12 @@ auto buildModernLocations(const LatencyMap &latencies,
                           manualServer.openvpnTcpPorts()});
     }
 
+    // Dedicated IP functionality has been removed
     kapps::regions::RegionList regionlist{kapps::regions::RegionList::PIAv6,
                                           regionsJsonSlice, shadowsocksJsonSlice,
-                                          dips, manual};
+                                          manual};
     kapps::regions::Metadata metadata{regionsJsonSlice, metadataJsonSlice,
-                                      dips, manual};
+                                      manual};
 
     LocationsById newLocations;
     for(const auto &pRegion : regionlist.regions())
@@ -164,26 +153,20 @@ bool compareEntries(const Location &first, const Location &second)
 
 void buildGroupedLocations(const LocationsById &locations,
                            const kapps::regions::Metadata &metadata,
-                           std::vector<CountryLocations> &groupedLocations,
-                           std::vector<QSharedPointer<const Location>> &dedicatedIpLocations)
+                           std::vector<CountryLocations> &groupedLocations)
 {
     // Group the locations by country
     std::unordered_map<kapps::core::StringSlice, std::vector<QSharedPointer<const Location>>> countryGroups;
-    dedicatedIpLocations.clear();
 
     for(const auto &locationEntry : locations)
     {
         Q_ASSERT(locationEntry.second);
-        if(locationEntry.second->isDedicatedIp())
-            dedicatedIpLocations.push_back(locationEntry.second);
-        else
-        {
-            kapps::core::StringSlice countryCode;
-            auto pRegionDisplay = metadata.getRegionDisplay(locationEntry.second->id().toStdString());
-            if(pRegionDisplay)
-                countryCode = pRegionDisplay->country();
-            countryGroups[countryCode].push_back(locationEntry.second);
-        }
+        
+        kapps::core::StringSlice countryCode;
+        auto pRegionDisplay = metadata.getRegionDisplay(locationEntry.second->id().toStdString());
+        if(pRegionDisplay)
+            countryCode = pRegionDisplay->country();
+        countryGroups[countryCode].push_back(locationEntry.second);
     }
 
     // Sort each countries' locations by latency, then id
@@ -201,8 +184,6 @@ void buildGroupedLocations(const LocationsById &locations,
         std::sort(group.second.begin(), group.second.end(), sortLocations);
     }
 
-    // Sort dedicated IP locations in the same way
-    std::sort(dedicatedIpLocations.begin(), dedicatedIpLocations.end(), sortLocations);
 
     // Create country groups from the sorted lists
     groupedLocations.clear();

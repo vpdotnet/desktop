@@ -18,39 +18,13 @@
 
 #pragma once
 #include "region.h"
-#include <kapps_regions/dedicatedip.h>
 #include <kapps_core/src/corejson.h>
 #include <unordered_map>
 #include <vector>
 
 namespace kapps::regions {
 
-// Dedicated IP structure used to indicate DIPs to RegionList.  This is similar
-// to the KARDedicatedIP API structure but adapted to internal types.
-//
-// All members are non-owning; this is only used to describe DIPs to the
-// constructor so internal representations can be built.
-struct DedicatedIp
-{
-    // The client's artificial "region ID" for the generated DIP region.
-    core::StringSlice dipRegionId;
-    // The IPv4 address of the VPN server for this dedicated IP
-    core::Ipv4Address address;
-    // The certificate common name for this server
-    core::StringSlice commonName;
-    // FQDN of the server - only used on some platforms for IKEv2, empty if not
-    // needed
-    core::StringSlice fqdn;
-    // The service group(s) from the general regions list to apply to this
-    // region - indicates the available protocols, ports, etc.  Represents the
-    // deployment configuration applied by Ops.
-    core::ArraySlice<const core::StringSlice> serviceGroups;
-    // The region ID for the corresponding region - required for DIP regions.
-    // Metadata information such as country name, region name, geo flag, etc.
-    // are taken from this region, and auxiliary services such as
-    // meta/Shadowsocks are used from this region when needed.
-    core::StringSlice correspondingRegionId;
-};
+// Dedicated IP functionality has been removed
 
 // Manual region structure used to indicate manual regions to RegionList.  This
 // is similar to the KARManualRegion API structure but adapted to internal
@@ -117,13 +91,11 @@ public:
 
     RegionList(core::StringSlice regionsJson,
                core::StringSlice shadowsocksJson,
-               core::ArraySlice<const DedicatedIp> dips,
                core::ArraySlice<const ManualRegion> manual);
 
     // Construct from the legacy PIAv6 format; see RegionList::PIAv6 above
     RegionList(PIAv6_t, core::StringSlice regionsJson,
                core::StringSlice shadowsocksJson,
-               core::ArraySlice<const DedicatedIp> dips,
                core::ArraySlice<const ManualRegion> manual);
 
     // Default copy and assign are fine - _regions and _regionsById in both
@@ -184,10 +156,9 @@ private:
                                     const ServiceGroups &pssGroups)
         -> std::vector<std::shared_ptr<const Server>>;
 
-    // Build dedicated IP regions from the information given to the constructor
-    void buildDipRegions(const core::ArraySlice<const DedicatedIp> &dips,
-                         const ServiceGroups &groups,
-                         const StdRegionsById &stdRegions);
+    // Dedicated IP functionality has been removed
+    void buildDipRegions(const ServiceGroups &groups,
+                        const StdRegionsById &stdRegions);
     // Build manual regions from the information given to the constructor
     void buildManualRegions(const core::ArraySlice<const ManualRegion> &manualRegions,
                             const ServiceGroups &groups,

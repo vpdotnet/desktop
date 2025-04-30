@@ -101,7 +101,8 @@ struct serializer<Location>
             {"geoLocated", l.geoLocated()},
             {"autoSafe", l.autoSafe()},
             {"latency", l.latency()},
-            {"dedicatedIp", l.dedicatedIp()},
+            // dedicated IP functionality removed
+            {"dedicatedIp", ""}, // Keep property to avoid breaking client
             {"offline", l.offline()},
             {"hasShadowsocks", l.hasShadowsocks()}
         };

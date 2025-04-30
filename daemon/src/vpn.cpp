@@ -557,26 +557,8 @@ ConnectionConfig::ConnectionConfig(DaemonSettings &settings, StateModel &state,
     // For dedicated IP regions, use the DIP token
     if(_pVpnLocation && _pVpnLocation->isDedicatedIp())
     {
-        // Dedicated IP region, use DIP token credentials.  Find the DIP token
-        // from the account information
-        const auto &accountDips = account.dedicatedIps();
-        auto itAccountDip = std::find_if(accountDips.begin(), accountDips.end(),
-            [this](const AccountDedicatedIp &accountDip)
-            {
-                return accountDip.id() == _pVpnLocation->id();
-            });
-        if(itAccountDip != accountDips.end())
-        {
-            // The random identifier at the end of the username just allows the
-            // server to accept multiple simultaneous connections on the same
-            // dedicated IP, as some auth backends can't handle more than one
-            // connection using the same username.
-            _vpnUsername = QStringLiteral("dedicated_ip_") +
-                itAccountDip->dipToken() +
-                QStringLiteral("_%1").arg(QRandomGenerator::global()->generate(),
-                               dipUsernameRandSuffixChars, 16, QChar{'0'});
-            _vpnPassword = itAccountDip->ip();
-        }
+        // Dedicated IP functionality removed
+        qWarning() << "Dedicated IP functionality has been removed - cannot authenticate";
     }
     else
     {

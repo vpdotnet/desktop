@@ -22,26 +22,23 @@
 #include "common.h"
 #include "settings/connection.h"
 #include "settings/locations.h"
-#include "settings/dedicatedip.h"
 #include <kapps_regions/src/metadata.h>
 
 
 // Build Location and Server objects for the modern region infrastructure from
 // the latencies, modern regions list, and Shadowsocks regions list.
-// Dedicated IPs and the dev manual server are added as additional regions.
+// The dev manual server is added as an additional region.
 COMMON_EXPORT auto buildModernLocations(const LatencyMap &latencies,
                                         const QJsonObject &regionsObj,
                                         const QJsonArray &shadowsocksObj,
                                         const QJsonObject &metadataObj,
-                                        const std::vector<AccountDedicatedIp> &dedicatedIps,
                                         const ManualServer &manualServer)
     -> std::pair<LocationsById, kapps::regions::Metadata>;
 
 // Build the grouped and sorted locations from the flat locations.
 COMMON_EXPORT void buildGroupedLocations(const LocationsById &locations,
                                          const kapps::regions::Metadata &metadata,
-                                         std::vector<CountryLocations> &groupedLocations,
-                                         std::vector<QSharedPointer<const Location>> &dedicatedIpLocations);
+                                         std::vector<CountryLocations> &groupedLocations);
 
 class COMMON_EXPORT NearestLocations
 {

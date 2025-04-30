@@ -50,9 +50,7 @@ QtObject {
             'protocol',
             'network',
             'privacy',
-            // removed dedicated-ip
             'automation',
-            // removed split-tunnel
             'account',
             'help'
       ];
@@ -188,7 +186,6 @@ QtObject {
 
     readonly property string reconnectShadowImage: Theme.imagePathCommon + "/settings/shadow-reconnect.png"
 
-    readonly property string dedicatedIpPageImage: Theme.imagePath + "/settings/dedicatedip-page.png"
 
     readonly property color buttonBorderColor: Theme.dark ? "#59596D" : "#CDCDCD"
     readonly property color disabledButtonBorderColor : Theme.dark ? "#444555" : "#EDEAEA"

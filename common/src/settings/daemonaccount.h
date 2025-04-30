@@ -21,7 +21,6 @@
 
 #include "../common.h"
 #include "../json.h"
-#include "dedicatedip.h"
 #include <unordered_set>
 
 // Class encapsulating 'account' properties of the daemon.  This includes:
@@ -81,11 +80,6 @@ public:
     JsonField(QString, portForwardPayload, {})
     JsonField(QString, portForwardSignature, {})
 
-    // Dedicated IP tokens and the information most recently fetched from the
-    // API for those tokens.  These are in DaemonAccount because the token is
-    // functionally a password and should be protected like account information,
-    // but they are not erased on a logout.
-    JsonField(std::vector<AccountDedicatedIp>, dedicatedIps, {})
 };
 
 #endif

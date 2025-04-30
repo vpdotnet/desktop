@@ -199,24 +199,10 @@ Rectangle {
           onClicked: regionListView.regionSelected('auto')
           onFocusCell: mouseFocusCell({country: 'auto', location: 'auto'}, keyColumn)
         }
+        // Dedicated IP functionality removed
         Repeater {
           id: dedicatedIpsRepeater
-          model: displayDedicatedIpsArray
-          delegate: DedicatedIpRegion {
-            Layout.fillWidth: true
-            region: modelData
-            serviceLocations: regionListView.serviceLocations
-            portForwardEnabled: regionListView.portForwardEnabled
-            canFavorite: regionListView.canFavorite
-            highlightColumn: {
-              if(keyboardRow.country === "dip" && keyboardRow.location === region.id) {
-                return regionListView.highlightColumn
-              }
-              return -1
-            }
-            onClicked: regionListView.regionSelected(modelData.id)
-            onFocusCell: mouseFocusCell({country: "dip", location: region.id}, keyColumn)
-          }
+          model: []
         }
         // Separator between the "auto" + dedicated regions and the normal
         // regions.  Show if any region above the separator would be shown.
@@ -433,29 +419,9 @@ Rectangle {
     return value.toLowerCase().indexOf(searchTerm.toLowerCase()) >= 0
   }
 
-  // Filter the 'dedicatedIpLocations' array from DaemonState, which is an array
-  // of Locations representing dedicated IP regions.
-  // These are not grouped, so they're just filtered by the region names.
+  // Dedicated IP functionality has been removed
   function filterDedicatedIps() {
-    var dedicatedIps = Daemon.state.dedicatedIpLocations
-
-    if(!searchTerm && !regionFilter)
-      return dedicatedIps
-
-    var filteredDedicatedIps = dedicatedIps
-
-    // Filter with the region filter if there is one
-    if(regionFilter)
-      filteredDedicatedIps = filteredDedicatedIps.filter(regionFilter)
-
-    // Filter by the search term if present
-    if(searchTerm) {
-      filteredDedicatedIps = filteredDedicatedIps.filter(function(dip) {
-        return matchesSearchTerm(Client.getRegionAutoName(dip.id))
-      })
-    }
-
-    return filteredDedicatedIps
+    return [];
   }
 
   // Filter the 'countries' object from DaemonState.groupedLocations,
@@ -529,14 +495,8 @@ Rectangle {
                             Client.getRegionAutoName(second.id).toLowerCase())
       if(nameComp !== 0)
         return nameComp
-      // For dedicated IP regions, the names could be exactly the same if the
-      // user has more than one dedicated IP.  Sort by IP next.  This is a
-      // lexical sort - a numeric sort by IP might be nice, but it really
-      // doesn't make that much difference, we just need a consistent order.
-      //
-      // If this somehow happens for regions that aren't dedicated IP regions,
-      // this won't do anything (both will be empty strings).
-      return localeCompareRegions(first.dedicatedIp, second.dedicatedIp)
+      // Dedicated IP functionality removed
+      return 0
     })
     return sortedLocations
   }
