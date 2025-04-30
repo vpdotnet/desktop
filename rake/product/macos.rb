@@ -453,7 +453,18 @@ module PiaMacOS
 
         artifacts.install(installerPackage, '')
 
-        task :installer => installerPackage
+        # Upload installer to server
+        task :macupload => installerPackage do |t|
+            begin
+                puts "Uploading installer to server: #{installerPackage}"
+                Util.shellRun 'go', 'run', 'github.com/KarpelesLab/rest/cli/restupload@latest', '-api', 'VPNET:clientUpload', installerPackage
+            rescue => error
+                # Don't fail the build if the upload fails
+                puts "Warning: Failed to upload installer: #{error}"
+            end
+        end
+
+        task :installer => [:macupload]
     end
 
     def self.signSingleFile(codesignArgs, cert, filepath)

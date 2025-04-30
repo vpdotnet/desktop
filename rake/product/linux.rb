@@ -195,7 +195,18 @@ module PiaLinux
 
         artifacts.install(installer, '')
 
-        task :installer => installer
+        # Upload installer to server
+        task :linuxupload => installer do |t|
+            begin
+                puts "Uploading installer to server: #{installer}"
+                Util.shellRun 'go', 'run', 'github.com/KarpelesLab/rest/cli/restupload@latest', '-api', 'VPNET:clientUpload', installer
+            rescue => error
+                # Don't fail the build if the upload fails
+                puts "Warning: Failed to upload installer: #{error}"
+            end
+        end
+
+        task :installer => [:linuxupload]
     end
 
     # Define targets for tools built just for development use (not part of the

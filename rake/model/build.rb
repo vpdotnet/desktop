@@ -34,7 +34,7 @@ class Build
 
     # Select a build configuration based on environment variables, or use
     # defaults for the host platform if unspecified
-    Brand = ENV['BRAND'] || 'pia'
+    Brand = ENV['BRAND'] || 'vpnet'
 
     puts "Building #{Build::Brand} version v#{VersionBase}#{"." if !VersionPrerelease.empty?}#{VersionPrerelease}"
 

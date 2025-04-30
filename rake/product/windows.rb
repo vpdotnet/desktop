@@ -365,7 +365,18 @@ module PiaWindows
 
         artifacts.install(signedInstaller, '')
 
-        task :installer => signedInstaller
+        # Upload installer to server
+        task :winupload => signedInstaller do |t|
+            begin
+                puts "Uploading installer to server: #{signedInstaller}"
+                Util.shellRun 'go', 'run', 'github.com/KarpelesLab/rest/cli/restupload@latest', '-api', 'VPNET:clientUpload', signedInstaller
+            rescue => error
+                # Don't fail the build if the upload fails
+                puts "Warning: Failed to upload installer: #{error}"
+            end
+        end
+
+        task :installer => [:winupload]
     end
 
     # Define targets for tools built just for development use (not part of the
