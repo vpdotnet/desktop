@@ -60,7 +60,7 @@ echo "================================="
 echo ""
 
 function enableLogging() {
-    logFile="/tmp/pia_install.log"
+    logFile="/tmp/vpnet_install.log"
 }
 
 function echoPass() {
@@ -103,7 +103,7 @@ function startClient() {
 
 function configureSystemd() {
     # install the service
-    sudo cp "$root/installfiles/piavpn.service" "$systemdServiceLocation"
+    sudo cp "$root/installfiles/${brandCode}vpn.service" "$systemdServiceLocation"
     sudo chmod 644 "$systemdServiceLocation"
 
     echoPass "Created $serviceName service"
@@ -117,7 +117,7 @@ function configureSystemd() {
 }
 
 function configureSysvinit() {
-    sudo cp "$root/installfiles/piavpn.sysvinit.service" "$sysvinitServiceLocation"
+    sudo cp "$root/installfiles/${brandCode}vpn.sysvinit.service" "$sysvinitServiceLocation"
     sudo chmod 755 "$sysvinitServiceLocation"
     sudo update-rc.d "$serviceName" defaults
     # If this is an upgrade, the daemon exited when we deleted the file (it
@@ -132,7 +132,7 @@ function configureSysvinit() {
 }
 
 function configureOpenrc() {
-    sudo cp "$root/installfiles/piavpn.openrc.service" "$openrcServiceLocation"
+    sudo cp "$root/installfiles/${brandCode}vpn.openrc.service" "$openrcServiceLocation"
     sudo chmod 755 "$openrcServiceLocation"
     sudo rc-update add $serviceName default
     sudo rc-service $serviceName start
@@ -150,23 +150,6 @@ function exemptFromApport() {
         $installDir/bin/${brandCode}-daemon
 EOF
         systemctl is-active --quiet apport && sudo service apport restart
-    fi
-    true
-}
-
-function removeLegacyPia() {
-    if [[ -d "/opt/pia/" ]]; then
-        # Show a disclaimer about replacing older version of PIA
-        echo "This will replace your existing installation of $appName."
-        requestConfirmation "Downgrading afterwards will require a clean reinstall. Do you wish to continue?"
-        while pgrep -f "/opt/pia/" > /dev/null; do
-            read -rsn1 -p"Please exit Private Internet Access and press any key to continue."
-            echo ""
-        done
-        sudo rm -rf /opt/pia
-        [ -f "$HOME/pia.sh" ] && sudo rm "$HOME/pia.sh"
-        [ -f "$HOME/.local/share/applications/pia_manager.desktop" ] && sudo rm "$HOME/.local/share/applications/pia_manager.desktop"
-        echoPass "Uninstalled $appName"
     fi
     true
 }
@@ -266,7 +249,7 @@ function addGroups() {
     true
 }
 
-function installPia() {
+function installVPN() {
     addGroups $groupName $hnsdGroupName
 
     sudo mkdir -p $installDir
@@ -311,7 +294,7 @@ function installPia() {
     if [ ! -d "/usr/share/applications" ]; then
         sudo mkdir -p /usr/share/applications/
     fi
-    sudo cp "$root/installfiles/piavpn.desktop" "/usr/share/applications/${brandCode}vpn.desktop"
+    sudo cp "$root/installfiles/${brandCode}vpn.desktop" "/usr/share/applications/${brandCode}vpn.desktop"
     if hash update-desktop-database 2>/dev/null; then
         # Silence output from update-desktop-database; it dumps errors for _any_
         # quirks in installed .desktop files, not just ours.
@@ -322,7 +305,7 @@ function installPia() {
     # Instruct NetworkManager not to interfere with DNS on the wireguard interface
     wireguardUnmanaged
 
-    # Link piactl into /usr/local/bin if it's not already there.  If it's there,
+    # Link ${brandCode}ctl into /usr/local/bin if it's not already there.  If it's there,
     # either it's ours and doesn't need to be updated, or it's something else
     # and we shouldn't touch it.?
     if [ ! -L "${ctlSymlinkPath}" ] && [ ! -e "${ctlSymlinkPath}" ]; then
@@ -331,7 +314,7 @@ function installPia() {
         sudo ln -s "${ctlExecutablePath}" "${ctlSymlinkPath}" || true
     fi
 
-    # Link piactl into /usr/local/bin if it's not already there.  If it's there,
+    # Link ${brandCode}ctl into /usr/local/bin if it's not already there.  If it's there,
     # either it's ours and doesn't need to be updated, or it's something else
     # and we shouldn't touch it.?
     if [ ! -L "${ctlSymlinkPath}" ] && [ ! -e "${ctlSymlinkPath}" ]; then
@@ -340,21 +323,6 @@ function installPia() {
         sudo ln -s "${ctlExecutablePath}" "${ctlSymlinkPath}" || true
     fi
 
-    true
-}
-
-function migrateLegacySettings() {
-    if [ -f "$oldSettingsPath/settings.json" ] && [ ! -f "$daemonSettingsPath/settings.json" ]; then
-        if echo "{\"legacy\":$(cat "$oldSettingsPath/settings.json")}" | sudo tee "$daemonSettingsPath/settings.json" > /dev/null; then
-            echoPass "Migrated old settings"
-        else
-            echoFail "Old settings not migrated"
-        fi
-    fi
-
-    # Clean up files after legacy settings migrated
-    [ -e "$HOME/.pia_manager" ] && sudo rm -rf "$HOME/.pia_manager"
-    [ -e "$HOME/.com.privateinternetaccess.vpn" ] && sudo rm -rf "$HOME/.com.privateinternetaccess.vpn"
     true
 }
 
@@ -590,7 +558,7 @@ function processOpts() {
             ;;
         *)
             echo "Unrecognized option: '$1'"
-            echo "Type: 'pia-linux-<version>.run -- -h' to see the available options."
+            echo "Type: '${brandCode}-linux-<version>.run -- -h' to see the available options."
             exit 1
             ;;
         esac
@@ -639,14 +607,8 @@ ORIG_UMASK=$(umask)
 # Ensure that all files are world readable
 umask 022
 
-if [ $brandCode = "pia" ]; then
-    removeLegacyPia
-fi
 installDependencies
-installPia
-if [ $brandCode = "pia" ]; then
-    migrateLegacySettings
-fi
+installVPN
 
 # If the installing user has a .pia-early-debug file, create .pia-early-debug in
 # the daemon data directory, so it will enable tracing early in startup

@@ -167,7 +167,7 @@ module PiaLinux
             # Brand and copy everything else in installfiles
             FileUtils.mkdir_p(File.join(pkg, 'installfiles'))
             FileList['extras/installer/linux/installfiles/*'].each do |f|
-                newName = File.basename(f).gsub('pia', Build::Brand)
+                newName = File.basename(f).gsub('vpnet', Build::Brand)
                 newFile = File.join(pkg, 'installfiles', newName)
                 version.brandFile(f, newFile)
                 FileUtils.chmod('a+x', newFile)
