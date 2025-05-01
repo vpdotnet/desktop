@@ -50,3 +50,5 @@ default.profraw
 
 # Extra mac files
 extras/mac/
+
+.claude

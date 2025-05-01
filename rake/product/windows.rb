@@ -184,6 +184,10 @@ module PiaWindows
                 args << '/kc'
                 args << ENV['PIA_SIGNTOOL_KEYCONTAINER']
             end
+            if ENV['PIA_SIGNTOOL_KSP'] != nil
+                args << '/ksp'
+                args << ENV['PIA_SIGNTOOL_KSP']
+            end
         elsif(SignCertFile != nil)
             args << '/f'
             args << SignCertFile
