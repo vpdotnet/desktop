@@ -28,7 +28,7 @@ MetaServiceApiBase::MetaServiceApiBase(const StateModel &state,
                                        std::shared_ptr<PrivateCA> pDynamicBaseCA,
                                        std::vector<QString> fixedBaseUris)
     : _dynamicBasePath{std::move(dynamicBasePath)},
-      _pDynamicBaseCA{std::move(pDynamicBaseCA)},
+      _pDynamicBaseCA{nullptr}, // Not using a custom CA, system CAs will be used instead
       _state{state}, _fixedBaseUris{std::move(fixedBaseUris)}
 {
     // Ensure the base path begins and ends with a '/'
@@ -36,6 +36,9 @@ MetaServiceApiBase::MetaServiceApiBase(const StateModel &state,
         _dynamicBasePath.insert(0, '/');
     if(!_dynamicBasePath.endsWith('/'))
         _dynamicBasePath.append('/');
+    
+    // Ignore passed custom CA parameter - we'll use system CAs
+    Q_UNUSED(pDynamicBaseCA);
 }
 
 ApiBaseSequence MetaServiceApiBase::beginAttempt()
@@ -58,8 +61,8 @@ ApiBaseSequence MetaServiceApiBase::beginAttempt()
         {
             // Use a fixed address for the internal meta sevice available in
             // the modern infrastructure.  This is provided by the VPN server,
-            // so use the VPN cert's common name
-            bases.push_back({QString("https://10.0.0.1:443") + _dynamicBasePath, _pDynamicBaseCA, _state.connectedServer()->commonName()});
+            // so use the VPN cert's common name for verification, but rely on system CAs
+            bases.push_back({QString("https://10.0.0.1:443") + _dynamicBasePath, nullptr, _state.connectedServer()->commonName()});
             // Fallback addresses
             appendFixedBases();
 
@@ -122,10 +125,9 @@ ApiBaseSequence MetaServiceApiBase::beginAttempt()
                 .arg(pBaseServer->ip())
                 .arg(basePort)
                 .arg(_dynamicBasePath);
-            std::shared_ptr<PrivateCA> pServerCA = createPrivateCAFromX509(pBaseServer->x509Certificate());
-            // If we have a server CA, use it, otherwise fall back to dynamic CA
-            std::shared_ptr<PrivateCA> pCA = pServerCA ? pServerCA : _pDynamicBaseCA;
-            bases.push_back({uri, pCA, pBaseServer->commonName()});
+            // Still use the server's common name for verification, but rely on system CAs
+            // instead of a custom CA certificate
+            bases.push_back({uri, nullptr, pBaseServer->commonName()});
         }
     };
 

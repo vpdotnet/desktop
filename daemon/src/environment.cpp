@@ -279,9 +279,8 @@ void Environment::loadApiBases()
 void Environment::reload()
 {
     _authorities.clear();
-    loadCertificateAuthority(QStringLiteral("RSA-4096"), QStringLiteral("rsa_4096.crt"));
-
-    _pRsa4096CA = std::make_shared<PrivateCA>(getCertificateAuthority(QStringLiteral("RSA-4096")));
+    // Note: Removed dependency on rsa_4096.crt
+    _pRsa4096CA = nullptr; // No longer using a custom CA for API requests
 
     loadRegionsListPublicKey();
 

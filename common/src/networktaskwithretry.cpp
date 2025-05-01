@@ -163,19 +163,15 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
         // Use the URL host for the Host header instead of the SNI name
         request.setRawHeader("Host", urlHost.toUtf8());
         
-        if (nextBase.pCA)
-        {
-            qDebug() << "requesting:" << requestResource
-                << "using peer name" << nextBase.peerVerifyName << "with custom CA";
-            // Since we're using a custom CA and peer name, do not use the default
-            // CAs. Copy the SSL configuration and explicitly set an empty CA list.
-            sslConfig.setCaCertificates({});
-            request.setSslConfiguration(sslConfig);
-        }
-        else
+        // We use peer name verification with system CAs for all domains
+        if (!nextBase.peerVerifyName.isEmpty())
         {
             qDebug() << "requesting:" << requestResource
                 << "using peer name" << nextBase.peerVerifyName << "with system CA";
+        }
+        else
+        {
+            qDebug() << "requesting:" << requestResource;
         }
     }
     else
