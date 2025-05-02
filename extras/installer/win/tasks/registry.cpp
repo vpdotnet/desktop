@@ -205,10 +205,10 @@ bool WriteUninstallRegistryTask::updateKey(HKEY hkey)
     writeRegistry(hkey, L"DisplayName", REG_SZ, L"" PIA_PRODUCT_NAME);
     writeRegistry(hkey, L"InstallLocation", REG_EXPAND_SZ, g_installPath);
     writeRegistry(hkey, L"UninstallString", REG_EXPAND_SZ, g_installPath + L"\\uninstall.exe");
-    writeRegistry(hkey, L"Publisher", REG_SZ, L"Private Internet Access, Inc.");
+    writeRegistry(hkey, L"Publisher", REG_SZ, L"VP.NET LLC");
     writeRegistry(hkey, L"DisplayVersion", REG_SZ, L"" PIA_VERSION_LITERAL);
     writeRegistry(hkey, L"DisplayIcon", REG_EXPAND_SZ, g_installPath + L"\\" BRAND_CODE "-client.exe");
-    writeRegistry(hkey, L"URLInfoAbout", REG_SZ, L"https://www.privateinternetaccess.com/");
+    writeRegistry(hkey, L"URLInfoAbout", REG_SZ, L"https://vp.net/");
     if (g_installationSize)
         writeRegistry(hkey, L"EstimatedSize", (DWORD)(g_installationSize / 1024));
     writeRegistry(hkey, L"NoModify", 1);
