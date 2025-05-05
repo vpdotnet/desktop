@@ -292,7 +292,7 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
                     // If OpenSSL fails (indicated by verifyHttpsCertificate returning false),
                     // try direct PEM comparison for the self-signed certificate
                     if (!nextBase.pCA->verifyHttpsCertificate(certChain, nextBase.peerVerifyName, true)) {
-                        qWarning() << "OpenSSL verification failed. Trying direct certificate comparison...";
+                        qWarning("OpenSSL verification failed. Trying direct certificate comparison...");
                         
                         // Check if we have self-signed certificate errors
                         bool hasSelfSignedError = false;
@@ -335,6 +335,22 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
                                 }
                             } else {
                                 qWarning("Certificate does NOT match the X509 provided in server list");
+                                
+                                // Log certificate details for comparison
+                                QString serverInfo = QString("Server cert: CN=%1 Serial=%2 Fingerprint=%3")
+                                    .arg(serverCert.subjectInfo(QSslCertificate::CommonName).join(", "))
+                                    .arg(serverCert.serialNumber())
+                                    .arg(QString(QCryptographicHash::hash(serverCert.toDer(), 
+                                                 QCryptographicHash::Sha256).toHex()));
+                                
+                                QString storedInfo = QString("Stored cert: CN=%1 Serial=%2 Fingerprint=%3")
+                                    .arg(storedCert.subjectInfo(QSslCertificate::CommonName).join(", "))
+                                    .arg(storedCert.serialNumber())
+                                    .arg(QString(QCryptographicHash::hash(storedCert.toDer(), 
+                                                 QCryptographicHash::Sha256).toHex()));
+                                
+                                qWarning("%s", qPrintable(serverInfo));
+                                qWarning("%s", qPrintable(storedInfo));
                             }
                         }
                         
@@ -342,7 +358,7 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
                         checkSslCertificate(*reply, nextBase, errors);
                     } else {
                         // OpenSSL verification succeeded
-                        qInfo("OpenSSL verification SUCCEEDED for %s", qPrintable(nextBase.peerVerifyName));
+                        qInfo("OpenSSL verification SUCCEEDED for: %s", qPrintable(nextBase.peerVerifyName));
                         reply->ignoreSslErrors();
                     }
                 }
