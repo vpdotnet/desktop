@@ -278,10 +278,66 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
                     }
                 }
                 
-                // For custom CA with pinning, use our verifyHttpsCertificate
+                // For custom CA with pinning (from server-provided X509)
                 if (nextBase.pCA) {
                     qInfo() << "Using provided X509 certificate for validation of" << nextBase.peerVerifyName;
-                    checkSslCertificate(*reply, nextBase, errors);
+                    
+                    // Get the certificate chain from the server
+                    const auto &certChain = reply->sslConfiguration().peerCertificateChain();
+                    if (certChain.isEmpty()) {
+                        qWarning() << "No certificate provided by server for" << nextBase.peerVerifyName;
+                        return;
+                    }
+
+                    // If OpenSSL fails (indicated by verifyHttpsCertificate returning false),
+                    // try direct PEM comparison for the self-signed certificate
+                    if (!nextBase.pCA->verifyHttpsCertificate(certChain, nextBase.peerVerifyName, true)) {
+                        qWarning() << "OpenSSL verification failed. Trying direct certificate comparison...";
+                        
+                        // Check if we have self-signed certificate errors
+                        bool hasSelfSignedError = false;
+                        for (const QSslError &error : errors) {
+                            if (error.error() == QSslError::SelfSignedCertificate || 
+                                error.error() == QSslError::SelfSignedCertificateInChain) {
+                                hasSelfSignedError = true;
+                                break;
+                            }
+                        }
+                        
+                        if (hasSelfSignedError && !certChain.isEmpty()) {
+                            // Convert the server's certificate to DER format for binary comparison
+                            QByteArray serverCertDer = certChain.first().toDer();
+                            
+                            // Convert our stored PEM data to a QSslCertificate and then to DER format
+                            QSslCertificate storedCert = QSslCertificate(nextBase.pCA->rawPemData());
+                            QByteArray storedCertDer = storedCert.toDer();
+                            
+                            // Compare with the certificate we received from the server list - must be EXACTLY equal
+                            if (!storedCertDer.isEmpty() && serverCertDer == storedCertDer) {
+                                
+                                qInfo() << "Direct certificate comparison SUCCEEDED - server cert EXACTLY matches x509 from server list";
+                                
+                                // Check if CN matches expected hostname
+                                if (certChain.first().subjectInfo(QSslCertificate::CommonName).contains(nextBase.peerVerifyName)) {
+                                    qInfo() << "Certificate has expected CN:" << nextBase.peerVerifyName;
+                                    qInfo() << "Accepting self-signed certificate that matches provided X509 from server list";
+                                    reply->ignoreSslErrors();
+                                    return;
+                                } else {
+                                    qWarning() << "Certificate has wrong CN (expected" << nextBase.peerVerifyName << ")";
+                                }
+                            } else {
+                                qWarning() << "Certificate does NOT match the X509 provided in server list";
+                            }
+                        }
+                        
+                        // If direct comparison failed, continue with normal verification
+                        checkSslCertificate(*reply, nextBase, errors);
+                    } else {
+                        // OpenSSL verification succeeded
+                        qInfo() << "OpenSSL verification SUCCEEDED for" << nextBase.peerVerifyName;
+                        reply->ignoreSslErrors();
+                    }
                 }
                 // With system CAs but specified peerVerifyName, check if errors are only about hostname mismatch
                 else {

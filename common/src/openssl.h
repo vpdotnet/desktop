@@ -51,9 +51,18 @@ public:
     bool verifyHttpsCertificate(const QList<QSslCertificate> &certChain,
                                 const QString &peerName,
                                 bool allowExpired = false);
+                                
+    // Store the raw PEM data of the certificate for direct comparison
+    void setRawPemData(const QByteArray &pemData) { _rawPemData = pemData; }
+    
+    // Get the raw PEM data of the certificate
+    const QByteArray &rawPemData() const { return _rawPemData; }
 
 private:
     std::unique_ptr<data> _pData;
+    
+    // Store the raw PEM data for direct certificate comparison
+    QByteArray _rawPemData;
 };
 
 enum

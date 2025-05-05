@@ -589,11 +589,20 @@ std::shared_ptr<PrivateCA> createPrivateCAFromX509(const QString &x509CertData)
     
     pemData.append("-----END CERTIFICATE-----\n");
     
+    // Log detailed information for debugging
+    qInfo() << "Creating PrivateCA from X509 certificate data";
+    
     // Create a PrivateCA from the PEM data
     try {
-        return std::make_shared<PrivateCA>(pemData);
+        auto pCA = std::make_shared<PrivateCA>(pemData);
+        // Store the original PEM data in the object for verification purposes
+        pCA->setRawPemData(pemData);
+        return pCA;
+    } catch (const std::exception &e) {
+        qWarning() << "Failed to create PrivateCA from X509 certificate data:" << e.what();
+        return nullptr;
     } catch (...) {
-        qWarning() << "Failed to create PrivateCA from X509 certificate data";
+        qWarning() << "Failed to create PrivateCA from X509 certificate data: unknown error";
         return nullptr;
     }
 }
