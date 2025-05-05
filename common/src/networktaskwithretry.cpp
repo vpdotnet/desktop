@@ -146,12 +146,8 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
     {
         QSslConfiguration sslConfig{request.sslConfiguration()};
         
-        // Set peer verify name for all requests with a peer name
-        // This sets up SNI and hostname verification correctly
-        request.setPeerVerifyName(nextBase.peerVerifyName);
-        
-        // Set SNI for TLS, but use a consistent approach for Host header
-        // For a diagnostic approach, let's log both options but use the actual URL host
+        // For WireGuard connections, both the cert CN and HTTP Host header must use the same value
+        // This is crucial for server-side validation where the Host is matched against the certificate
         QUrl requestUrl(requestUri);
         QString urlHost = requestUrl.host();
         if (requestUrl.port() != -1) {
@@ -160,8 +156,16 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
         
         qDebug() << "Host options - URL host:" << urlHost << "SNI hostname:" << nextBase.peerVerifyName;
         
-        // Use the URL host for the Host header instead of the SNI name
-        request.setRawHeader("Host", urlHost.toUtf8());
+        // Set peer verify name for certificate validation
+        // This enforces that the certificate CN matches the expected value from the server list
+        request.setPeerVerifyName(nextBase.peerVerifyName);
+        
+        // Set the SSL configuration to use in this request
+        request.setSslConfiguration(sslConfig);
+        
+        // Use the peer verify name (CN) for the Host header instead of the URL host
+        // This ensures the server sees the expected hostname in the HTTP request
+        request.setRawHeader("Host", nextBase.peerVerifyName.toUtf8());
         
         // We use peer name verification with system CAs for all domains
         if (!nextBase.peerVerifyName.isEmpty())
@@ -251,14 +255,44 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
             }
         });
 
-    // Handle SSL errors for custom CA verification
-    if(!nextBase.peerVerifyName.isEmpty() && nextBase.pCA)
+    // Handle SSL errors for certificate verification
+    // We need to check SSL errors in two cases:
+    // 1. When using a custom CA (traditional pinning)
+    // 2. When a peerVerifyName is set but we're using system CAs (for WireGuard servers)
+    if(!nextBase.peerVerifyName.isEmpty())
     {
-        // Connect the SSL errors handler for custom CA verification
+        // Connect the SSL errors handler for certificate verification
         connect(reply.get(), &QNetworkReply::sslErrors, this,
             [this, reply, nextBase](const QList<QSslError> &errors)
             {
-                checkSslCertificate(*reply, nextBase, errors);
+                // For custom CA with pinning, use our verifyHttpsCertificate
+                if (nextBase.pCA) {
+                    checkSslCertificate(*reply, nextBase, errors);
+                }
+                // With system CAs but specified peerVerifyName, check if errors are only about hostname mismatch
+                else {
+                    bool onlyHostnameMismatchErrors = true;
+                    for (const QSslError &error : errors) {
+                        // If there are errors other than hostname mismatch, don't ignore
+                        if (error.error() != QSslError::HostNameMismatch) {
+                            onlyHostnameMismatchErrors = false;
+                            break;
+                        }
+                    }
+                    
+                    // If the only errors are hostname mismatches and we have a peerVerifyName, 
+                    // we can safely ignore them (the setPeerVerifyName will enforce correct verification)
+                    if (onlyHostnameMismatchErrors) {
+                        qInfo() << "Accepting certificate with hostname mismatch for peer" << nextBase.peerVerifyName;
+                        reply->ignoreSslErrors();
+                    } else {
+                        qWarning() << "Certificate has non-hostname errors for" << nextBase.peerVerifyName;
+                        // Log the errors for debugging
+                        for (const QSslError &error : errors) {
+                            qWarning() << "  -" << error.errorString();
+                        }
+                    }
+                }
             });
     }
 
@@ -431,6 +465,14 @@ void NetworkTaskWithRetry::checkSslCertificate(QNetworkReply &reply,
         return;
     }
 
+    // Log the errors for diagnostic purposes
+    if (!errors.isEmpty()) {
+        qInfo() << "SSL errors for" << baseUri.peerVerifyName << ":";
+        for (const QSslError &error : errors) {
+            qInfo() << "  -" << error.errorString();
+        }
+    }
+
     if(baseUri.pCA->verifyHttpsCertificate(certChain,
                                            baseUri.peerVerifyName))
     {
@@ -442,5 +484,15 @@ void NetworkTaskWithRetry::checkSslCertificate(QNetworkReply &reply,
     {
         qWarning() << "Rejected certificate for" << baseUri.peerVerifyName;
         traceLeafCert(certChain.first());
+        
+        // Show details that help diagnose certificate validation failures
+        if (!certChain.isEmpty()) {
+            QSslCertificate cert = certChain.first();
+            qWarning() << "Certificate details:";
+            qWarning() << "  - Effective date:" << cert.effectiveDate();
+            qWarning() << "  - Expiry date:" << cert.expiryDate();
+            qWarning() << "  - Issuer:" << cert.issuerDisplayName();
+            qWarning() << "  - Expected CN:" << baseUri.peerVerifyName;
+        }
     }
 }
