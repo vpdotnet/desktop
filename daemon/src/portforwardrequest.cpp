@@ -80,6 +80,12 @@ PortForwardRequestModern::PortForwardRequestModern(ApiClient &apiClient,
                 
                 if (pServerCA) {
                     qInfo() << "Using server-provided X509 certificate for port forwarding with hostname" << pServer->commonName();
+                    
+                    // Register the certificate with the IP-based registry for future updates
+                    if (!pServerCA->storedCertificate().isNull()) {
+                        qInfo() << "Registering certificate for port forwarding server IP:" << pServer->ip();
+                        ApiBase::registerServerCertificate(pServer->ip(), pServerCA->storedCertificate());
+                    }
                 }
                 
                 // Use either the server CA or system certificates (if pServerCA is null)

@@ -133,7 +133,28 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
     QNetworkAccessManager &networkManager = ApiNetwork::instance()->getAccessManager();
 
 
+    // Get the next base URI
     const BaseUri &nextBase = _baseUriSequence.getNextUri();
+    
+    // Extract the server IP from the URI for WireGuard servers
+    QString serverIp;
+    if (nextBase.uri.startsWith("http")) {
+        QUrl url(nextBase.uri);
+        serverIp = url.host();
+    }
+    
+    // Check if we need to update the certificate for this server
+    if (!serverIp.isEmpty() && nextBase.pCA) {
+        // For WireGuard servers specifically, we need to check certificates by IP
+        // since they all use the same CN ("WG")
+        if (!nextBase.peerVerifyName.isEmpty() && nextBase.peerVerifyName == "WG") {
+            // Try to update the certificate using the IP address
+            if (ApiBase::updatePrivateCAWithLatestCertificate(serverIp, const_cast<std::shared_ptr<PrivateCA>&>(nextBase.pCA))) {
+                qInfo() << "Updated certificate for WireGuard server:" << serverIp;
+            }
+        }
+    }
+    
     ApiResource requestResource{nextBase.uri + _resource};
     QUrl requestUri{requestResource};
     QNetworkRequest request(requestUri);
@@ -316,7 +337,7 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
                                 .arg(serverCert.subjectInfo(QSslCertificate::CommonName).join(", "))
                                 .arg(serverCert.serialNumber())
                                 .arg(serverCert.issuerDisplayName());
-                            qInfo("%s", qPrintable(certInfo));
+                            qInfo() << certInfo;
                             
                             // Compare with the certificate we received from the server list using QSslCertificate's equality operator
                             // This properly compares all certificate fields and data
@@ -358,7 +379,7 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
                         checkSslCertificate(*reply, nextBase, errors);
                     } else {
                         // OpenSSL verification succeeded
-                        qInfo("OpenSSL verification SUCCEEDED for: %s", qPrintable(nextBase.peerVerifyName));
+                        qInfo() << "OpenSSL verification SUCCEEDED for:" << nextBase.peerVerifyName;
                         reply->ignoreSslErrors();
                     }
                 }
@@ -406,8 +427,8 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
         qInfo() << "  Status: " << statusCode.toInt() << statusMsg.toByteArray().data();
         qInfo() << "  QNetworkReply error code:" << replyError;
         
-        // Log request URL and headers
-        qInfo() << "  Request URL:" << reply->request().url().toString();
+        // Log request URL (using ApiResource to redact sensitive data) and headers
+        qInfo() << "  Request URL:" << ApiResource{reply->request().url().toString()};
         qInfo() << "  Response Headers:";
         const auto &headers = reply->rawHeaderPairs();
         for (const auto &header : headers) {
@@ -416,31 +437,6 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
             qInfo() << "    " << name << ":" << value;
         }
         
-        // Try to log response body for error diagnosis (even for errors)
-        // Make a copy of the data so we don't interfere with regular processing
-        QByteArray responseBody;
-        
-        if (reply->isReadable()) {
-            // Create a buffer for the data
-            responseBody = reply->peek(reply->bytesAvailable());
-            if (!responseBody.isEmpty()) {
-                // Convert to QString for logging, with fallback for non-text data
-                QString bodyStr;
-                if (responseBody.contains('\0')) {
-                    // Binary data - show as hex
-                    bodyStr = "[Binary data, size: " + QString::number(responseBody.size()) + " bytes]";
-                } else {
-                    // Text data - convert to string
-                    bodyStr = QString::fromUtf8(responseBody);
-                }
-                qInfo() << "  Response Body:" << bodyStr;
-            } else {
-                qInfo() << "  Response Body: [empty]";
-            }
-        } else {
-            qInfo() << "  Response Body: [not readable]";
-        }
-
         // Check specifically for an auth error, which indicates that the creds are
         // not valid.
         // Look for both the QNetworkReply error code and the actual HTTP status code

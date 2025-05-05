@@ -1336,6 +1336,16 @@ void WireguardMethod::run(const ConnectionConfig &connectingConfig,
     
     if (pServerCA) {
         qInfo() << "Using server-provided X509 certificate for" << certCommonName;
+        
+        // Register the certificate with our IP-based registry for future updates
+        // This ensures we can update certificates when they change in the server list
+        // without requiring daemon restart
+        if (!pServerCA->storedCertificate().isNull()) {
+            qInfo() << "Registering certificate for server IP:" << vpnServer.ip();
+            ApiBase::registerServerCertificate(vpnServer.ip(), pServerCA->storedCertificate());
+        } else {
+            qWarning() << "Cannot register null certificate for server IP:" << vpnServer.ip();
+        }
     } else {
         qInfo() << "Using system root certificates for" << certCommonName;
     }

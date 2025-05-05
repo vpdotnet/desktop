@@ -45,6 +45,11 @@
 //   regions and may have more than one endpoint per region.
 //
 // API bases can also be overridden for testing; see environment.cpp.
+//
+// The certificates for server connections are obtained from the server list
+// when they are first created. When server certificates are updated in the server
+// list, the application needs to ensure those updates are used for future
+// connections without requiring a daemon restart.
 
 // BaseUri describes a single API endpoint.  A BaseUri is selected for each
 // attempt by calling ApiBaseSequence::beginAttempt().
@@ -138,6 +143,19 @@ public:
     // dynamically built ApiBase might not always know the exact number of
     // bases; it'll use an estimate here to determine the attempt count.
     virtual unsigned getAttemptCount(unsigned attemptsPerBase) = 0;
+    
+    // Registry for tracking server certificates by IP address
+    // This allows the client to update certificates when they change in the server list
+    // without requiring daemon restart
+    static void registerServerCertificate(const QString &serverIp, const QSslCertificate &cert);
+    
+    // Get the latest certificate registered for a server IP
+    // Returns nullptr if no certificate is registered for this IP
+    static std::optional<QSslCertificate> getLatestCertificate(const QString &serverIp);
+    
+    // Update or create a PrivateCA with the latest certificate for a server
+    // Returns true if the certificate was updated
+    static bool updatePrivateCAWithLatestCertificate(const QString &serverIp, std::shared_ptr<PrivateCA> &pCA);
 };
 
 // ApiBase using a fixed set of base URIs.

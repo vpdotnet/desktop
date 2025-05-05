@@ -17,6 +17,79 @@
 // <https://www.gnu.org/licenses/>.
 
 #include "apibase.h"
+#include <QMutex>
+#include <QMap>
+
+// Static registry for server certificates
+namespace {
+    QMutex certificateMutex;
+    QMap<QString, QSslCertificate> serverCertificates;
+}
+
+void ApiBase::registerServerCertificate(const QString &serverIp, const QSslCertificate &cert)
+{
+    if (serverIp.isEmpty() || cert.isNull()) {
+        qWarning() << "Cannot register null or empty certificate for server:" << serverIp;
+        return;
+    }
+    
+    QMutexLocker locker(&certificateMutex);
+    serverCertificates[serverIp] = cert;
+    qInfo() << "Registered certificate for server IP:" << serverIp 
+            << "with CN:" << cert.subjectInfo(QSslCertificate::CommonName).join(", ")
+            << "expiring:" << cert.expiryDate();
+}
+
+std::optional<QSslCertificate> ApiBase::getLatestCertificate(const QString &serverIp)
+{
+    QMutexLocker locker(&certificateMutex);
+    
+    // For WireGuard servers, extract the actual IP address from the URI
+    // This handles URIs like https://178.162.222.218:1337/ where 178.162.222.218 is the IP
+    QString effectiveIp = serverIp;
+    
+    // If we have a full URI, extract just the IP address part
+    if (serverIp.startsWith("http")) {
+        QUrl url(serverIp);
+        effectiveIp = url.host();
+        
+        // Remove port if present
+        int colonPos = effectiveIp.lastIndexOf(':');
+        if (colonPos > 0) {
+            effectiveIp = effectiveIp.left(colonPos);
+        }
+    }
+    
+    auto it = serverCertificates.find(effectiveIp);
+    if (it != serverCertificates.end()) {
+        return it.value();
+    }
+    
+    return std::nullopt;
+}
+
+bool ApiBase::updatePrivateCAWithLatestCertificate(const QString &serverIp, std::shared_ptr<PrivateCA> &pCA)
+{
+    if (!pCA) {
+        qWarning() << "Cannot update null PrivateCA for server:" << serverIp;
+        return false;
+    }
+    
+    auto latestCert = getLatestCertificate(serverIp);
+    if (!latestCert) {
+        return false;
+    }
+    
+    // If the current certificate is different from stored one, update it
+    if (pCA->storedCertificate().isNull() || pCA->storedCertificate() != *latestCert) {
+        pCA->setStoredCertificate(*latestCert);
+        qInfo() << "Updated certificate for server:" << serverIp;
+        return true;
+    }
+    
+    return false;
+}
+
 ApiBaseData::ApiBaseData(const std::vector<QString> &baseUris)
     : _baseUris{}, _nextStartIndex{0}
 {
