@@ -311,6 +311,11 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
                             // Get the stored certificate from our PrivateCA object
                             const QSslCertificate &storedCert = nextBase.pCA->storedCertificate();
                             
+                            // Log certificate details for debugging
+                            qInfo() << "Server certificate: CN=" << serverCert.subjectInfo(QSslCertificate::CommonName).join(", ")
+                                   << " Serial=" << serverCert.serialNumber()
+                                   << " Issuer=" << serverCert.issuerDisplayName();
+                            
                             // Compare with the certificate we received from the server list using QSslCertificate's equality operator
                             // This properly compares all certificate fields and data
                             if (!storedCert.isNull() && serverCert == storedCert) {
