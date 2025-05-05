@@ -305,14 +305,15 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
                         }
                         
                         if (hasSelfSignedError && !certChain.isEmpty()) {
-                            // Get the server's certificate in DER format for direct binary comparison
-                            QByteArray serverCertDer = certChain.first().toDer();
+                            // Get the server's certificate for direct comparison
+                            const QSslCertificate &serverCert = certChain.first();
                             
-                            // Get the pre-stored DER data from our PrivateCA object
-                            const QByteArray &storedCertDer = nextBase.pCA->rawDerData();
+                            // Get the stored certificate from our PrivateCA object
+                            const QSslCertificate &storedCert = nextBase.pCA->storedCertificate();
                             
-                            // Compare with the certificate we received from the server list - must be EXACTLY equal
-                            if (!storedCertDer.isEmpty() && serverCertDer == storedCertDer) {
+                            // Compare with the certificate we received from the server list using QSslCertificate's equality operator
+                            // This properly compares all certificate fields and data
+                            if (!storedCert.isNull() && serverCert == storedCert) {
                                 
                                 qInfo() << "Direct certificate comparison SUCCEEDED - server cert EXACTLY matches x509 from server list";
                                 

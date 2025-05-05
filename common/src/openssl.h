@@ -52,17 +52,17 @@ public:
                                 const QString &peerName,
                                 bool allowExpired = false);
                                 
-    // Store the raw DER data of the certificate for direct comparison
-    void setRawDerData(const QByteArray &derData) { _rawDerData = derData; }
+    // Store the certificate as a QSslCertificate object for proper comparison
+    void setStoredCertificate(const QSslCertificate &cert) { _storedCert = cert; }
     
-    // Get the raw DER data of the certificate
-    const QByteArray &rawDerData() const { return _rawDerData; }
+    // Get the stored certificate
+    const QSslCertificate &storedCertificate() const { return _storedCert; }
 
 private:
     std::unique_ptr<data> _pData;
     
-    // Store the raw DER data for direct certificate comparison
-    QByteArray _rawDerData;
+    // Store the certificate as a QSslCertificate object for direct comparison
+    QSslCertificate _storedCert;
 };
 
 enum
