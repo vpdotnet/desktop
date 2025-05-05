@@ -145,19 +145,16 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
     
     // Check if we need to update the certificate for this server
     if (!serverIp.isEmpty() && nextBase.pCA) {
-        // For WireGuard servers specifically, we need to check certificates by IP
-        // since they all use the same CN ("WG")
-        if (!nextBase.peerVerifyName.isEmpty() && nextBase.peerVerifyName == "WG") {
-            // Get the latest certificate for this server IP address
-            auto latestCert = ApiBase::getLatestCertificate(serverIp);
-            if (latestCert && !latestCert->isNull()) {
-                // Directly update the stored certificate in the PrivateCA object
-                const_cast<BaseUri&>(nextBase).pCA->setStoredCertificate(*latestCert);
-                
-                qInfo() << "Updated certificate for WireGuard server:" << serverIp
-                       << "CN:" << latestCert->subjectInfo(QSslCertificate::CommonName).join(", ")
-                       << "Expiry:" << latestCert->expiryDate().toString();
-            }
+        // Check certificates by IP address for all servers
+        // This is a more generic approach that doesn't rely on specific common names
+        auto latestCert = ApiBase::getLatestCertificate(serverIp);
+        if (latestCert && !latestCert->isNull()) {
+            // Directly update the stored certificate in the PrivateCA object
+            const_cast<BaseUri&>(nextBase).pCA->setStoredCertificate(*latestCert);
+            
+            qInfo() << "Updated certificate for server:" << serverIp
+                   << "CN:" << latestCert->subjectInfo(QSslCertificate::CommonName).join(", ")
+                   << "Expiry:" << latestCert->expiryDate().toString();
         }
     }
     
@@ -363,15 +360,14 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
                             } else {
                                 qWarning("Certificate does NOT match the X509 provided in server list");
                                 
-                                // Check if we're dealing with a WireGuard server by hostname and CN
-                                if (nextBase.peerVerifyName == "WG") {
-                                    // Extract the server IP from the URI
-                                    QString serverIp;
-                                    if (nextBase.uri.startsWith("http")) {
-                                        QUrl url(nextBase.uri);
-                                        serverIp = url.host();
-                                    }
-                                    
+                                // Extract the server IP from the URI - this works for any server type
+                                QString serverIp;
+                                if (nextBase.uri.startsWith("http")) {
+                                    QUrl url(nextBase.uri);
+                                    serverIp = url.host();
+                                }
+                                
+                                if (!serverIp.isEmpty()) {
                                     // For better diagnostics, log if the certificate is in our registry
                                     auto registeredCert = ApiBase::getLatestCertificate(serverIp);
                                     if (registeredCert) {
@@ -388,7 +384,7 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
                                             // Now check if the updated certificate matches
                                             if (serverCert == nextBase.pCA->storedCertificate()) {
                                                 qInfo("Certificate updated SUCCESSFULLY and now matches server certificate");
-                                                qInfo("Accepting certificate from registry for %s", qPrintable(nextBase.peerVerifyName));
+                                                qInfo("Accepting certificate from registry for server: %s", qPrintable(serverIp));
                                                 reply->ignoreSslErrors();
                                                 return;
                                             } else {
