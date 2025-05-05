@@ -1330,7 +1330,8 @@ void WireguardMethod::run(const ConnectionConfig &connectingConfig,
     }
     // Don't do DNS resolution while connecting - specify the IP address in the
     // request, and use the host name to verify the certificate.
-    // Check if the server has an x509 certificate provided
+    
+    // Check if the server has an x509 certificate provided in the server list
     std::shared_ptr<PrivateCA> pServerCA = createPrivateCAFromX509(vpnServer.x509Certificate());
     
     if (pServerCA) {
@@ -1339,7 +1340,7 @@ void WireguardMethod::run(const ConnectionConfig &connectingConfig,
         qInfo() << "Using system root certificates for" << certCommonName;
     }
     
-    // Create the FixedApiBase with either the server CA or system certificates
+    // Create the FixedApiBase with either the server-provided CA or system certificates
     FixedApiBase hostAuthBase(authHost, pServerCA, certCommonName);
 
     _pAuthRequest = g_daemon->apiClient().getRetry(hostAuthBase, resource, authHeader)

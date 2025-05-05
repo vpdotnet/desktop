@@ -167,11 +167,16 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
         // This ensures the server sees the expected hostname in the HTTP request
         request.setRawHeader("Host", nextBase.peerVerifyName.toUtf8());
         
-        // We use peer name verification with system CAs for all domains
+        // Log whether we're using a custom CA or system CAs
         if (!nextBase.peerVerifyName.isEmpty())
         {
-            qDebug() << "requesting:" << requestResource
-                << "using peer name" << nextBase.peerVerifyName << "with system CA";
+            if (nextBase.pCA) {
+                qDebug() << "requesting:" << requestResource
+                    << "using peer name" << nextBase.peerVerifyName << "with provided X509 certificate";
+            } else {
+                qDebug() << "requesting:" << requestResource
+                    << "using peer name" << nextBase.peerVerifyName << "with system CA";
+            }
         }
         else
         {
@@ -265,8 +270,17 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
         connect(reply.get(), &QNetworkReply::sslErrors, this,
             [this, reply, nextBase](const QList<QSslError> &errors)
             {
+                // Log the SSL errors for diagnostics
+                if (!errors.isEmpty()) {
+                    qInfo() << "SSL errors for" << nextBase.peerVerifyName << ":";
+                    for (const QSslError &error : errors) {
+                        qInfo() << "  -" << error.errorString();
+                    }
+                }
+                
                 // For custom CA with pinning, use our verifyHttpsCertificate
                 if (nextBase.pCA) {
+                    qInfo() << "Using provided X509 certificate for validation of" << nextBase.peerVerifyName;
                     checkSslCertificate(*reply, nextBase, errors);
                 }
                 // With system CAs but specified peerVerifyName, check if errors are only about hostname mismatch
