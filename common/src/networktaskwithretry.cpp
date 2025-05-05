@@ -148,9 +148,15 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
         // For WireGuard servers specifically, we need to check certificates by IP
         // since they all use the same CN ("WG")
         if (!nextBase.peerVerifyName.isEmpty() && nextBase.peerVerifyName == "WG") {
-            // Try to update the certificate using the IP address
-            if (ApiBase::updatePrivateCAWithLatestCertificate(serverIp, const_cast<std::shared_ptr<PrivateCA>&>(nextBase.pCA))) {
-                qInfo() << "Updated certificate for WireGuard server:" << serverIp;
+            // Get the latest certificate for this server IP address
+            auto latestCert = ApiBase::getLatestCertificate(serverIp);
+            if (latestCert && !latestCert->isNull()) {
+                // Directly update the stored certificate in the PrivateCA object
+                const_cast<BaseUri&>(nextBase).pCA->setStoredCertificate(*latestCert);
+                
+                qInfo() << "Updated certificate for WireGuard server:" << serverIp
+                       << "CN:" << latestCert->subjectInfo(QSslCertificate::CommonName).join(", ")
+                       << "Expiry:" << latestCert->expiryDate().toString();
             }
         }
     }
@@ -356,6 +362,45 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
                                 }
                             } else {
                                 qWarning("Certificate does NOT match the X509 provided in server list");
+                                
+                                // Check if we're dealing with a WireGuard server by hostname and CN
+                                if (nextBase.peerVerifyName == "WG") {
+                                    // Extract the server IP from the URI
+                                    QString serverIp;
+                                    if (nextBase.uri.startsWith("http")) {
+                                        QUrl url(nextBase.uri);
+                                        serverIp = url.host();
+                                    }
+                                    
+                                    // For better diagnostics, log if the certificate is in our registry
+                                    auto registeredCert = ApiBase::getLatestCertificate(serverIp);
+                                    if (registeredCert) {
+                                        qInfo("Found registered certificate for server IP: %s", qPrintable(serverIp));
+                                        
+                                        // Check if the server's certificate matches our registered one
+                                        if (!registeredCert->isNull() && serverCert == *registeredCert) {
+                                            qInfo("Server certificate matches the REGISTERED certificate but NOT the one in PrivateCA");
+                                            qInfo("This suggests our certificate registry is working but wasn't applied correctly");
+                                            
+                                            // Try updating the PrivateCA directly with the registered certificate
+                                            const_cast<BaseUri&>(nextBase).pCA->setStoredCertificate(*registeredCert);
+                                            
+                                            // Now check if the updated certificate matches
+                                            if (serverCert == nextBase.pCA->storedCertificate()) {
+                                                qInfo("Certificate updated SUCCESSFULLY and now matches server certificate");
+                                                qInfo("Accepting certificate from registry for %s", qPrintable(nextBase.peerVerifyName));
+                                                reply->ignoreSslErrors();
+                                                return;
+                                            } else {
+                                                qWarning("Certificate update failed - still doesn't match server certificate");
+                                            }
+                                        } else {
+                                            qWarning("Server certificate doesn't match the registered certificate either");
+                                        }
+                                    } else {
+                                        qWarning("No registered certificate found for server IP: %s", qPrintable(serverIp));
+                                    }
+                                }
                                 
                                 // Log certificate details for comparison
                                 QString serverInfo = QString("Server cert: CN=%1 Serial=%2 Fingerprint=%3")

@@ -239,6 +239,9 @@ private:
     // Authentication API request - set once the request is started (remains set
     // after that).
     Async<void> _pAuthRequest;
+    
+    // Store the ApiBase for the host to maintain certificate association
+    std::shared_ptr<ApiBase> _hostAuthBase;
     // Backend implementation - set once we try to create the device, cleared
     // when we shut down
     std::unique_ptr<WireguardBackend> _pBackend;
@@ -1351,9 +1354,14 @@ void WireguardMethod::run(const ConnectionConfig &connectingConfig,
     }
     
     // Create the FixedApiBase with either the server-provided CA or system certificates
-    FixedApiBase hostAuthBase(authHost, pServerCA, certCommonName);
+    // Persist this ApiBase object to ensure the certificate association is maintained
+    auto hostAuthBase = std::make_shared<FixedApiBase>(authHost, pServerCA, certCommonName);
+    
+    // Store this ApiBase for reuse in case we need to reconnect to the same server
+    // This ensures we maintain the certificate association across connection attempts
+    _hostAuthBase = hostAuthBase;
 
-    _pAuthRequest = g_daemon->apiClient().getRetry(hostAuthBase, resource, authHeader)
+    _pAuthRequest = g_daemon->apiClient().getRetry(*hostAuthBase, resource, authHeader)
         ->then(this, [this, clientKeypair=std::move(clientKeypair)](const QJsonDocument &result)
             {
                 handleAuthResult(clientKeypair, result);

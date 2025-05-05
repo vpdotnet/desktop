@@ -48,21 +48,39 @@ std::optional<QSslCertificate> ApiBase::getLatestCertificate(const QString &serv
     // This handles URIs like https://178.162.222.218:1337/ where 178.162.222.218 is the IP
     QString effectiveIp = serverIp;
     
+    // Debug the input
+    qDebug() << "Looking for certificate for:" << serverIp;
+    
     // If we have a full URI, extract just the IP address part
     if (serverIp.startsWith("http")) {
         QUrl url(serverIp);
         effectiveIp = url.host();
-        
-        // Remove port if present
-        int colonPos = effectiveIp.lastIndexOf(':');
-        if (colonPos > 0) {
-            effectiveIp = effectiveIp.left(colonPos);
-        }
+        qDebug() << "Extracted from URL:" << effectiveIp;
     }
     
+    // Remove port if present in the host
+    int colonPos = effectiveIp.lastIndexOf(':');
+    if (colonPos > 0) {
+        effectiveIp = effectiveIp.left(colonPos);
+        qDebug() << "Removed port, effective IP:" << effectiveIp;
+    }
+    
+    // Try finding the certificate with the exact IP
     auto it = serverCertificates.find(effectiveIp);
     if (it != serverCertificates.end()) {
+        qDebug() << "Found certificate for IP:" << effectiveIp;
         return it.value();
+    }
+    
+    // If not found, print all registered certificates for debugging
+    if (serverCertificates.isEmpty()) {
+        qWarning() << "No certificates registered in the registry";
+    } else {
+        qDebug() << "Certificate not found. Registered certificates:";
+        for (auto regIt = serverCertificates.begin(); regIt != serverCertificates.end(); ++regIt) {
+            qDebug() << "  - IP:" << regIt.key() 
+                    << "CN:" << regIt.value().subjectInfo(QSslCertificate::CommonName).join(", ");
+        }
     }
     
     return std::nullopt;
