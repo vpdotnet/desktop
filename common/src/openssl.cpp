@@ -594,9 +594,22 @@ std::shared_ptr<PrivateCA> createPrivateCAFromX509(const QString &x509CertData)
     
     // Create a PrivateCA from the PEM data
     try {
+        // Convert PEM to QSslCertificate and then to DER for efficient storage and comparison
+        QSslCertificate cert(pemData);
+        if (cert.isNull()) {
+            qWarning() << "Failed to parse X509 certificate from PEM data";
+            throw std::runtime_error("Invalid X509 certificate");
+        }
+        
+        QByteArray derData = cert.toDer();
+        if (derData.isEmpty()) {
+            qWarning() << "Failed to convert X509 certificate to DER format";
+            throw std::runtime_error("DER conversion failed");
+        }
+        
         auto pCA = std::make_shared<PrivateCA>(pemData);
-        // Store the original PEM data in the object for verification purposes
-        pCA->setRawPemData(pemData);
+        // Store the DER data in the object for verification purposes
+        pCA->setRawDerData(derData);
         return pCA;
     } catch (const std::exception &e) {
         qWarning() << "Failed to create PrivateCA from X509 certificate data:" << e.what();

@@ -305,12 +305,11 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
                         }
                         
                         if (hasSelfSignedError && !certChain.isEmpty()) {
-                            // Convert the server's certificate to DER format for binary comparison
+                            // Get the server's certificate in DER format for direct binary comparison
                             QByteArray serverCertDer = certChain.first().toDer();
                             
-                            // Convert our stored PEM data to a QSslCertificate and then to DER format
-                            QSslCertificate storedCert = QSslCertificate(nextBase.pCA->rawPemData());
-                            QByteArray storedCertDer = storedCert.toDer();
+                            // Get the pre-stored DER data from our PrivateCA object
+                            const QByteArray &storedCertDer = nextBase.pCA->rawDerData();
                             
                             // Compare with the certificate we received from the server list - must be EXACTLY equal
                             if (!storedCertDer.isEmpty() && serverCertDer == storedCertDer) {
