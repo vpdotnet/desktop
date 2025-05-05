@@ -611,10 +611,12 @@ std::shared_ptr<PrivateCA> createPrivateCAFromX509(const QString &x509CertData)
         // Store the certificate object directly for proper comparison
         pCA->setStoredCertificate(cert);
         
-        // Log certificate info for debugging - avoid logging the entire certificate directly 
-        qInfo() << "Parsed X509 certificate: CN=" << cert.subjectInfo(QSslCertificate::CommonName).join(", ") 
-                << " Serial=" << cert.serialNumber()
-                << " Expires=" << cert.expiryDate().toString();
+        // Log certificate info for debugging - use C-style formatting to avoid logging issues
+        QString certInfo = QString("Parsed X509 certificate: CN=%1 Serial=%2 Expires=%3")
+            .arg(cert.subjectInfo(QSslCertificate::CommonName).join(", "))
+            .arg(cert.serialNumber())
+            .arg(cert.expiryDate().toString());
+        qInfo("%s", qPrintable(certInfo));
         return pCA;
     } catch (const std::exception &e) {
         qWarning() << "Failed to create PrivateCA from X509 certificate data:" << e.what();

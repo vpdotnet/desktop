@@ -311,28 +311,30 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
                             // Get the stored certificate from our PrivateCA object
                             const QSslCertificate &storedCert = nextBase.pCA->storedCertificate();
                             
-                            // Log certificate details for debugging
-                            qInfo() << "Server certificate: CN=" << serverCert.subjectInfo(QSslCertificate::CommonName).join(", ")
-                                   << " Serial=" << serverCert.serialNumber()
-                                   << " Issuer=" << serverCert.issuerDisplayName();
+                            // Log certificate details for debugging - use string conversions to avoid logging issues
+                            QString certInfo = QString("Server certificate: CN=%1 Serial=%2 Issuer=%3")
+                                .arg(serverCert.subjectInfo(QSslCertificate::CommonName).join(", "))
+                                .arg(serverCert.serialNumber())
+                                .arg(serverCert.issuerDisplayName());
+                            qInfo("%s", qPrintable(certInfo));
                             
                             // Compare with the certificate we received from the server list using QSslCertificate's equality operator
                             // This properly compares all certificate fields and data
                             if (!storedCert.isNull() && serverCert == storedCert) {
                                 
-                                qInfo() << "Direct certificate comparison SUCCEEDED - server cert EXACTLY matches x509 from server list";
+                                qInfo("Direct certificate comparison SUCCEEDED - server cert EXACTLY matches x509 from server list");
                                 
                                 // Check if CN matches expected hostname
                                 if (certChain.first().subjectInfo(QSslCertificate::CommonName).contains(nextBase.peerVerifyName)) {
-                                    qInfo() << "Certificate has expected CN:" << nextBase.peerVerifyName;
-                                    qInfo() << "Accepting self-signed certificate that matches provided X509 from server list";
+                                    qInfo("Certificate has expected CN: %s", qPrintable(nextBase.peerVerifyName));
+                                    qInfo("Accepting self-signed certificate that matches provided X509 from server list");
                                     reply->ignoreSslErrors();
                                     return;
                                 } else {
-                                    qWarning() << "Certificate has wrong CN (expected" << nextBase.peerVerifyName << ")";
+                                    qWarning("Certificate has wrong CN (expected %s)", qPrintable(nextBase.peerVerifyName));
                                 }
                             } else {
-                                qWarning() << "Certificate does NOT match the X509 provided in server list";
+                                qWarning("Certificate does NOT match the X509 provided in server list");
                             }
                         }
                         
@@ -340,7 +342,7 @@ Async<QByteArray> NetworkTaskWithRetry::sendRequest()
                         checkSslCertificate(*reply, nextBase, errors);
                     } else {
                         // OpenSSL verification succeeded
-                        qInfo() << "OpenSSL verification SUCCEEDED for" << nextBase.peerVerifyName;
+                        qInfo("OpenSSL verification SUCCEEDED for %s", qPrintable(nextBase.peerVerifyName));
                         reply->ignoreSslErrors();
                     }
                 }
