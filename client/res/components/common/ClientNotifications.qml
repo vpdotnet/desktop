@@ -373,7 +373,7 @@ Item {
     severity: severities.warning
     links: [{
       text: uiTranslate("RatingRequestNotificationStatus", "Contact Support"),
-      clicked: function() { Qt.openUrlExternally("https://www.privateinternetaccess.com/helpdesk/new-ticket") }
+      clicked: function() { Qt.openUrlExternally("https://vp.net/support") }
     }]
     active: Daemon.state.usingSlowInterval &&
             Daemon.state.connectionLost === 0 &&
